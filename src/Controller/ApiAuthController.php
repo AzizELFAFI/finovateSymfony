@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class ApiAuthController extends AbstractController
 {
@@ -84,7 +85,8 @@ final class ApiAuthController extends AbstractController
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
     public function register(
         Request $request,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator
     ): JsonResponse {
         $payload = json_decode($request->getContent() ?: '', true);
 
@@ -94,6 +96,7 @@ final class ApiAuthController extends AbstractController
 
         $email = trim((string) ($payload['email'] ?? ''));
         $password = (string) ($payload['password'] ?? '');
+        $passwordConfirm = (string) ($payload['password_confirm'] ?? '');
         $nom = trim((string) ($payload['nom'] ?? ''));
         $prenom = trim((string) ($payload['prenom'] ?? ''));
         $dateNaissance = (string) ($payload['date_naissance'] ?? '');
@@ -106,6 +109,39 @@ final class ApiAuthController extends AbstractController
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->json(['message' => 'Adresse e-mail invalide.'], 422);
+        }
+
+        if (mb_strlen($nom) < 3) {
+            return $this->json(['message' => 'Le nom doit contenir au moins 3 caractères.'], 422);
+        }
+
+        if (mb_strlen($prenom) < 3) {
+            return $this->json(['message' => 'Le prénom doit contenir au moins 3 caractères.'], 422);
+        }
+
+        if (!preg_match('/^\d{8}$/', $cin)) {
+            return $this->json(['message' => 'Le CIN doit contenir exactement 8 chiffres.'], 422);
+        }
+
+        $telephoneDigits = preg_replace('/\D+/', '', $telephone);
+        if (!is_string($telephoneDigits)) {
+            $telephoneDigits = '';
+        }
+
+        if (!preg_match('/^\d{8}$/', $telephoneDigits)) {
+            return $this->json(['message' => 'Le numéro de téléphone doit contenir exactement 8 chiffres.'], 422);
+        }
+
+        if (mb_strlen($password) < 8) {
+            return $this->json(['message' => 'Le mot de passe doit contenir au moins 8 caractères.'], 422);
+        }
+
+        if (mb_strlen($passwordConfirm) < 8) {
+            return $this->json(['message' => 'La confirmation du mot de passe doit contenir au moins 8 caractères.'], 422);
+        }
+
+        if (!hash_equals($password, $passwordConfirm)) {
+            return $this->json(['message' => 'Les mots de passe ne correspondent pas.'], 422);
         }
 
         $passwordHash = $this->normalizeIncomingPassword($password);
@@ -121,6 +157,13 @@ final class ApiAuthController extends AbstractController
             return $this->json(['message' => 'Date de naissance invalide.'], 422);
         }
 
+        $today = new \DateTimeImmutable('today');
+        $birthImmutable = \DateTimeImmutable::createFromMutable($birthdate)->setTime(0, 0, 0);
+        $age = $birthImmutable->diff($today)->y;
+        if ($age < 18) {
+            return $this->json(['message' => 'Vous devez avoir au moins 18 ans pour créer un compte.'], 422);
+        }
+
         $user = new User();
         $user->setId((string) (int) (microtime(true) * 1000));
         $user->setEmail($email);
@@ -131,10 +174,24 @@ final class ApiAuthController extends AbstractController
         $user->setSolde('0');
         $user->setBirthdate($birthdate);
         $user->setCin($cin);
-        $user->setPhone_number((int) preg_replace('/\D+/', '', $telephone));
+        $user->setPhone_number((int) $telephoneDigits);
         $user->setCreated_at(new \DateTime());
         $user->setNumero_carte((string) random_int(1000000000000000, 9999999999999999));
         $user->setPassword($passwordHash);
+
+        $violations = $validator->validate($user);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $property = (string) $violation->getPropertyPath();
+                $errors[$property][] = (string) $violation->getMessage();
+            }
+
+            return $this->json([
+                'message' => 'Données invalides.',
+                'errors' => $errors,
+            ], 422);
+        }
 
         $entityManager->persist($user);
         try {

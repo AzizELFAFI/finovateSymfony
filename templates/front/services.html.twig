@@ -170,21 +170,28 @@ https://templatemo.com/tm-545-finance-business
           </div>
           <div class="col-md-12">
             <div class="contact-form">
-              <form id="contact" action="" method="post">
+              {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                  <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+                {% endfor %}
+              {% endfor %}
+
+              <form id="contact" action="{{ path('front_contact_send') }}" method="post" novalidate="novalidate">
+                <input type="hidden" name="_token" value="{{ csrf_token('contact_form') }}">
                 <div class="row">
                   <div class="col-lg-4 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="">
+                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="" pattern=".*\D.*" title="Le nom complet ne doit pas être un entier.">
                     </fieldset>
                   </div>
                   <div class="col-lg-4 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                      <input name="email" type="email" class="form-control" id="email" placeholder="Adresse e-mail" required="">
                     </fieldset>
                   </div>
                   <div class="col-lg-4 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="subject" type="text" class="form-control" id="subject" placeholder="Sujet" required="">
+                      <input name="subject" type="text" class="form-control" id="subject" placeholder="Sujet" required="" pattern=".*\D.*" title="Le sujet ne doit pas être un entier.">
                     </fieldset>
                   </div>
                   <div class="col-lg-12">
@@ -228,16 +235,18 @@ https://templatemo.com/tm-545-finance-business
           <div class="col-md-3 footer-item last-item">
             <h4>Nous écrire</h4>
             <div class="contact-form">
-              <form id="contact footer-contact" action="" method="post">
+              <form id="contact-footer" action="{{ path('front_contact_send') }}" method="post" novalidate="novalidate">
+                <input type="hidden" name="_token" value="{{ csrf_token('contact_form') }}">
+                <input type="hidden" name="subject" value="Contact depuis le footer (Services)">
                 <div class="row">
                   <div class="col-lg-12 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="">
+                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="" pattern=".*\D.*" title="Le nom complet ne doit pas être un entier.">
                     </fieldset>
                   </div>
                   <div class="col-lg-12 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                      <input name="email" type="email" class="form-control" id="email" placeholder="Adresse e-mail" required="">
                     </fieldset>
                   </div>
                   <div class="col-lg-12">

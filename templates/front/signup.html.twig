@@ -113,21 +113,21 @@
           </div>
           <div class="col-lg-8 col-md-10 mx-auto">
             <div class="contact-form p-4" style="border-radius: 0; background-color: #e8f5e9;">
-              <form id="signup" action="" method="post">
+              <form id="signup" action="" method="post" novalidate="novalidate">
                 <div class="row">
                   <div class="col-lg-6 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="nom" type="text" class="form-control" id="nom" placeholder="Nom" required="">
+                      <input name="nom" type="text" class="form-control" id="nom" placeholder="Nom" required="" minlength="3" pattern="^[\p{L} .'-]{3,}$" title="Le nom doit être une chaîne de caractères (min 3).">
                     </fieldset>
                   </div>
                   <div class="col-lg-6 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="prenom" type="text" class="form-control" id="prenom" placeholder="Prénom" required="">
+                      <input name="prenom" type="text" class="form-control" id="prenom" placeholder="Prénom" required="" minlength="3" pattern="^[\p{L} .'-]{3,}$" title="Le prénom doit être une chaîne de caractères (min 3).">
                     </fieldset>
                   </div>
                   <div class="col-lg-6 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                      <input name="email" type="email" class="form-control" id="email" placeholder="Adresse e-mail" required="">
                     </fieldset>
                   </div>
                   <div class="col-lg-6 col-md-12 col-sm-12">
@@ -137,22 +137,22 @@
                   </div>
                   <div class="col-lg-6 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="cin" type="text" class="form-control" id="cin" placeholder="CIN" required="">
+                      <input name="cin" type="text" inputmode="numeric" class="form-control" id="cin" placeholder="CIN" required="" pattern="^\d{8}$" minlength="8" maxlength="8" title="Le CIN doit contenir exactement 8 chiffres.">
                     </fieldset>
                   </div>
                   <div class="col-lg-6 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="telephone" type="text" class="form-control" id="telephone" placeholder="Numéro de téléphone" required="">
+                      <input name="telephone" type="text" inputmode="numeric" class="form-control" id="telephone" placeholder="Numéro de téléphone" required="" pattern="^\d{8}$" minlength="8" maxlength="8" title="Le numéro de téléphone doit contenir exactement 8 chiffres.">
                     </fieldset>
                   </div>
                   <div class="col-lg-6 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="password" type="password" class="form-control" id="password" placeholder="Mot de passe" required="">
+                      <input name="password" type="password" class="form-control" id="password" placeholder="Mot de passe" required="" minlength="8" title="Le mot de passe doit contenir au moins 8 caractères.">
                     </fieldset>
                   </div>
                   <div class="col-lg-6 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="password_confirm" type="password" class="form-control" id="password_confirm" placeholder="Confirmation du mot de passe" required="">
+                      <input name="password_confirm" type="password" class="form-control" id="password_confirm" placeholder="Confirmation du mot de passe" required="" minlength="8" title="La confirmation du mot de passe doit contenir au moins 8 caractères.">
                     </fieldset>
                   </div>
                   <div class="col-lg-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
@@ -197,16 +197,18 @@
           <div class="col-md-3 footer-item last-item">
             <h4>Nous écrire</h4>
             <div class="contact-form">
-              <form id="contact footer-contact" action="" method="post">
+              <form id="contact-footer" action="{{ path('front_contact_send') }}" method="post" novalidate="novalidate">
+                <input type="hidden" name="_token" value="{{ csrf_token('contact_form') }}">
+                <input type="hidden" name="subject" value="Contact depuis le footer (Signup)">
                 <div class="row">
                   <div class="col-lg-12 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="">
+                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="" pattern=".*\D.*" title="Le nom complet ne doit pas être un entier.">
                     </fieldset>
                   </div>
                   <div class="col-lg-12 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                      <input name="email" type="email" class="form-control" id="email" placeholder="Adresse e-mail" required="">
                     </fieldset>
                   </div>
                   <div class="col-lg-12">
@@ -270,8 +272,26 @@
         var form = document.getElementById('signup');
         if (!form) return;
 
+        function showSignupError(message) {
+          var existing = form.querySelector('.signup-validation-alert');
+          if (existing) existing.remove();
+
+          var alertDiv = document.createElement('div');
+          alertDiv.className = 'alert alert-danger signup-validation-alert';
+          alertDiv.setAttribute('role', 'alert');
+          alertDiv.innerHTML = message;
+          form.prepend(alertDiv);
+        }
+
+        function clearSignupError() {
+          var existing = form.querySelector('.signup-validation-alert');
+          if (existing) existing.remove();
+        }
+
         form.addEventListener('submit', async function (e) {
           e.preventDefault();
+
+          clearSignupError();
 
           var nom = document.getElementById('nom') ? document.getElementById('nom').value : '';
           var prenom = document.getElementById('prenom') ? document.getElementById('prenom').value : '';
@@ -282,8 +302,56 @@
           var password = document.getElementById('password') ? document.getElementById('password').value : '';
           var passwordConfirm = document.getElementById('password_confirm') ? document.getElementById('password_confirm').value : '';
 
+          nom = (nom || '').trim();
+          prenom = (prenom || '').trim();
+          email = (email || '').trim();
+          cin = (cin || '').trim();
+          telephone = (telephone || '').trim();
+          password = (password || '').trim();
+          passwordConfirm = (passwordConfirm || '').trim();
+
+          if (!nom || nom.length < 3) {
+            showSignupError('Le nom doit contenir au moins 3 caractères.');
+            return;
+          }
+
+          if (!prenom || prenom.length < 3) {
+            showSignupError('Le prénom doit contenir au moins 3 caractères.');
+            return;
+          }
+
+          if (!email) {
+            showSignupError('L\'adresse e-mail est obligatoire.');
+            return;
+          }
+
+          if (!/^\S+@\S+\.\S+$/.test(email)) {
+            showSignupError('Veuillez saisir une adresse e-mail valide.');
+            return;
+          }
+
+          if (!cin || !/^\d{8}$/.test(cin)) {
+            showSignupError('Le CIN doit contenir exactement 8 chiffres.');
+            return;
+          }
+
+          if (!telephone || !/^\d{8}$/.test(telephone)) {
+            showSignupError('Le numéro de téléphone doit contenir exactement 8 chiffres.');
+            return;
+          }
+
+          if (!password || password.length < 8) {
+            showSignupError('Le mot de passe doit contenir au moins 8 caractères.');
+            return;
+          }
+
+          if (!passwordConfirm || passwordConfirm.length < 8) {
+            showSignupError('La confirmation du mot de passe doit contenir au moins 8 caractères.');
+            return;
+          }
+
           if (password !== passwordConfirm) {
-            alert('Les mots de passe ne correspondent pas.');
+            showSignupError('Les mots de passe ne correspondent pas.');
             return;
           }
 
@@ -300,19 +368,34 @@
                 date_naissance: dateNaissance,
                 cin: cin,
                 telephone: telephone,
-                password: password
+                password: password,
+                password_confirm: passwordConfirm
               })
             });
 
             var data = await res.json().catch(function () { return {}; });
             if (!res.ok) {
-              alert(data.message || 'Inscription impossible.');
+              if (data && data.errors) {
+                var msgs = [];
+                Object.keys(data.errors).forEach(function (field) {
+                  (data.errors[field] || []).forEach(function (msg) {
+                    msgs.push(msg);
+                  });
+                });
+
+                if (msgs.length > 0) {
+                  showSignupError(msgs.join('<br>'));
+                  return;
+                }
+              }
+
+              showSignupError(data.message || 'Inscription impossible.');
               return;
             }
 
             window.location.href = '{{ path('front_login') }}';
           } catch (err) {
-            alert('Erreur réseau. Réessaie.');
+            showSignupError('Erreur réseau. Réessaie.');
           }
         });
       })();

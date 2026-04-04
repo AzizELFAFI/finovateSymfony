@@ -4,7 +4,11 @@ namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class FrontController extends AbstractController
@@ -57,6 +61,46 @@ final class FrontController extends AbstractController
     public function contact(): Response
     {
         return $this->render('front/contact.html.twig');
+    }
+
+    #[Route('/contact/send', name: 'front_contact_send', methods: ['POST'])]
+    public function sendContact(Request $request, MailerInterface $mailer): Response
+    {
+        if (!$this->isCsrfTokenValid('contact_form', (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Échec de validation du formulaire. Veuillez réessayer.');
+            return $this->redirectToRoute('front_contact');
+        }
+
+        $name = trim((string) $request->request->get('name'));
+        $fromEmail = trim((string) $request->request->get('email'));
+        $subject = trim((string) $request->request->get('subject'));
+        $message = trim((string) $request->request->get('message'));
+
+        if ($name === '' || $fromEmail === '' || $subject === '' || $message === '') {
+            $this->addFlash('danger', 'Veuillez remplir tous les champs du formulaire.');
+            return $this->redirectToRoute('front_contact');
+        }
+
+        if (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+            $this->addFlash('danger', 'Adresse e-mail invalide.');
+            return $this->redirectToRoute('front_contact');
+        }
+
+        $email = (new Email())
+            ->from('no-reply@finovate.tn')
+            ->to('aziz.fafi@gmail.com')
+            ->replyTo($fromEmail)
+            ->subject('[Contact Finovate] ' . $subject)
+            ->text("Nom: {$name}\nEmail: {$fromEmail}\n\nMessage:\n{$message}\n");
+
+        try {
+            $mailer->send($email);
+            $this->addFlash('success', 'Votre message a été envoyé avec succès.');
+        } catch (TransportExceptionInterface $e) {
+            $this->addFlash('danger', "Impossible d'envoyer l'e-mail pour le moment. Veuillez réessayer plus tard.");
+        }
+
+        return $this->redirectToRoute('front_contact');
     }
 
     #[Route('/user/dashboard', name: 'user_dashboard', methods: ['GET'])]

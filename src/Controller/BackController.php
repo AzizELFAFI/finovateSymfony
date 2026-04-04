@@ -9,6 +9,7 @@ use App\Entity\Posts;
 use App\Entity\Comments;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -120,12 +121,82 @@ final class BackController extends AbstractController
     }
 
     #[Route('/users', name: 'backoffice_users', methods: ['GET'])]
-    public function users(EntityManagerInterface $em): Response
+    public function users(EntityManagerInterface $em, Request $request): Response
     {
-        $users = $em->getRepository(User::class)->findAll();
+        $search = $request->query->get('search');
+        $role = $request->query->get('role');
+        $sort = (string) $request->query->get('sort', 'lastname');
+        $dir = strtoupper((string) $request->query->get('dir', 'ASC'));
+
+        $allowedSorts = ['lastname', 'firstname', 'email'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'lastname';
+        }
+        if (!in_array($dir, ['ASC', 'DESC'], true)) {
+            $dir = 'ASC';
+        }
+
+        $allowedRoles = ['ADMIN', 'USER'];
+        if ($role !== null && $role !== '' && !in_array($role, $allowedRoles, true)) {
+            $role = null;
+        }
+
+        $queryBuilder = $em->getRepository(User::class)->createQueryBuilder('u');
+
+        if ($role) {
+            $queryBuilder->andWhere('u.role = :role')
+                ->setParameter('role', $role);
+        }
+
+        if ($search) {
+            $queryBuilder->where('u.email LIKE :search')
+                ->orWhere('u.firstname LIKE :search')
+                ->orWhere('u.lastname LIKE :search')
+                ->orWhere('u.role LIKE :search')
+                ->orWhere('u.cin LIKE :search')
+                ->orWhere('u.phone_number LIKE :search')
+                ->orWhere('u.numero_carte LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $queryBuilder->orderBy('u.' . $sort, $dir)
+            ->addOrderBy('u.id', 'DESC');
+
+        $users = $queryBuilder->getQuery()->getResult();
 
         return $this->render('backoffice/users.html.twig', [
-            'users' => $users
+            'users' => $users,
+            'search' => $search,
+            'role' => $role,
+            'sort' => $sort,
+            'dir' => $dir
         ]);
+    }
+
+    #[Route('/users/{id}/delete', name: 'backoffice_user_delete', methods: ['POST'])]
+    public function deleteUser(string $id, EntityManagerInterface $em, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('delete_user_' . $id, (string) $request->request->get('_token'))) {
+            return $this->redirectToRoute('backoffice_users');
+        }
+
+        $user = $em->getRepository(User::class)->find($id);
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('backoffice_users');
+        }
+
+        $numericId = (int) $user->getId();
+
+        $em->createQueryBuilder()
+            ->delete(Transaction::class, 't')
+            ->where('t.sender_id = :uid OR t.receiver_id = :uid')
+            ->setParameter('uid', $numericId)
+            ->getQuery()
+            ->execute();
+
+        $em->remove($user);
+        $em->flush();
+
+        return $this->redirectToRoute('backoffice_users');
     }
 }
