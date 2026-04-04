@@ -158,7 +158,14 @@ https://templatemo.com/tm-545-finance-business
           </div>
           <div class="col-md-12">
             <div class="contact-form">
-              <form id="contact" action="" method="get">
+              {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                  <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+                {% endfor %}
+              {% endfor %}
+
+              <form id="contact" action="{{ path('front_contact_send') }}" method="post">
+                <input type="hidden" name="_token" value="{{ csrf_token('contact_form') }}">
                 <div class="row">
                   <div class="col-lg-4 col-md-12 col-sm-12">
                     <fieldset>
