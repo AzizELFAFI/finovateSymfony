@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
 #[ORM\Entity]
@@ -14,15 +15,24 @@ class Bill
     private int $id;
 
     #[ORM\Column(type: "integer")]
+    #[Assert\NotBlank(message: "L'utilisateur est obligatoire.")]
     private int $id_user;
 
     #[ORM\Column(type: "string", length: 50)]
+    #[Assert\NotBlank(message: "La référence est obligatoire.")]
+    #[Assert\Type(type: "string", message: "La référence doit être une chaîne.")]
+    #[Assert\Length(min: 3, max: 50, minMessage: "La référence doit contenir au moins {{ limit }} caractères.", maxMessage: "La référence ne doit pas dépasser {{ limit }} caractères.")]
     private string $reference;
 
     #[ORM\Column(type: "float")]
+    #[Assert\NotBlank(message: "Le montant est obligatoire.")]
+    #[Assert\Type(type: "numeric", message: "Le montant doit être un nombre.")]
+    #[Assert\Positive(message: "Le montant doit être supérieur à 0.")]
     private float $amount;
 
     #[ORM\Column(type: "date")]
+    #[Assert\NotBlank(message: "La date de paiement est obligatoire.")]
+    #[Assert\Type(type: "\\DateTimeInterface", message: "Date de paiement invalide.")]
     private \DateTimeInterface $date_paiement;
 
     public function getId()

@@ -2,39 +2,30 @@
 
 namespace App\Form;
 
-use App\Model\CreateGoalRequest;
+use App\Model\PayBillRequest;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class CreateGoalRequestType extends AbstractType
+class PayBillRequestType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('title', TextType::class, [
+            ->add('reference', TextType::class, [
                 'required' => true,
                 'attr' => [
-                    'maxlength' => 40,
-                    'minlength' => 3,
-                    'placeholder' => 'Titre du goal',
+                    'placeholder' => 'Référence de facture',
+                    'maxlength' => 50,
                 ],
             ])
-            ->add('deadline', DateType::class, [
-                'required' => true,
-                'widget' => 'single_text',
-                'attr' => [
-                    'min' => (new \DateTime('tomorrow'))->format('Y-m-d'),
-                ],
-            ])
-            ->add('targetAmount', NumberType::class, [
+            ->add('amount', NumberType::class, [
                 'required' => true,
                 'scale' => 2,
                 'attr' => [
-                    'placeholder' => 'Montant objectif',
+                    'placeholder' => 'Montant',
                     'step' => '0.01',
                     'min' => '0.01',
                 ],
@@ -44,7 +35,7 @@ class CreateGoalRequestType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => CreateGoalRequest::class,
+            'data_class' => PayBillRequest::class,
         ]);
     }
 }

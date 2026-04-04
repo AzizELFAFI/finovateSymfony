@@ -2,14 +2,17 @@
 
 namespace App\Controller;
 
+use App\Entity\Bill;
 use App\Entity\Goal;
 use App\Entity\Transaction;
 use App\Entity\User;
 use App\Form\CreateGoalRequestType;
 use App\Form\GoalAmountRequestType;
+use App\Form\PayBillRequestType;
 use App\Form\TransferRequestType;
 use App\Model\CreateGoalRequest;
 use App\Model\GoalAmountRequest;
+use App\Model\PayBillRequest;
 use App\Model\TransferRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -371,5 +374,61 @@ final class FrontController extends AbstractController
 
         $this->addFlash('success', 'Goal supprimé et montant restitué au solde.');
         return $this->redirectToRoute('user_goals');
+    }
+
+    #[Route('/user/bills', name: 'user_bills', methods: ['GET', 'POST'])]
+    public function bills(Request $request, EntityManagerInterface $em): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_login');
+        }
+
+        $data = new PayBillRequest();
+        $form = $this->createForm(PayBillRequestType::class, $data);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $amount = (float) str_replace(',', '.', (string) $data->getAmount());
+            $balance = (float) str_replace(',', '.', (string) $user->getSolde());
+
+            if ($balance < $amount) {
+                $form->get('amount')->addError(new \Symfony\Component\Form\FormError('Solde insuffisant.'));
+            } else {
+                $bill = new Bill();
+
+                $maxIdScalar = $em->createQueryBuilder()
+                    ->select('MAX(b.id)')
+                    ->from(Bill::class, 'b')
+                    ->getQuery()
+                    ->getSingleScalarResult();
+                $maxId = $maxIdScalar !== null ? (int) $maxIdScalar : 0;
+                $generatedId = $maxId + 1;
+
+                $bill->setId($generatedId);
+                $bill->setId_user((int) $user->getId());
+                $bill->setReference((string) $data->getReference());
+                $bill->setAmount((float) $amount);
+                $bill->setDate_paiement(new \DateTime());
+
+                $user->setSolde((string) ($balance - $amount));
+
+                $em->persist($bill);
+                $em->flush();
+
+                $this->addFlash('success', 'Facture payée avec succès.');
+                return $this->redirectToRoute('user_bills');
+            }
+        }
+
+        $bills = $em->getRepository(Bill::class)->findBy(
+            ['id_user' => (int) $user->getId()],
+            ['date_paiement' => 'DESC']
+        );
+
+        return $this->render('front/bills.html.twig', [
+            'form' => $form,
+            'bills' => $bills,
+        ]);
     }
 }

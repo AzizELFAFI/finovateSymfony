@@ -27,6 +27,7 @@ class Goal
     #[ORM\Column(type: "date")]
     #[Assert\NotBlank(message: "La deadline est obligatoire.")]
     #[Assert\Type(type: "\\DateTimeInterface", message: "Deadline invalide.")]
+    #[Assert\GreaterThan(value: "today", message: "La deadline doit être dans le futur.")]
     private \DateTimeInterface $deadline;
 
     #[ORM\Column(type: "string", length: 20)]
