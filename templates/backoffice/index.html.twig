@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Finovate - Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/images/favicon_io/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon_io/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/favicon_io/favicon-16x16.png">
+  <link rel="manifest" href="./assets/images/favicon_io/site.webmanifest">
+
+  <base href="{{ asset('backoffice/') }}">
+
+  <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+</head>
+
+<body>
+  <div id="overlay" class="overlay"></div>
+  <!-- TOPBAR -->
+  <nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
+    <button id="toggleBtn" class="d-none d-lg-inline-flex btn btn-light btn-icon btn-sm ">
+      <i class="ti ti-layout-sidebar-left-expand"></i>
+    </button>
+
+    <!-- MOBILE -->
+    <button id="mobileBtn" class="btn btn-light btn-icon btn-sm d-lg-none me-2">
+      <i class="ti ti-layout-sidebar-left-expand"></i>
+    </button>
+    <div>
+      <!-- Navbar nav -->
+      <ul class="list-unstyled d-flex align-items-center mb-0 gap-1">
+      </ul>
+    </div>
+
+  </nav>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar">
+    <div class="logo-area">
+     <a href="{{ path('backoffice_dashboard') }}" class="d-inline-flex align-items-center text-decoration-none">
+        <span class="logo-text ms-2 fw-bold" style="font-size: 1.25rem; letter-spacing: 0.2px;">Finovate</span>
+      </a>
+    </div>
+    <ul class="nav flex-column">
+      <li class="px-4 py-2"><small class="nav-text">Banque Virtuelle</small></li>
+      <li><a class="nav-link active" href="{{ path('backoffice_dashboard') }}"><i class="ti ti-home"></i><span
+            class="nav-text">Vue d'ensemble</span></a></li>
+      <li><a class="nav-link" href="{{ path('backoffice_users') }}"><i class="ti ti-users"></i><span
+            class="nav-text">Gestion Utilisateurs</span></a></li>
+
+      <li class="px-4 pt-4 pb-2"><small class="nav-text">Session</small></li>
+      <li><a class="nav-link" href="{{ path('front_logout') }}"><i class="ti ti-logout"></i><span class="nav-text">Déconnexion</span></a></li>
+    </ul>
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main id="content" class="content py-10">
+    <div class="container-fluid">
+      <div class="row ">
+        <div class="col-12">
+          <div class="mb-6">
+            <h1 class="fs-3 mb-1">Tableau de Bord Finovate</h1>
+            <p>Aperçu global de la banque virtuelle.</p>
+          </div>
+        </div>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-lg-3 col-12">
+          <div class="card p-4 bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-2">
+            <div class="d-flex gap-3 ">
+              <div class="icon-shape icon-md bg-primary text-white rounded-2">
+                <i class="ti ti-users fs-4"></i>
+              </div>
+              <div>
+                <h2 class="mb-3 fs-6">Utilisateurs</h2>
+                <h3 class="fw-bold mb-0">{{ stats.total_users }}</h3>
+                <p class="text-primary mb-0 small">Membres inscrits</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-12">
+          <div class="card p-4 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-2">
+            <div class="d-flex gap-3 ">
+              <div class="icon-shape icon-md bg-success text-white rounded-2">
+                <i class="ti ti-currency-dollar fs-4"></i>
+              </div>
+              <div>
+                <h2 class="mb-3 fs-6">Volume Transactions</h2>
+                <h3 class="fw-bold mb-0">{{ stats.sum_transactions }} TND</h3>
+                <p class="text-success mb-0 small">{{ stats.total_transactions }} transactions</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-12">
+          <div class="card p-4 bg-info bg-opacity-10 border border-info border-opacity-25 rounded-2">
+            <div class="d-flex gap-3 ">
+              <div class="icon-shape icon-md bg-info text-white rounded-2">
+                <i class="ti ti-messages fs-4"></i>
+              </div>
+              <div>
+                <h2 class="mb-3 fs-6">Activité Forum</h2>
+                <h3 class="fw-bold mb-0">{{ stats.total_posts }}</h3>
+                <p class="text-info mb-0 small">{{ stats.total_forums }} forums actifs</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-12">
+          <div class="card p-4 bg-warning bg-opacity-10 border border-warning border-opacity-25 rounded-2">
+            <div class="d-flex gap-3 ">
+              <div class="icon-shape icon-md bg-warning text-white rounded-2">
+                <i class="ti ti-message-dots fs-4"></i>
+              </div>
+              <div>
+                <h2 class="mb-3 fs-6">Commentaires</h2>
+                <h3 class="fw-bold mb-0">{{ stats.total_comments }}</h3>
+                <p class="text-warning mb-0 small">Interactions totales</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-lg-6 col-12">
+          <div class="card">
+            <div class="card-header bg-transparent px-4 py-3">
+              <h3 class="h5 mb-0">Répartition des Rôles</h3>
+            </div>
+            <div class="card-body p-4">
+              <div id="rolesChart"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 col-12">
+          <div class="card">
+            <div class="card-header bg-transparent px-4 py-3">
+              <h3 class="h5 mb-0">Forums Récents</h3>
+            </div>
+            <div class="card-body p-0">
+              <ul class="list-group list-group-flush">
+                {% for forum in stats.top_forums %}
+                <li class="list-group-item d-flex align-items-center gap-3">
+                  <div class="flex-grow-1">
+                    <p class="mb-0 fw-bold">{{ forum.title }}</p>
+                    <small class="text-muted">Créé le {{ forum.getCreated_at()|date('d/m/Y') }}</small>
+                  </div>
+                  <span class="badge bg-light text-dark">Forum</span>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row g-3">
+
+        <!-- CARD 1 — Derniers Utilisateurs -->
+        <div class="col-lg-12">
+          <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center px-4 py-3">
+              <h4 class="mb-0 h5">Derniers Utilisateurs Inscrits</h4>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover table-centered mb-0 text-nowrap">
+                <thead class="table-light">
+                  <tr>
+                    <th>Nom & Prénom</th>
+                    <th>Email</th>
+                    <th>Téléphone</th>
+                    <th>Date d'inscription</th>
+                    <th>Rôle</th>
+                  </tr>
+                </thead>
+                <tbody id="last-users-table">
+                  {% for user in stats.last_users %}
+                  <tr>
+                    <td>{{ user.firstname }} {{ user.lastname }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.phone_number }}</td>
+                    <td>{{ user.created_at|date('d/m/Y H:i') }}</td>
+                    <td>
+                      {% if user.role == 'ADMIN' %}
+                        <span class="badge bg-danger">Admin</span>
+                      {% else %}
+                        <span class="badge bg-primary">Client</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% else %}
+                  <tr>
+                    <td colspan="5" class="text-center">Aucun utilisateur trouvé.</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-12">
+<footer class="text-center py-2 mt-6 text-secondary ">
+        <p class="mb-0">Copyright © 2026 Finovate. Tous droits réservés.</p>
+      </footer>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Bootstrap JS -->
+  <script src="{{ asset('backoffice/assets/js/main.js') }}" type="module"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Données pour le graphique des rôles
+      const rolesData = [
+        {% for roleStat in stats.roles_distribution %}
+          {{ roleStat.count }},
+        {% endfor %}
+      ];
+      const rolesLabels = [
+        {% for roleStat in stats.roles_distribution %}
+          "{{ roleStat.roleName }}",
+        {% endfor %}
+      ];
+
+      if (document.getElementById('rolesChart')) {
+        const options = {
+          series: rolesData,
+          chart: {
+            type: 'donut',
+            height: 300
+          },
+          labels: rolesLabels,
+          colors: ['#0f766e', '#10b981', '#a7f3d0'],
+          responsive: [{
+            breakpoint: 480,
+            options: {
+              chart: {
+                width: 200
+              },
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }]
+        };
+        const chart = new ApexCharts(document.getElementById('rolesChart'), options);
+        chart.render();
+      }
+
+      const token = localStorage.getItem('finovate_token');
+      if (!token) return;
+
+      fetch('/api/me', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.nom) {
+          document.getElementById('admin-full-name').textContent = data.prenom + ' ' + data.nom;
+          document.getElementById('admin-email').textContent = data.email;
+        }
+      })
+      .catch(err => console.error('Erreur chargement profil admin:', err));
+    });
+  </script>
+</body>
+
+</html>

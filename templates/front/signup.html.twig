@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="TemplateMo">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+
+    <title>Finovate - Inscription</title>
+
+    <base href="{{ asset('front/') }}">
+
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="assets/css/fontawesome.css">
+    <link rel="stylesheet" href="assets/css/templatemo-finance-business.css">
+    <link rel="stylesheet" href="assets/css/owl.css">
+
+  </head>
+
+  <body>
+
+    <div id="preloader">
+        <div class="jumper">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
+    <div class="sub-header">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 col-xs-12">
+            <ul class="left-info">
+              <li><a href="#"><i class="fa fa-clock-o"></i>Lun-Ven 09:00-17:00</a></li>
+              <li><a href="#"><i class="fa fa-phone"></i>090-080-0760</a></li>
+            </ul>
+          </div>
+          <div class="col-md-4">
+            <ul class="right-icons">
+              <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+              <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+              <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
+              <li><a href="#"><i class="fa fa-behance"></i></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <header class="">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_home') }}">Accueil</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_about') }}">À propos</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_services') }}">Nos services</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_contact') }}">Contact</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_one_page') }}">Présentation</a>
+              </li>
+              <li class="nav-item" id="nav-login">
+                <a class="nav-link" href="{{ path('front_login') }}">Connexion</a>
+              </li>
+              <li class="nav-item" id="nav-dashboard" style="display: none;">
+                <a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a>
+              </li>
+              <li class="nav-item" id="nav-logout" style="display: none;">
+                <a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <div class="page-heading header-text">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h1>Inscription</h1>
+            <span>Ouvrir un compte Finovate</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callback-form contact-us">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="section-heading">
+              <h2>Créer un <em>compte</em></h2>
+              <span>Complétez le formulaire pour démarrer votre parcours Finovate</span>
+            </div>
+          </div>
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="contact-form p-4" style="border-radius: 0; background-color: #e8f5e9;">
+              <form id="signup" action="" method="post">
+                <div class="row">
+                  <div class="col-lg-6 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="nom" type="text" class="form-control" id="nom" placeholder="Nom" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="prenom" type="text" class="form-control" id="prenom" placeholder="Prénom" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="date_naissance" type="date" class="form-control" id="date_naissance" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="cin" type="text" class="form-control" id="cin" placeholder="CIN" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="telephone" type="text" class="form-control" id="telephone" placeholder="Numéro de téléphone" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="password" type="password" class="form-control" id="password" placeholder="Mot de passe" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="password_confirm" type="password" class="form-control" id="password_confirm" placeholder="Confirmation du mot de passe" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                    <fieldset class="mb-3 mb-md-0">
+                      <button type="submit" class="filled-button">Créer mon compte</button>
+                    </fieldset>
+                    <div>
+                      <a href="{{ path('front_login') }}">J’ai déjà un compte</a>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-3 footer-item">
+            <h4>Liens utiles</h4>
+            <ul class="menu-list">
+              <li><a href="{{ path('front_home') }}">Accueil</a></li>
+              <li><a href="{{ path('front_services') }}">Nos services</a></li>
+              <li><a href="{{ path('front_about') }}">À propos</a></li>
+              <li><a href="{{ path('front_contact') }}">Contact</a></li>
+              <li><a href="{{ path('front_one_page') }}">Présentation</a></li>
+            </ul>
+          </div>
+          <div class="col-md-3 footer-item">
+            <h4>Informations</h4>
+            <ul class="menu-list">
+              <li><a href="#">Tarifs</a></li>
+              <li><a href="#">Sécurité</a></li>
+              <li><a href="#">FAQ</a></li>
+              <li><a href="#">Support</a></li>
+              <li><a href="#">Politique de confidentialité</a></li>
+            </ul>
+          </div>
+          <div class="col-md-3 footer-item last-item">
+            <h4>Nous écrire</h4>
+            <div class="contact-form">
+              <form id="contact footer-contact" action="" method="post">
+                <div class="row">
+                  <div class="col-lg-12 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12">
+                    <fieldset>
+                      <textarea name="message" rows="6" class="form-control" id="message" placeholder="Votre message" required=""></textarea>
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12">
+                    <fieldset>
+                      <button type="submit" id="form-submit" class="filled-button">Envoyer</button>
+                    </fieldset>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div class="sub-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <p>Copyright &copy; 2026 Finovate.
+            
+            - Design: <a rel="nofollow noopener" href="https://templatemo.com" target="_blank">TemplateMo</a><br>
+            Distribué par: <a rel="nofollow noopener" href="https://themewagon.com" target="_blank">ThemeWagon</a>
+          </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <script src="assets/js/custom.js"></script>
+    <script src="assets/js/owl.js"></script>
+    <script src="assets/js/slick.js"></script>
+    <script src="assets/js/accordions.js"></script>
+
+    <script>
+      (function () {
+        var loginItem = document.getElementById('nav-login');
+        var dashboardItem = document.getElementById('nav-dashboard');
+        var logoutItem = document.getElementById('nav-logout');
+
+        if (loginItem && dashboardItem && logoutItem) {
+          var token = null;
+          try {
+            token = localStorage.getItem('finovate_token');
+          } catch (e) {}
+
+          var isAuthed = !!token;
+          loginItem.style.display = isAuthed ? 'none' : '';
+          dashboardItem.style.display = isAuthed ? '' : 'none';
+          logoutItem.style.display = isAuthed ? '' : 'none';
+        }
+
+        var form = document.getElementById('signup');
+        if (!form) return;
+
+        form.addEventListener('submit', async function (e) {
+          e.preventDefault();
+
+          var nom = document.getElementById('nom') ? document.getElementById('nom').value : '';
+          var prenom = document.getElementById('prenom') ? document.getElementById('prenom').value : '';
+          var email = document.getElementById('email') ? document.getElementById('email').value : '';
+          var dateNaissance = document.getElementById('date_naissance') ? document.getElementById('date_naissance').value : '';
+          var cin = document.getElementById('cin') ? document.getElementById('cin').value : '';
+          var telephone = document.getElementById('telephone') ? document.getElementById('telephone').value : '';
+          var password = document.getElementById('password') ? document.getElementById('password').value : '';
+          var passwordConfirm = document.getElementById('password_confirm') ? document.getElementById('password_confirm').value : '';
+
+          if (password !== passwordConfirm) {
+            alert('Les mots de passe ne correspondent pas.');
+            return;
+          }
+
+          try {
+            var res = await fetch('/api/register', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                nom: nom,
+                prenom: prenom,
+                email: email,
+                date_naissance: dateNaissance,
+                cin: cin,
+                telephone: telephone,
+                password: password
+              })
+            });
+
+            var data = await res.json().catch(function () { return {}; });
+            if (!res.ok) {
+              alert(data.message || 'Inscription impossible.');
+              return;
+            }
+
+            window.location.href = '{{ path('front_login') }}';
+          } catch (err) {
+            alert('Erreur réseau. Réessaie.');
+          }
+        });
+      })();
+    </script>
+
+  </body>
+</html>

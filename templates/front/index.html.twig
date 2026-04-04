@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="TemplateMo">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+
+    <title>Finovate - Banque en ligne</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Additional CSS Files -->
+    <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+    <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+    <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+<!--
+
+Finance Business TemplateMo
+
+https://templatemo.com/tm-545-finance-business
+
+-->
+  </head>
+
+  <body>
+
+    <!-- ***** Preloader Start ***** -->
+    <div id="preloader">
+        <div class="jumper">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>  
+    <!-- ***** Preloader End ***** -->
+
+    <!-- Header -->
+    <div class="sub-header">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 col-xs-12">
+            <ul class="left-info">
+              <li><a href="#"><i class="fa fa-clock-o"></i>Lun-Ven 09:00-17:00</a></li>
+              <li><a href="#"><i class="fa fa-phone"></i>090-080-0760</a></li>
+            </ul>
+          </div>
+          <div class="col-md-4">
+            <ul class="right-icons">
+              <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+              <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+              <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
+              <li><a href="#"><i class="fa fa-behance"></i></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <header class="">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item active">
+                <a class="nav-link" href="#top">Accueil
+                  <span class="sr-only">(current)</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_about') }}">À propos</a>
+              </li>  
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_services') }}">Nos services</a>
+              </li>                          
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_contact') }}">Contact</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_one_page') }}">Présentation</a>
+              </li>
+              <li class="nav-item" id="nav-login">
+                <a class="nav-link" href="{{ path('front_login') }}">Connexion</a>
+              </li>
+              <li class="nav-item" id="nav-dashboard" style="display: none;">
+                <a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a>
+              </li>
+              <li class="nav-item" id="nav-logout" style="display: none;">
+                <a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Page Content -->
+    <!-- Banner Starts Here -->
+    <div class="main-banner header-text" id="top">
+        <div class="Modern-Slider">
+          <!-- Item -->
+          <div class="item item-1">
+            <div class="img-fill">
+                <div class="text-content">
+                  <h6>La banque en ligne qui va à l’essentiel</h6>
+                  <h4>Comptes, cartes<br>&amp; épargne en temps réel</h4>
+                  <p>Avec Finovate, ouvrez un compte en quelques minutes, suivez vos dépenses en direct et pilotez votre épargne depuis une seule application.</p>
+                  <a href="{{ path('front_signup') }}" class="filled-button">Ouvrir un compte</a>
+                </div>
+            </div>
+          </div>
+          <!-- // Item -->
+          <!-- Item -->
+          <div class="item item-2">
+            <div class="img-fill">
+                <div class="text-content">
+                  <h6>Sécurité et transparence</h6>
+                  <h4>Paiements<br>&amp; protection</h4>
+                  <p>Authentification forte, alertes instantanées, plafonds personnalisables et contrôle total sur vos paiements, en France et à l’international.</p>
+                  <a href="{{ path('front_services') }}" class="filled-button">Découvrir nos offres</a>
+                </div>
+            </div>
+          </div>
+          <!-- // Item -->
+          <!-- Item -->
+          <div class="item item-3">
+            <div class="img-fill">
+                <div class="text-content">
+                  <h6>Une application intelligente</h6>
+                  <h4>Budget, objectifs<br>&amp; analyses</h4>
+                  <p>Catégorisation automatique, objectifs mensuels et recommandations pour optimiser votre budget sans effort.</p>
+                  <a href="{{ path('front_about') }}" class="filled-button">En savoir plus</a>
+                </div>
+            </div>
+          </div>
+          <!-- // Item -->
+        </div>
+    </div>
+    <!-- Banner Ends Here -->
+
+    <div class="request-form">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <h4>Un conseiller vous rappelle</h4>
+            <span>Posez vos questions: offres, ouverture de compte, carte, épargne, sécurité.</span>
+          </div>
+          <div class="col-md-4">
+            <a href="{{ path('front_contact') }}" class="border-button">Nous contacter</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="services">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="section-heading">
+              <h2>Nos <em>services</em></h2>
+              <span>Une banque 100% en ligne, pour particuliers et indépendants</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="service-item">
+              <img src="{{ asset('front/assets/images/service_01.jpg') }}" alt="">
+              <div class="down-content">
+                <h4>Compte courant</h4>
+                <p>Ouverture rapide, IBAN, virements instantanés et suivi des opérations en temps réel.</p>
+                <a href="{{ path('front_services') }}" class="filled-button">En savoir plus</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="service-item">
+              <img src="{{ asset('front/assets/images/service_02.jpg') }}" alt="">
+              <div class="down-content">
+                <h4>Cartes & paiements</h4>
+                <p>Carte virtuelle, contrôle du sans-contact, blocage/déblocage instantané et paiements sécurisés.</p>
+                <a href="{{ path('front_services') }}" class="filled-button">En savoir plus</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="service-item">
+              <img src="{{ asset('front/assets/images/service_03.jpg') }}" alt="">
+              <div class="down-content">
+                <h4>Épargne & objectifs</h4>
+                <p>Épargne automatique, coffres projets et objectifs mensuels pour financer vos projets.</p>
+                <a href="{{ path('front_services') }}" class="filled-button">En savoir plus</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fun-facts">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="left-content">
+              <span>Finovate, banque digitale</span>
+              <h2>Des outils concrets pour <em>mieux gérer votre argent</em></h2>
+              <p>Suivez votre budget, recevez des alertes intelligentes, exportez vos relevés et gardez le contrôle sur vos paiements.
+              <br><br>Finovate centralise vos opérations et vous aide à prendre de meilleures décisions financières au quotidien.</p>
+              <a href="{{ path('front_about') }}" class="filled-button">Découvrir Finovate</a>
+            </div>
+          </div>
+          <div class="col-md-6 align-self-center">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="count-area-content">
+                  <div class="count-digit">945</div>
+                  <div class="count-title">Demandes traitées</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="count-area-content">
+                  <div class="count-digit">1280</div>
+                  <div class="count-title">Avis clients</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="count-area-content">
+                  <div class="count-digit">578</div>
+                  <div class="count-title">Comptes ouverts</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="count-area-content">
+                  <div class="count-digit">26</div>
+                  <div class="count-title">Partenaires</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="more-info">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="more-info-content">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="left-image">
+                    <img src="{{ asset('front/assets/images/more-info.jpg') }}" alt="">
+                  </div>
+                </div>
+                <div class="col-md-6 align-self-center">
+                  <div class="right-content">
+                    <span>Qui sommes-nous ?</span>
+                    <h2>Une banque en ligne <em>centrée sur l’expérience</em></h2>
+                    <p>Finovate combine la simplicité d’une app moderne avec des standards de sécurité bancaire élevés.
+                    <br><br>Notre mission: vous offrir une gestion transparente, rapide et intuitive de vos finances.</p>
+                    <a href="{{ path('front_about') }}" class="filled-button">Lire la suite</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonials">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="section-heading">
+              <h2>Ce que disent <em>nos clients</em></h2>
+              <span>Des retours d’expérience sur Finovate</span>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="owl-testimonials owl-carousel">
+              
+              <div class="testimonial-item">
+                <div class="inner-content">
+                  <h4>George Walker</h4>
+                  <span>Conseiller financier</span>
+                  <p>"J’ai ouvert mon compte Finovate en quelques minutes. Les notifications en temps réel et le suivi des dépenses m’aident à mieux gérer mon budget."</p>
+                </div>
+              </div>
+              
+              <div class="testimonial-item">
+                <div class="inner-content">
+                  <h4>John Smith</h4>
+                  <span>Spécialiste épargne</span>
+                  <p>"L’épargne automatique est excellente. J’ai créé des objectifs (voyage, urgence) et Finovate met de côté sans que j’y pense."</p>
+                </div>
+              </div>
+              
+              <div class="testimonial-item">
+                <div class="inner-content">
+                  <h4>David Wood</h4>
+                  <span>Responsable conformité</span>
+                  <p>"La transparence est au rendez-vous: historique clair, exports faciles et contrôle complet sur la carte. On se sent vraiment en sécurité."</p>
+                </div>
+                <img src="{{ asset('front/assets/images/client-01.png') }}" alt="">
+              </div>
+              
+              <div class="testimonial-item">
+                <div class="inner-content">
+                  <h4>Andrew Boom</h4>
+                  <span>Responsable expérience client</span>
+                  <p>"Le support m’a aidé rapidement pour une question de paiement. L’application est simple et l’interface est très agréable."</p>
+                </div>
+                <img src="{{ asset('front/assets/images/client-01.png') }}" alt="">
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callback-form">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="section-heading">
+              <h2>Prendre <em>rendez-vous</em></h2>
+              <span>Un expert Finovate vous contacte sous 24h ouvrées</span>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="contact-form">
+              <form id="contact" action="" method="post">
+                <div class="row">
+                  <div class="col-lg-4 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-4 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-4 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="subject" type="text" class="form-control" id="subject" placeholder="Sujet" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12">
+                    <fieldset>
+                      <textarea name="message" rows="6" class="form-control" id="message" placeholder="Votre message" required=""></textarea>
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12">
+                    <fieldset>
+                      <button type="submit" id="form-submit" class="border-button">Envoyer</button>
+                    </fieldset>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+
+
+    <!-- Footer Starts Here -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-3 footer-item">
+            <h4>Liens utiles</h4>
+            <ul class="menu-list">
+              <li><a href="{{ path('front_home') }}">Accueil</a></li>
+              <li><a href="{{ path('front_services') }}">Nos services</a></li>
+              <li><a href="{{ path('front_about') }}">À propos</a></li>
+              <li><a href="{{ path('front_contact') }}">Contact</a></li>
+              <li><a href="{{ path('front_one_page') }}">Présentation</a></li>
+            </ul>
+          </div>
+          
+          <div class="col-md-3 footer-item last-item">
+            <h4>Nous écrire</h4>
+            <div class="contact-form">
+              <form id="contact footer-contact" action="" method="post">
+                <div class="row">
+                  <div class="col-lg-12 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12">
+                    <fieldset>
+                      <textarea name="message" rows="6" class="form-control" id="message" placeholder="Votre message" required=""></textarea>
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12">
+                    <fieldset>
+                      <button type="submit" id="form-submit" class="filled-button">Envoyer</button>
+                    </fieldset>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    
+    <div class="sub-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <p>Copyright &copy; 2026 Finovate.
+            
+            
+          </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+    <!-- Additional Scripts -->
+    <script src="{{ asset('front/assets/js/custom.js') }}"></script>
+    <script src="{{ asset('front/assets/js/owl.js') }}"></script>
+    <script src="{{ asset('front/assets/js/slick.js') }}"></script>
+    <script src="{{ asset('front/assets/js/accordions.js') }}"></script>
+
+    <script>
+      (function () {
+        var loginItem = document.getElementById('nav-login');
+        var dashboardItem = document.getElementById('nav-dashboard');
+        var logoutItem = document.getElementById('nav-logout');
+
+        if (!loginItem || !dashboardItem || !logoutItem) return;
+
+        var token = null;
+        try {
+          token = localStorage.getItem('finovate_token');
+        } catch (e) {}
+
+        var isAuthed = !!token;
+        loginItem.style.display = isAuthed ? 'none' : '';
+        dashboardItem.style.display = isAuthed ? '' : 'none';
+        logoutItem.style.display = isAuthed ? '' : 'none';
+      })();
+    </script>
+
+    <script language = "text/Javascript"> 
+      cleared[0] = cleared[1] = cleared[2] = 0; //set a cleared flag for each field
+      function clearField(t){                   //declaring the array outside of the
+      if(! cleared[t.id]){                      // function makes it static and global
+          cleared[t.id] = 1;  // you could use true and false, but that's more typing
+          t.value='';         // with more chance of typos
+          t.style.color='#fff';
+          }
+      }
+    </script>
+
+  </body>
+</html>

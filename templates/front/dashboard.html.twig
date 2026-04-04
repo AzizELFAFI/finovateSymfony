@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate - Mon espace</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  <style>
+    .welcome-title {
+      font-weight: 900;
+      font-size: 1.65rem;
+      letter-spacing: 0.2px;
+      margin: 0;
+      color: #0f766e;
+    }
+
+    .welcome-sub {
+      margin: 6px 0 0 0;
+      color: rgba(0, 0, 0, 0.55);
+      font-weight: 600;
+    }
+
+    .dashboard-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 26px;
+    }
+
+    .dashboard-title {
+      font-weight: 800;
+      margin-bottom: 18px;
+      letter-spacing: 0.2px;
+    }
+
+    .label {
+      color: #6c757d;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .metric {
+      border-radius: 14px;
+      padding: 14px 14px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      background: linear-gradient(180deg, rgba(236, 253, 245, 1) 0%, rgba(255, 255, 255, 1) 100%);
+      height: 100%;
+    }
+
+    .metric .k {
+      color: #0f766e;
+      font-weight: 800;
+      font-size: 1.35rem;
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .metric .t {
+      color: #6c757d;
+      margin: 2px 0 0 0;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title {
+      font-weight: 900;
+      margin: 0 0 10px 0;
+      letter-spacing: 0.2px;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .content-panel {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.0);
+    }
+
+    .bank-card {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: linear-gradient(135deg, #0b1220 0%, #0f766e 45%, #10b981 100%);
+      box-shadow: 0 18px 45px rgba(16, 185, 129, 0.18);
+      padding: 18px;
+      color: rgba(255, 255, 255, 0.92);
+      min-height: 150px;
+    }
+
+    .bank-card::before {
+      content: '';
+      position: absolute;
+      top: -90px;
+      right: -110px;
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0));
+      transform: rotate(15deg);
+    }
+
+    .bank-card::after {
+      content: '';
+      position: absolute;
+      bottom: -120px;
+      left: -140px;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
+      transform: rotate(-10deg);
+    }
+
+    .bank-card .brand {
+      position: relative;
+      z-index: 1;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      opacity: 0.95;
+      font-size: 0.9rem;
+    }
+
+    .bank-card .chip {
+      position: relative;
+      z-index: 1;
+      width: 52px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.15) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      margin-top: 10px;
+    }
+
+    .bank-card .number {
+      position: relative;
+      z-index: 1;
+      margin-top: 16px;
+      font-weight: 900;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .bank-card .holder {
+      position: relative;
+      z-index: 1;
+      margin-top: 12px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .bank-card .holder .label {
+      color: rgba(255, 255, 255, 0.75);
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .bank-card .holder .value {
+      margin: 0;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #f2f2f2 25%, #e6e6e6 37%, #f2f2f2 63%);
+      background-size: 400% 100%;
+      animation: shimmer 1.4s ease infinite;
+      border-radius: 4px;
+      height: 14px;
+      margin: 8px 0;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 100% 0
+      }
+
+      100% {
+        background-position: -100% 0
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sub-header">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8 col-xs-12">
+          <ul class="left-info">
+            <li><a href="#"><i class="fa fa-clock-o"></i>Lun-Ven 09:00-17:00</a></li>
+            <li><a href="#"><i class="fa fa-phone"></i>+216 00 000 000</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <ul class="right-icons">
+            <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+            <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+            <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
+            <li><a href="#"><i class="fa fa-behance"></i></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+          aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_services') }}">Nos services</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_contact') }}">Contact</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_one_page') }}">One-page</a></li>
+
+            <li class="nav-item" id="nav-login">
+              <a class="nav-link" href="{{ path('front_login') }}">Connexion</a>
+            </li>
+            <li class="nav-item active" id="nav-dashboard" style="display:none">
+              <a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a>
+            </li>
+            <li class="nav-item" id="nav-logout" style="display:none">
+              <a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Mon espace</h1>
+          <span>Informations du compte connecté</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="request-form">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8">
+          <h4 id="welcome-title" class="welcome-title">Bienvenue</h4>
+          <p id="welcome-sub" class="welcome-sub">Chargement de votre profil...</p>
+        </div>
+        <div class="col-md-4">
+          <a href="{{ path('front_logout') }}" class="border-button">Déconnexion</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="more-info">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-12">
+          <div class="row">
+            <div class="col-lg-3 mb-4">
+              <div class="sidebar" id="sidebar">
+                <div class="title">Mon espace</div>
+                <a href="#" id="nav-dashboard-side" class="active">Dashboard</a>
+                <a href="#" id="nav-edit-profile">Modifier le profil</a>
+                <a href="{{ path('front_logout') }}">Déconnexion</a>
+              </div>
+            </div>
+
+            <div class="col-lg-9">
+              <div class="content-panel">
+                <div class="dashboard-card" id="panel-dashboard">
+                  <h3 class="dashboard-title">Dashboard</h3>
+
+                  <div id="loading">
+                    <div class="skeleton" style="width: 40%"></div>
+                    <div class="skeleton" style="width: 60%"></div>
+                    <div class="skeleton" style="width: 35%"></div>
+                    <div class="skeleton" style="width: 55%"></div>
+                  </div>
+
+                  <div id="error" class="alert alert-danger" style="display:none"></div>
+
+                  <div id="profile" style="display:none">
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <div class="label">Nom</div>
+                        <div class="value" id="p-nom"></div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <div class="label">Prénom</div>
+                        <div class="value" id="p-prenom"></div>
+                      </div>
+                      <div class="col-md-4 mb-3">
+                        <div class="metric">
+                          <p class="k" id="p-solde"></p>
+                          <p class="t">Solde</p>
+                        </div>
+                      </div>
+                      <div class="col-md-4 mb-3">
+                        <div class="metric">
+                          <p class="k" id="p-points"></p>
+                          <p class="t">Points</p>
+                        </div>
+                      </div>
+                      <div class="col-md-12 mb-3">
+                        <div class="bank-card">
+                          <div class="d-flex justify-content-between align-items-start">
+                            <div class="brand">FINOVATE</div>
+                            <div class="brand">CARD</div>
+                          </div>
+                          <div class="chip"></div>
+                          <div class="number" id="p-numero-carte"></div>
+                          <div class="holder">
+                            <div>
+                              <p class="label">TITULAIRE</p>
+                              <p class="value" id="card-holder"></p>
+                            </div>
+                            <div>
+                              <p class="label">STATUT</p>
+                              <p class="value">ACTIVE</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="dashboard-card" id="panel-edit-profile" style="display:none">
+                  <h3 class="dashboard-title">Modifier le profil</h3>
+
+                  <div id="edit-success" class="alert alert-success" style="display:none"></div>
+                  <div id="edit-error" class="alert alert-danger" style="display:none"></div>
+
+                  <form id="edit-profile-form">
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <label for="edit-prenom">Prénom</label>
+                        <input type="text" class="form-control" id="edit-prenom" placeholder="Votre prénom">
+                      </div>
+                      <div class="form-group col-md-6">
+                        <label for="edit-nom">Nom</label>
+                        <input type="text" class="form-control" id="edit-nom" placeholder="Votre nom">
+                      </div>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <label for="edit-telephone">Téléphone</label>
+                        <input type="text" class="form-control" id="edit-telephone" placeholder="Votre numéro">
+                      </div>
+                      <div class="form-group col-md-6">
+                        <label for="edit-email">Email</label>
+                        <input type="text" class="form-control" id="edit-email" placeholder="Votre email">
+                      </div>
+                    </div>
+
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <label for="edit-date-naissance">Date de naissance</label>
+                        <input type="date" class="form-control" id="edit-date-naissance">
+                      </div>
+                      <div class="form-group col-md-6">
+                        <label for="edit-cin">CIN</label>
+                        <input type="text" class="form-control" id="edit-cin" placeholder="Votre CIN">
+                      </div>
+                    </div>
+
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <label for="edit-password">Mot de passe</label>
+                        <input type="password" class="form-control" id="edit-password" placeholder="Nouveau mot de passe (optionnel)">
+                      </div>
+                      <div class="form-group col-md-6">
+                        <label for="edit-password-confirm">Confirmation</label>
+                        <input type="password" class="form-control" id="edit-password-confirm" placeholder="Confirmer (optionnel)">
+                      </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Enregistrer</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ asset('front/assets/js/custom.js') }}"></script>
+  <script src="{{ asset('front/assets/js/owl.js') }}"></script>
+  <script src="{{ asset('front/assets/js/slick.js') }}"></script>
+  <script src="{{ asset('front/assets/js/accordions.js') }}"></script>
+
+  <script>
+    (function () {
+      var loginItem = document.getElementById('nav-login');
+      var dashboardItem = document.getElementById('nav-dashboard');
+      var logoutItem = document.getElementById('nav-logout');
+
+      function setAuthedUI(isAuthed) {
+        if (!loginItem || !dashboardItem || !logoutItem) return;
+        loginItem.style.display = isAuthed ? 'none' : '';
+        dashboardItem.style.display = isAuthed ? '' : 'none';
+        logoutItem.style.display = isAuthed ? '' : 'none';
+      }
+
+      var token = null;
+      try {
+        token = localStorage.getItem('finovate_token');
+      } catch (e) {}
+
+      if (!token) {
+        setAuthedUI(false);
+        window.location.href = '{{ path('front_login') }}';
+        return;
+      }
+
+      setAuthedUI(true);
+
+      var elLoading = document.getElementById('loading');
+      var elError = document.getElementById('error');
+      var elProfile = document.getElementById('profile');
+
+      function showError(message) {
+        if (elLoading) elLoading.style.display = 'none';
+        if (elProfile) elProfile.style.display = 'none';
+        if (elError) {
+          elError.textContent = message;
+          elError.style.display = '';
+        }
+      }
+
+      function showProfile(data) {
+        if (elLoading) elLoading.style.display = 'none';
+        if (elError) elError.style.display = 'none';
+        if (elProfile) elProfile.style.display = '';
+
+        var welcomeTitleEl = document.getElementById('welcome-title');
+        var welcomeSubEl = document.getElementById('welcome-sub');
+
+        var nomEl = document.getElementById('p-nom');
+        var prenomEl = document.getElementById('p-prenom');
+        var soldeEl = document.getElementById('p-solde');
+        var pointsEl = document.getElementById('p-points');
+        var numeroCarteEl = document.getElementById('p-numero-carte');
+        var cardHolderEl = document.getElementById('card-holder');
+
+        var editNomEl = document.getElementById('edit-nom');
+        var editPrenomEl = document.getElementById('edit-prenom');
+        var editTelephoneEl = document.getElementById('edit-telephone');
+        var editEmailEl = document.getElementById('edit-email');
+        var editBirthdateEl = document.getElementById('edit-date-naissance');
+        var editCinEl = document.getElementById('edit-cin');
+
+        if (nomEl) nomEl.textContent = data.nom || '';
+        if (prenomEl) prenomEl.textContent = data.prenom || '';
+        if (soldeEl) soldeEl.textContent = data.solde != null ? String(data.solde) : '';
+        if (pointsEl) pointsEl.textContent = data.points != null ? String(data.points) : '';
+        if (numeroCarteEl) numeroCarteEl.textContent = data.numero_carte || '';
+
+        var fullName = ((data.prenom || '') + ' ' + (data.nom || '')).trim();
+        if (welcomeTitleEl) welcomeTitleEl.textContent = fullName ? ('Bienvenue, ' + fullName) : 'Bienvenue';
+        if (welcomeSubEl) welcomeSubEl.textContent = 'Voici un résumé de votre compte.';
+        if (cardHolderEl) cardHolderEl.textContent = fullName || '';
+
+        if (editNomEl) editNomEl.value = data.nom || '';
+        if (editPrenomEl) editPrenomEl.value = data.prenom || '';
+        if (editTelephoneEl) editTelephoneEl.value = data.telephone != null ? String(data.telephone) : '';
+        if (editEmailEl) editEmailEl.value = data.email || '';
+        if (editBirthdateEl) editBirthdateEl.value = data.date_naissance || '';
+        if (editCinEl) editCinEl.value = data.cin || '';
+
+        var navAdminSide = document.getElementById('nav-admin-side');
+        if (navAdminSide && data.roles && data.roles.includes('ROLE_ADMIN')) {
+          navAdminSide.style.display = 'block';
+        }
+      }
+
+      function setActiveSide(which) {
+        var aDashboard = document.getElementById('nav-dashboard-side');
+        var aEdit = document.getElementById('nav-edit-profile');
+        var panelDashboard = document.getElementById('panel-dashboard');
+        var panelEdit = document.getElementById('panel-edit-profile');
+
+        if (!aDashboard || !aEdit || !panelDashboard || !panelEdit) return;
+
+        if (which === 'edit') {
+          aDashboard.classList.remove('active');
+          aEdit.classList.add('active');
+          panelDashboard.style.display = 'none';
+          panelEdit.style.display = '';
+        } else {
+          aEdit.classList.remove('active');
+          aDashboard.classList.add('active');
+          panelEdit.style.display = 'none';
+          panelDashboard.style.display = '';
+        }
+      }
+
+      var navDashboardSide = document.getElementById('nav-dashboard-side');
+      var navEditProfile = document.getElementById('nav-edit-profile');
+      if (navDashboardSide) {
+        navDashboardSide.addEventListener('click', function (e) {
+          e.preventDefault();
+          setActiveSide('dashboard');
+        });
+      }
+      if (navEditProfile) {
+        navEditProfile.addEventListener('click', function (e) {
+          e.preventDefault();
+          setActiveSide('edit');
+        });
+      }
+
+      var editForm = document.getElementById('edit-profile-form');
+      if (editForm) {
+        editForm.addEventListener('submit', function (e) {
+          e.preventDefault();
+
+          var successEl = document.getElementById('edit-success');
+          var errorEl = document.getElementById('edit-error');
+          if (successEl) successEl.style.display = 'none';
+          if (errorEl) errorEl.style.display = 'none';
+
+          var nom = document.getElementById('edit-nom') ? document.getElementById('edit-nom').value : '';
+          var prenom = document.getElementById('edit-prenom') ? document.getElementById('edit-prenom').value : '';
+          var telephone = document.getElementById('edit-telephone') ? document.getElementById('edit-telephone').value : '';
+          var email = document.getElementById('edit-email') ? document.getElementById('edit-email').value : '';
+          var dateNaissance = document.getElementById('edit-date-naissance') ? document.getElementById('edit-date-naissance').value : '';
+          var cin = document.getElementById('edit-cin') ? document.getElementById('edit-cin').value : '';
+          var password = document.getElementById('edit-password') ? document.getElementById('edit-password').value : '';
+          var passwordConfirm = document.getElementById('edit-password-confirm') ? document.getElementById('edit-password-confirm').value : '';
+
+          if (password && !passwordConfirm) {
+            if (errorEl) {
+              errorEl.textContent = 'Confirmation du mot de passe obligatoire.';
+              errorEl.style.display = '';
+            }
+            return;
+          }
+
+          if ((password || passwordConfirm) && password !== passwordConfirm) {
+            if (errorEl) {
+              errorEl.textContent = 'Les mots de passe ne correspondent pas.';
+              errorEl.style.display = '';
+            }
+            return;
+          }
+
+          fetch('/api/me', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ nom: nom, prenom: prenom, email: email, date_naissance: dateNaissance, cin: cin, telephone: telephone, password: password, password_confirm: passwordConfirm })
+          })
+            .then(function (res) {
+              return res.json().then(function (data) {
+                return { ok: res.ok, data: data };
+              }).catch(function () {
+                return { ok: res.ok, data: {} };
+              });
+            })
+            .then(function (result) {
+              if (!result.ok) {
+                if (errorEl) {
+                  errorEl.textContent = (result.data && result.data.message) ? result.data.message : 'Mise à jour impossible.';
+                  errorEl.style.display = '';
+                }
+                return;
+              }
+
+              if (successEl) {
+                successEl.textContent = (result.data && result.data.message) ? result.data.message : 'Profil mis à jour.';
+                successEl.style.display = '';
+              }
+
+              fetch('/api/me', {
+                method: 'GET',
+                headers: {
+                  'Authorization': 'Bearer ' + token
+                }
+              })
+                .then(function (r) { return r.json(); })
+                .then(function (d) { showProfile(d || {}); });
+            })
+            .catch(function () {
+              if (errorEl) {
+                errorEl.textContent = 'Erreur réseau.';
+                errorEl.style.display = '';
+              }
+            });
+        });
+      }
+
+      fetch('/api/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      })
+        .then(function (res) {
+          return res.json().then(function (data) {
+            return { ok: res.ok, status: res.status, data: data };
+          }).catch(function () {
+            return { ok: res.ok, status: res.status, data: {} };
+          });
+        })
+        .then(function (result) {
+          if (!result.ok) {
+            try {
+              localStorage.removeItem('finovate_token');
+            } catch (e) {}
+            showError(result.data && result.data.message ? result.data.message : 'Session expirée. Veuillez vous reconnecter.');
+            setTimeout(function () {
+              window.location.href = '{{ path('front_login') }}';
+            }, 900);
+            return;
+          }
+
+          showProfile(result.data || {});
+        })
+        .catch(function () {
+          showError('Erreur réseau.');
+        });
+    })();
+  </script>
+</body>
+
+</html>
