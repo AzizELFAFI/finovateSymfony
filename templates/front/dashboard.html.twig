@@ -229,26 +229,7 @@
 </head>
 
 <body>
-  <div class="sub-header">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-8 col-xs-12">
-          <ul class="left-info">
-            <li><a href="#"><i class="fa fa-clock-o"></i>Lun-Ven 09:00-17:00</a></li>
-            <li><a href="#"><i class="fa fa-phone"></i>+216 00 000 000</a></li>
-          </ul>
-        </div>
-        <div class="col-md-4">
-          <ul class="right-icons">
-            <li><a href="#"><i class="fa fa-facebook"></i></a></li>
-            <li><a href="#"><i class="fa fa-twitter"></i></a></li>
-            <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
-            <li><a href="#"><i class="fa fa-behance"></i></a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+  
 
   <header>
     <nav class="navbar navbar-expand-lg">
@@ -576,6 +557,13 @@
           setActiveSide('edit');
         });
       }
+
+      try {
+        var params = new URLSearchParams(window.location.search || '');
+        if (params.get('section') === 'edit') {
+          setActiveSide('edit');
+        }
+      } catch (e) {}
 
       var editForm = document.getElementById('edit-profile-form');
       if (editForm) {
