@@ -2,8 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Transaction;
+use App\Entity\User;
+use App\Form\TransferRequestType;
+use App\Model\TransferRequest;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -107,5 +113,96 @@ final class FrontController extends AbstractController
     public function userDashboard(): Response
     {
         return $this->render('front/dashboard.html.twig');
+    }
+
+    #[Route('/user/transactions', name: 'user_transactions', methods: ['GET', 'POST'])]
+    public function transactions(Request $request, EntityManagerInterface $em): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_login');
+        }
+
+        $data = new TransferRequest();
+        $form = $this->createForm(TransferRequestType::class, $data);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $beneficiaryCin = (string) $data->getCin();
+            $amountStr = (string) $data->getMontant();
+            $description = (string) $data->getDescription();
+
+            $beneficiary = $em->getRepository(User::class)->findOneBy(['cin' => $beneficiaryCin]);
+            if (!$beneficiary instanceof User) {
+                $form->get('cin')->addError(new \Symfony\Component\Form\FormError("Bénéficiaire introuvable."));
+            } elseif ($beneficiary->getId() === $user->getId()) {
+                $form->get('cin')->addError(new \Symfony\Component\Form\FormError("Vous ne pouvez pas envoyer de l'argent à vous-même."));
+            } else {
+                $senderBalance = (float) str_replace(',', '.', (string) $user->getSolde());
+                $amount = (float) str_replace(',', '.', $amountStr);
+
+                if ($amount <= 0) {
+                    $form->get('montant')->addError(new \Symfony\Component\Form\FormError("Montant invalide."));
+                } elseif ($senderBalance < $amount) {
+                    $form->get('montant')->addError(new \Symfony\Component\Form\FormError("Solde insuffisant."));
+                } else {
+                    $receiverBalance = (float) str_replace(',', '.', (string) $beneficiary->getSolde());
+                    $user->setSolde((string) ($senderBalance - $amount));
+                    $beneficiary->setSolde((string) ($receiverBalance + $amount));
+
+                    $tx = new Transaction();
+                    $generatedId = (int) (microtime(true) * 1000);
+                    $existing = $em->getRepository(Transaction::class)->find($generatedId);
+                    if ($existing instanceof Transaction) {
+                        $maxId = (int) $em->createQueryBuilder()
+                            ->select('MAX(t.id)')
+                            ->from(Transaction::class, 't')
+                            ->getQuery()
+                            ->getSingleScalarResult();
+                        $generatedId = $maxId + 1;
+                    }
+                    $tx->setId($generatedId);
+                    $tx->setSender_id((int) $user->getId());
+                    $tx->setReceiver_id((int) $beneficiary->getId());
+                    $tx->setAmount((string) $amount);
+                    $tx->setType('TRANSFER');
+                    $tx->setDescription($description);
+                    $tx->setDate(new \DateTime());
+
+                    $em->persist($tx);
+                    $em->flush();
+
+                    $this->addFlash('success', 'Virement effectué avec succès.');
+                    return $this->redirectToRoute('user_transactions');
+                }
+            }
+        }
+
+        return $this->render('front/transactions.html.twig', [
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/user/beneficiary-card', name: 'user_beneficiary_card', methods: ['GET'])]
+    public function beneficiaryCard(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $cin = trim((string) $request->query->get('cin', ''));
+        if ($cin === '' || !preg_match('/^\d{8}$/', $cin)) {
+            return $this->json(['message' => 'CIN invalide.'], 422);
+        }
+
+        $beneficiary = $em->getRepository(User::class)->findOneBy(['cin' => $cin]);
+        if (!$beneficiary instanceof User) {
+            return $this->json(['message' => 'Bénéficiaire introuvable.'], 404);
+        }
+
+        return $this->json([
+            'numero_carte' => $beneficiary->getNumero_carte(),
+        ]);
     }
 }

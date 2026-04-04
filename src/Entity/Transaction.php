@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
 #[ORM\Entity]
@@ -14,21 +15,33 @@ class Transaction
     private int $id;
 
     #[ORM\Column(type: "integer")]
+    #[Assert\NotBlank(message: "L'expéditeur est obligatoire.")]
     private int $sender_id;
 
     #[ORM\Column(type: "string", length: 255)]
+    #[Assert\NotBlank(message: "Le montant est obligatoire.")]
+    #[Assert\Type(type: "numeric", message: "Le montant doit être un nombre.")]
+    #[Assert\Positive(message: "Le montant doit être supérieur à 0.")]
     private string $amount;
 
     #[ORM\Column(type: "string", length: 20)]
+    #[Assert\NotBlank(message: "Le type est obligatoire.")]
+    #[Assert\Length(max: 20)]
     private string $type;
 
     #[ORM\Column(type: "string", length: 100)]
+    #[Assert\NotBlank(message: "La description est obligatoire.")]
+    #[Assert\Type(type: "string", message: "La description doit être une chaîne.")]
+    #[Assert\Length(max: 100)]
     private string $description;
 
     #[ORM\Column(type: "datetime")]
+    #[Assert\NotBlank(message: "La date est obligatoire.")]
+    #[Assert\Type(type: "\\DateTimeInterface", message: "Date invalide.")]
     private \DateTimeInterface $date;
 
     #[ORM\Column(type: "integer")]
+    #[Assert\NotBlank(message: "Le bénéficiaire est obligatoire.")]
     private int $receiver_id;
 
     public function getId()
