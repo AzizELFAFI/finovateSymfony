@@ -119,6 +119,9 @@
                       <td><code>{{ user.numero_carte }}</code></td>
                       <td>{{ user.getCreated_at()|date('d/m/Y H:i') }}</td>
                       <td>
+                        <a class="btn btn-sm btn-primary me-1" href="{{ path('backoffice_user_activity', {'id': user.id}) }}" title="Voir activités">
+                          <i class="ti ti-eye"></i>
+                        </a>
                         <form id="delete-user-form-{{ user.id }}" method="post" action="{{ path('backoffice_user_delete', {'id': user.id}) }}" class="d-inline">
                           <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
                           <button class="btn btn-sm btn-danger js-delete-user" type="button" data-user-email="{{ user.email }}" data-user-name="{{ user.firstname }} {{ user.lastname }}" data-form-id="delete-user-form-{{ user.id }}">

@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Entity\Transaction;
+use App\Entity\Goal;
+use App\Entity\Bill;
 use App\Entity\Forums;
 use App\Entity\Posts;
 use App\Entity\Comments;
@@ -198,5 +200,67 @@ final class BackController extends AbstractController
         $em->flush();
 
         return $this->redirectToRoute('backoffice_users');
+    }
+
+    #[Route('/users/{id}/activity', name: 'backoffice_user_activity', methods: ['GET'])]
+    public function userActivity(string $id, EntityManagerInterface $em): Response
+    {
+        $user = $em->getRepository(User::class)->find($id);
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('backoffice_users');
+        }
+
+        $numericId = (int) $user->getId();
+
+        $transactions = $em->getRepository(Transaction::class)
+            ->createQueryBuilder('t')
+            ->where('t.sender_id = :uid OR t.receiver_id = :uid')
+            ->setParameter('uid', $numericId)
+            ->orderBy('t.date', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $relatedUserIds = [];
+        foreach ($transactions as $transaction) {
+            if ($transaction instanceof Transaction) {
+                $relatedUserIds[] = (string) $transaction->getSender_id();
+                $relatedUserIds[] = (string) $transaction->getReceiver_id();
+            }
+        }
+        $relatedUserIds = array_values(array_unique($relatedUserIds));
+
+        $usersById = [];
+        if ($relatedUserIds !== []) {
+            $relatedUsers = $em->getRepository(User::class)
+                ->createQueryBuilder('u')
+                ->where('u.id IN (:ids)')
+                ->setParameter('ids', $relatedUserIds)
+                ->getQuery()
+                ->getResult();
+
+            foreach ($relatedUsers as $relatedUser) {
+                if ($relatedUser instanceof User) {
+                    $usersById[(string) $relatedUser->getId()] = $relatedUser;
+                }
+            }
+        }
+
+        $goals = $em->getRepository(Goal::class)->findBy(
+            ['id_user' => $numericId],
+            ['created_at' => 'DESC']
+        );
+
+        $bills = $em->getRepository(Bill::class)->findBy(
+            ['id_user' => $numericId],
+            ['date_paiement' => 'DESC']
+        );
+
+        return $this->render('backoffice/user-activity.html.twig', [
+            'user' => $user,
+            'transactions' => $transactions,
+            'usersById' => $usersById,
+            'goals' => $goals,
+            'bills' => $bills,
+        ]);
     }
 }

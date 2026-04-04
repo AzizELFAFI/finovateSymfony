@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate - Transactions</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  <style>
+    .page-shell {
+      padding: 36px 0;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 26px;
+    }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title {
+      font-weight: 900;
+      margin: 0 0 10px 0;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .form-error-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sub-header">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8 col-xs-12">
+          <ul class="left-info">
+            <li><a href="#"><i class="fa fa-clock-o"></i>Lun-Ven 09:00-17:00</a></li>
+            <li><a href="#"><i class="fa fa-phone"></i>+216 00 000 000</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <ul class="right-icons">
+            <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+            <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+            <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
+            <li><a href="#"><i class="fa fa-behance"></i></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+          aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_services') }}">Nos services</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_contact') }}">Contact</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_one_page') }}">One-page</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Transactions</h1>
+          <span>Envoyer du solde vers un autre compte</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-shell">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 mb-4">
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}">Dashboard</a>
+            <a href="{{ path('user_transactions') }}" class="active">Transactions</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
+        </div>
+
+        <div class="col-lg-9">
+          <div class="card-shell">
+            {% for label, messages in app.flashes %}
+              {% for message in messages %}
+                <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+              {% endfor %}
+            {% endfor %}
+
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+              {% set globalErrors = form_errors(form) %}
+              {% if globalErrors|trim is not empty %}
+                <div class="alert alert-danger" role="alert">{{ globalErrors }}</div>
+              {% endif %}
+
+              <div class="form-group">
+                <label for="{{ form.cin.vars.id }}">CIN du bénéficiaire</label>
+                {{ form_widget(form.cin, {'attr': {'class': 'form-control', 'autocomplete': 'off'}}) }}
+                <div class="text-danger small">{{ form_errors(form.cin) }}</div>
+              </div>
+
+              <div class="form-group">
+                <label for="{{ form.numeroCarte.vars.id }}">Numéro de carte</label>
+                {{ form_widget(form.numeroCarte, {'attr': {'class': 'form-control', 'readonly': 'readonly'}}) }}
+                <small class="text-muted">Se remplit automatiquement à partir du CIN.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="{{ form.montant.vars.id }}">Montant</label>
+                {{ form_widget(form.montant, {'attr': {'class': 'form-control'}}) }}
+                <div class="text-danger small">{{ form_errors(form.montant) }}</div>
+              </div>
+
+              <div class="form-group">
+                <label for="{{ form.description.vars.id }}">Description</label>
+                {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+                <div class="text-danger small">{{ form_errors(form.description) }}</div>
+              </div>
+
+              <button type="submit" class="btn btn-success">Envoyer</button>
+
+            {{ form_end(form) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+  <script>
+    (function () {
+      var cinInput = document.getElementById('{{ form.cin.vars.id }}');
+      var cardInput = document.getElementById('{{ form.numeroCarte.vars.id }}');
+      if (!cinInput || !cardInput) return;
+
+      var timer = null;
+      function fetchCard() {
+        var cin = (cinInput.value || '').trim();
+        if (!/^\d{8}$/.test(cin)) {
+          cardInput.value = '';
+          return;
+        }
+
+        fetch('{{ path('user_beneficiary_card') }}?cin=' + encodeURIComponent(cin), {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+          .then(function (res) {
+            return res.json().then(function (data) {
+              return { ok: res.ok, data: data };
+            }).catch(function () {
+              return { ok: res.ok, data: {} };
+            });
+          })
+          .then(function (result) {
+            if (!result.ok) {
+              cardInput.value = '';
+              return;
+            }
+            cardInput.value = result.data && result.data.numero_carte ? String(result.data.numero_carte) : '';
+          })
+          .catch(function () {
+            cardInput.value = '';
+          });
+      }
+
+      cinInput.addEventListener('input', function () {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(fetchCard, 250);
+      });
+    })();
+  </script>
+</body>
+
+</html>
