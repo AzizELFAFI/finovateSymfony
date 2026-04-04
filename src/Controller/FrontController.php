@@ -2,9 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Goal;
 use App\Entity\Transaction;
 use App\Entity\User;
+use App\Form\CreateGoalRequestType;
+use App\Form\GoalAmountRequestType;
 use App\Form\TransferRequestType;
+use App\Model\CreateGoalRequest;
+use App\Model\GoalAmountRequest;
 use App\Model\TransferRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -204,5 +209,167 @@ final class FrontController extends AbstractController
         return $this->json([
             'numero_carte' => $beneficiary->getNumero_carte(),
         ]);
+    }
+
+    #[Route('/user/goals', name: 'user_goals', methods: ['GET', 'POST'])]
+    public function goals(Request $request, EntityManagerInterface $em): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_login');
+        }
+
+        $createData = new CreateGoalRequest();
+        $createForm = $this->createForm(CreateGoalRequestType::class, $createData);
+        $createForm->handleRequest($request);
+
+        if ($createForm->isSubmitted() && $createForm->isValid()) {
+            $targetAmount = (float) str_replace(',', '.', (string) $createData->getTargetAmount());
+            $goal = new Goal();
+
+            // Trouver le premier ID libre (trou dans la séquence) à partir de 1
+            $allIds = $em->createQueryBuilder()
+                ->select('g.id')
+                ->from(Goal::class, 'g')
+                ->orderBy('g.id', 'ASC')
+                ->getQuery()
+                ->getSingleColumnResult();
+            
+            $generatedId = 1;
+            foreach ($allIds as $id) {
+                if ($id == $generatedId) {
+                    $generatedId++;
+                } elseif ($id > $generatedId) {
+                    break;
+                }
+            }
+
+            // Sécurité ultime contre la limite INT
+            if ($generatedId > 2147483647) {
+                $this->addFlash('danger', "Plus d'emplacements d'ID disponibles.");
+                return $this->redirectToRoute('user_goals');
+            }
+
+            $goal->setId($generatedId);
+            $goal->setId_user((int) $user->getId());
+            $goal->setTitle((string) $createData->getTitle());
+            $goal->setDeadline($createData->getDeadline());
+            $goal->setCreated_at(new \DateTime());
+            $goal->setStatus('IN_PROGRESS');
+            $goal->setTarget_amount((string) $targetAmount);
+            $goal->setCurrent_amount('0');
+
+            $em->persist($goal);
+            $em->flush();
+
+            $this->addFlash('success', 'Goal ajouté avec succès.');
+            return $this->redirectToRoute('user_goals');
+        }
+
+        $goals = $em->getRepository(Goal::class)->findBy(
+            ['id_user' => (int) $user->getId()],
+            ['created_at' => 'DESC']
+        );
+
+        $amountForms = [];
+        foreach ($goals as $g) {
+            $amountData = new GoalAmountRequest();
+            $amountForms[$g->getId()] = $this->createForm(GoalAmountRequestType::class, $amountData, [
+                'action' => $this->generateUrl('user_goal_add_amount', ['id' => $g->getId()]),
+                'method' => 'POST',
+            ])->createView();
+        }
+
+        return $this->render('front/goals.html.twig', [
+            'createForm' => $createForm,
+            'goals' => $goals,
+            'amountForms' => $amountForms,
+        ]);
+    }
+
+    #[Route('/user/goals/{id}/amount', name: 'user_goal_add_amount', methods: ['POST'])]
+    public function addGoalAmount(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_login');
+        }
+
+        $goal = $em->getRepository(Goal::class)->find($id);
+        if (!$goal instanceof Goal || (int) $goal->getId_user() !== (int) $user->getId()) {
+            $this->addFlash('danger', 'Goal introuvable.');
+            return $this->redirectToRoute('user_goals');
+        }
+
+        if ($goal->getStatus() === 'COMPLETED') {
+            $this->addFlash('danger', 'Ce goal est déjà terminé.');
+            return $this->redirectToRoute('user_goals');
+        }
+
+        $data = new GoalAmountRequest();
+        $form = $this->createForm(GoalAmountRequestType::class, $data);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $delta = (float) str_replace(',', '.', (string) $data->getAmount());
+            $userBalance = (float) str_replace(',', '.', (string) $user->getSolde());
+
+            if ($userBalance < $delta) {
+                $this->addFlash('danger', 'Solde insuffisant pour ajouter ce montant.');
+                return $this->redirectToRoute('user_goals');
+            }
+
+            $current = (float) str_replace(',', '.', (string) $goal->getCurrent_amount());
+            $target = (float) str_replace(',', '.', (string) $goal->getTarget_amount());
+
+            $newValue = $current + $delta;
+
+            $goal->setCurrent_amount((string) $newValue);
+            if ($newValue >= $target) {
+                $goal->setStatus('COMPLETED');
+            }
+
+            $user->setSolde((string) ($userBalance - $delta));
+
+            $em->flush();
+            $this->addFlash('success', 'Montant ajouté et solde mis à jour.');
+        } else {
+            $this->addFlash('danger', 'Montant invalide.');
+        }
+
+        return $this->redirectToRoute('user_goals');
+    }
+
+    #[Route('/user/goals/{id}/delete', name: 'user_goal_delete', methods: ['POST'])]
+    public function deleteGoal(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_login');
+        }
+
+        $goal = $em->getRepository(Goal::class)->find($id);
+        if (!$goal instanceof Goal || (int) $goal->getId_user() !== (int) $user->getId()) {
+            $this->addFlash('danger', 'Goal introuvable.');
+            return $this->redirectToRoute('user_goals');
+        }
+
+        if (!$this->isCsrfTokenValid('delete_goal_' . $goal->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Échec de validation.');
+            return $this->redirectToRoute('user_goals');
+        }
+
+        // Restitution du montant accumulé au solde
+        $currentAccumulated = (float) str_replace(',', '.', (string) $goal->getCurrent_amount());
+        if ($currentAccumulated > 0) {
+            $userBalance = (float) str_replace(',', '.', (string) $user->getSolde());
+            $user->setSolde((string) ($userBalance + $currentAccumulated));
+        }
+
+        $em->remove($goal);
+        $em->flush();
+
+        $this->addFlash('success', 'Goal supprimé et montant restitué au solde.');
+        return $this->redirectToRoute('user_goals');
     }
 }
