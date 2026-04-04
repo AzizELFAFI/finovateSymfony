@@ -113,11 +113,11 @@
           </div>
           <div class="col-lg-6 col-md-10 mx-auto">
             <div class="contact-form p-4" style="border-radius: 0; background-color: #e8f5e9;">
-              <form id="login" action="" method="post">
+              <form id="login" action="" method="post" novalidate="novalidate">
                 <div class="row">
                   <div class="col-lg-12 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                      <input name="email" type="email" class="form-control" id="email" placeholder="Adresse e-mail" required="">
                     </fieldset>
                   </div>
                   <div class="col-lg-12 col-md-12 col-sm-12">
@@ -167,18 +167,18 @@
           <div class="col-md-3 footer-item last-item">
             <h4>Nous écrire</h4>
             <div class="contact-form">
-              <form id="contact-footer" action="{{ path('front_contact_send') }}" method="post">
+              <form id="contact-footer" action="{{ path('front_contact_send') }}" method="post" novalidate="novalidate">
                 <input type="hidden" name="_token" value="{{ csrf_token('contact_form') }}">
                 <input type="hidden" name="subject" value="Contact depuis le footer (Login)">
                 <div class="row">
                   <div class="col-lg-12 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="">
+                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="" pattern=".*\D.*" title="Le nom complet ne doit pas être un entier.">
                     </fieldset>
                   </div>
                   <div class="col-lg-12 col-md-12 col-sm-12">
                     <fieldset>
-                      <input name="email" type="text" class="form-control" id="email" pattern="[^ @]*@[^ @]*" placeholder="Adresse e-mail" required="">
+                      <input name="email" type="email" class="form-control" id="email" placeholder="Adresse e-mail" required="">
                     </fieldset>
                   </div>
                   <div class="col-lg-12">
@@ -242,11 +242,40 @@
         var form = document.getElementById('login');
         if (!form) return;
 
+        function showLoginError(message) {
+          var existing = form.querySelector('.login-validation-alert');
+          if (existing) existing.remove();
+
+          var alertDiv = document.createElement('div');
+          alertDiv.className = 'alert alert-danger login-validation-alert';
+          alertDiv.setAttribute('role', 'alert');
+          alertDiv.textContent = message;
+          form.prepend(alertDiv);
+        }
+
         form.addEventListener('submit', async function (e) {
           e.preventDefault();
 
           var email = document.getElementById('email') ? document.getElementById('email').value : '';
           var password = document.getElementById('password') ? document.getElementById('password').value : '';
+
+          email = (email || '').trim();
+          password = (password || '').trim();
+
+          if (!email) {
+            showLoginError('L\'adresse e-mail est obligatoire.');
+            return;
+          }
+
+          if (!/^\S+@\S+\.\S+$/.test(email)) {
+            showLoginError('Veuillez saisir une adresse e-mail valide.');
+            return;
+          }
+
+          if (!password) {
+            showLoginError('Le mot de passe est obligatoire.');
+            return;
+          }
 
           try {
             var res = await fetch('/api/login', {
@@ -260,7 +289,7 @@
             var data = await res.json().catch(function () { return {}; });
 
             if (!res.ok || !data.token) {
-              alert(data.message || 'Connexion impossible. Vérifie tes identifiants.');
+              showLoginError(data.message || 'Connexion impossible. Vérifie tes identifiants.');
               return;
             }
 
@@ -268,7 +297,7 @@
             var target = (data && data.redirect_url) ? data.redirect_url : '{{ path('user_dashboard') }}';
             window.location.href = target;
           } catch (err) {
-            alert('Erreur réseau. Réessaie.');
+            showLoginError('Erreur réseau. Réessaie.');
           }
         });
       })();

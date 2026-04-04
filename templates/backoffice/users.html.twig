@@ -95,6 +95,7 @@
                       <th>Téléphone</th>
                       <th>N° Carte</th>
                       <th>Créé le</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -117,10 +118,18 @@
                       <td>{{ user.phone_number }}</td>
                       <td><code>{{ user.numero_carte }}</code></td>
                       <td>{{ user.getCreated_at()|date('d/m/Y H:i') }}</td>
+                      <td>
+                        <form id="delete-user-form-{{ user.id }}" method="post" action="{{ path('backoffice_user_delete', {'id': user.id}) }}" class="d-inline">
+                          <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
+                          <button class="btn btn-sm btn-danger js-delete-user" type="button" data-user-email="{{ user.email }}" data-user-name="{{ user.firstname }} {{ user.lastname }}" data-form-id="delete-user-form-{{ user.id }}">
+                            <i class="ti ti-trash"></i>
+                          </button>
+                        </form>
+                      </td>
                     </tr>
                     {% else %}
                     <tr>
-                      <td colspan="11" class="text-center py-4">Aucun utilisateur trouvé dans la base de données.</td>
+                      <td colspan="12" class="text-center py-4">Aucun utilisateur trouvé dans la base de données.</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -137,6 +146,122 @@
     <p class="mb-0">Copyright © 2026 Finovate. Tous droits réservés.</p>
   </footer>
 
+  <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmer la suppression</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0">Voulez-vous vraiment supprimer l'utilisateur :</p>
+          <div class="mt-2">
+            <div class="fw-bold" id="deleteUserModalName"></div>
+            <div class="text-secondary" id="deleteUserModalEmail"></div>
+          </div>
+          <div class="alert alert-warning mt-3 mb-0" role="alert">Cette action est irréversible.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteUserBtn">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="{{ asset('backoffice/assets/js/main.js') }}" type="module"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var modalEl = document.getElementById('deleteUserModal');
+      if (!modalEl) return;
+
+      var modal = null;
+      if (window.bootstrap && window.bootstrap.Modal) {
+        modal = new window.bootstrap.Modal(modalEl);
+      }
+
+      function fallbackShow() {
+        modalEl.style.display = 'block';
+        modalEl.removeAttribute('aria-hidden');
+        modalEl.setAttribute('aria-modal', 'true');
+        modalEl.setAttribute('role', 'dialog');
+        modalEl.classList.add('show');
+        document.body.classList.add('modal-open');
+
+        var backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        backdrop.setAttribute('data-fallback-backdrop', 'true');
+        document.body.appendChild(backdrop);
+      }
+
+      function fallbackHide() {
+        modalEl.style.display = 'none';
+        modalEl.setAttribute('aria-hidden', 'true');
+        modalEl.classList.remove('show');
+        document.body.classList.remove('modal-open');
+
+        document.querySelectorAll('[data-fallback-backdrop="true"]').forEach(function (el) {
+          el.remove();
+        });
+      }
+
+      function showModal() {
+        if (modal) {
+          modal.show();
+        } else {
+          fallbackShow();
+        }
+      }
+
+      function hideModal() {
+        if (modal) {
+          modal.hide();
+        } else {
+          fallbackHide();
+        }
+      }
+
+      var currentFormId = null;
+      var nameEl = document.getElementById('deleteUserModalName');
+      var emailEl = document.getElementById('deleteUserModalEmail');
+      var confirmBtn = document.getElementById('confirmDeleteUserBtn');
+
+      document.querySelectorAll('.js-delete-user').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          currentFormId = btn.getAttribute('data-form-id');
+          if (nameEl) nameEl.textContent = btn.getAttribute('data-user-name') || '';
+          if (emailEl) emailEl.textContent = btn.getAttribute('data-user-email') || '';
+
+          showModal();
+        });
+      });
+
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', function () {
+          if (!currentFormId) return;
+          var form = document.getElementById(currentFormId);
+          if (form) form.submit();
+        });
+      }
+
+      modalEl.querySelectorAll('[data-bs-dismiss="modal"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          hideModal();
+        });
+      });
+
+      modalEl.addEventListener('click', function (e) {
+        if (e.target === modalEl) {
+          hideModal();
+        }
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modalEl.classList.contains('show')) {
+          hideModal();
+        }
+      });
+    });
+  </script>
 </body>
 </html>

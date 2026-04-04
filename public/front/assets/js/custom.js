@@ -141,5 +141,69 @@ jQuery( document ).ready(function( $ ) {
         });
         }
     })
+
+        function validateContactForm(form) {
+            var nameEl = form.querySelector('input[name="name"]');
+            var emailEl = form.querySelector('input[name="email"]');
+            var subjectEl = form.querySelector('input[name="subject"]');
+            var messageEl = form.querySelector('textarea[name="message"]');
+
+            var errors = [];
+
+            var name = nameEl ? (nameEl.value || '').trim() : '';
+            var email = emailEl ? (emailEl.value || '').trim() : '';
+            var subject = subjectEl ? (subjectEl.value || '').trim() : '';
+            var message = messageEl ? (messageEl.value || '').trim() : '';
+
+            if (!name) {
+                errors.push('Le nom complet est obligatoire.');
+            } else if (/^\d+$/.test(name)) {
+                errors.push('Le nom complet ne doit pas être un entier.');
+            }
+
+            if (!email) {
+                errors.push('L\'adresse e-mail est obligatoire.');
+            } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+                errors.push('Veuillez saisir une adresse e-mail valide.');
+            }
+
+            if (subjectEl) {
+                if (!subject) {
+                    errors.push('Le sujet est obligatoire.');
+                } else if (/^\d+$/.test(subject)) {
+                    errors.push('Le sujet ne doit pas être un entier.');
+                }
+            }
+
+            if (!message) {
+                errors.push('Le message est obligatoire.');
+            }
+
+            var existingAlert = form.querySelector('.contact-validation-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            if (errors.length > 0) {
+                var alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger contact-validation-alert';
+                alertDiv.setAttribute('role', 'alert');
+                alertDiv.innerHTML = errors.join('<br>');
+
+                form.prepend(alertDiv);
+                return false;
+            }
+
+            return true;
+        }
+
+        document.querySelectorAll('form[action*="/contact/send"]').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                if (!validateContactForm(form)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+        });
  
 });

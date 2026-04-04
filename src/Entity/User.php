@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 use Doctrine\Common\Collections\Collection;
 use App\Entity\User_badges;
+use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -18,15 +19,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $id;
 
     #[ORM\Column(type: "string", length: 255)]
+    #[Assert\NotBlank(message: "L'adresse e-mail est obligatoire.")]
+    #[Assert\Email(message: "Veuillez saisir une adresse e-mail valide.")]
     private string $email;
 
     #[ORM\Column(type: "string", length: 255)]
+    #[Assert\NotBlank(message: "Le mot de passe est obligatoire.")]
     private string $password;
 
     #[ORM\Column(type: "string", length: 100)]
+    #[Assert\NotBlank(message: "Le prénom est obligatoire.")]
+    #[Assert\Length(min: 3, minMessage: "Le prénom doit contenir au moins {{ limit }} caractères.")]
+    #[Assert\Regex(pattern: "/^[\\p{L} .'-]+$/u", message: "Le prénom doit être une chaîne de caractères valide.")]
     private string $firstname;
 
     #[ORM\Column(type: "string", length: 100)]
+    #[Assert\NotBlank(message: "Le nom est obligatoire.")]
+    #[Assert\Length(min: 3, minMessage: "Le nom doit contenir au moins {{ limit }} caractères.")]
+    #[Assert\Regex(pattern: "/^[\\p{L} .'-]+$/u", message: "Le nom doit être une chaîne de caractères valide.")]
     private string $lastname;
 
     #[ORM\Column(type: "string", length: 50)]
@@ -39,12 +49,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $solde;
 
     #[ORM\Column(type: "date")]
+    #[Assert\NotBlank(message: "La date de naissance est obligatoire.")]
+    #[Assert\Type(type: "\\DateTimeInterface", message: "Date de naissance invalide.")]
+    #[Assert\LessThanOrEqual(value: "-18 years", message: "Vous devez avoir au moins 18 ans pour créer un compte.")]
     private \DateTimeInterface $birthdate;
 
     #[ORM\Column(type: "string", length: 50)]
+    #[Assert\NotBlank(message: "Le CIN est obligatoire.")]
+    #[Assert\Regex(pattern: "/^\\d{8}$/", message: "Le CIN doit contenir exactement 8 chiffres.")]
     private string $cin;
 
     #[ORM\Column(type: "integer")]
+    #[Assert\NotBlank(message: "Le numéro de téléphone est obligatoire.")]
+    #[Assert\Positive(message: "Le numéro de téléphone doit être numérique.")]
+    #[Assert\Range(min: 10000000, max: 99999999, notInRangeMessage: "Le numéro de téléphone doit contenir exactement 8 chiffres.")]
     private int $phone_number;
 
     #[ORM\Column(type: "datetime")]

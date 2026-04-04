@@ -172,4 +172,31 @@ final class BackController extends AbstractController
             'dir' => $dir
         ]);
     }
+
+    #[Route('/users/{id}/delete', name: 'backoffice_user_delete', methods: ['POST'])]
+    public function deleteUser(string $id, EntityManagerInterface $em, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('delete_user_' . $id, (string) $request->request->get('_token'))) {
+            return $this->redirectToRoute('backoffice_users');
+        }
+
+        $user = $em->getRepository(User::class)->find($id);
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('backoffice_users');
+        }
+
+        $numericId = (int) $user->getId();
+
+        $em->createQueryBuilder()
+            ->delete(Transaction::class, 't')
+            ->where('t.sender_id = :uid OR t.receiver_id = :uid')
+            ->setParameter('uid', $numericId)
+            ->getQuery()
+            ->execute();
+
+        $em->remove($user);
+        $em->flush();
+
+        return $this->redirectToRoute('backoffice_users');
+    }
 }
