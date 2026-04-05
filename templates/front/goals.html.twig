@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate - Goals</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  <style>
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 10px 0 0; white-space: nowrap; color: #0f766e; }
+
+    .sidebar a {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 10px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 22px;
+    }
+
+    .goal-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.06);
+      padding: 18px;
+      height: 100%;
+    }
+
+    .goal-title { font-weight: 900; margin: 0; }
+
+    .meta { color: rgba(0, 0, 0, 0.6); font-weight: 600; font-size: 0.9rem; }
+
+    .progress { height: 10px; border-radius: 999px; }
+
+    .badge-soft {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.75rem;
+      letter-spacing: 0.2px;
+    }
+
+    .badge-soft.ok { background: rgba(16,185,129,0.15); color: #0f766e; }
+    .badge-soft.run { background: rgba(59,130,246,0.12); color: #1d4ed8; }
+
+    .small-error { color: #dc3545; font-size: 0.85rem; }
+  </style>
+</head>
+
+<body>
+  
+
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+          aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_services') }}">Nos services</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_contact') }}">Contact</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_one_page') }}">One-page</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Goals</h1>
+          <span>Suivez vos objectifs et ajoutez des montants</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-shell">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12 mb-2">
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}">Dashboard</a>
+            <a href="{{ path('user_transactions') }}">Transactions</a>
+            <a href="{{ path('user_goals') }}" class="active">Goals</a>
+            <a href="{{ path('user_bills') }}">Factures</a>
+            <a href="{{ path('app_forum_home') }}">Forum</a>
+            <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
+        </div>
+
+        <div class="col-lg-12">        <div class="col-lg-9">
+          <div class="card-shell mb-4">
+            {% for label, messages in app.flashes %}
+              {% for message in messages %}
+                <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+              {% endfor %}
+            {% endfor %}
+
+            <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:12px">
+              <div>
+                <h4 style="font-weight:900;margin:0">Ajouter un goal</h4>
+                <div class="meta">Titre, deadline, montant objectif</div>
+              </div>
+            </div>
+
+            <div style="height:14px"></div>
+
+            {{ form_start(createForm, {'attr': {'novalidate': 'novalidate'}}) }}
+              {% set globalErrors = form_errors(createForm) %}
+              {% if globalErrors|trim is not empty %}
+                <div class="alert alert-danger" role="alert">{{ globalErrors }}</div>
+              {% endif %}
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="{{ createForm.title.vars.id }}">Titre</label>
+                  {{ form_widget(createForm.title, {'attr': {'class': 'form-control'}}) }}
+                  <div class="small-error">{{ form_errors(createForm.title) }}</div>
+                </div>
+                <div class="form-group col-md-3">
+                  <label for="{{ createForm.deadline.vars.id }}">Deadline</label>
+                  {{ form_widget(createForm.deadline, {'attr': {'class': 'form-control'}}) }}
+                  <div class="small-error">{{ form_errors(createForm.deadline) }}</div>
+                </div>
+                <div class="form-group col-md-3">
+                  <label for="{{ createForm.targetAmount.vars.id }}">Montant objectif</label>
+                  {{ form_widget(createForm.targetAmount, {'attr': {'class': 'form-control'}}) }}
+                  <div class="small-error">{{ form_errors(createForm.targetAmount) }}</div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-success">Ajouter</button>
+            {{ form_end(createForm) }}
+          </div>
+
+          <div class="row">
+            {% if goals is empty %}
+              <div class="col-12">
+                <div class="alert alert-info" role="alert">Aucun goal pour le moment.</div>
+              </div>
+            {% endif %}
+
+            {% for goal in goals %}
+              {% set target = goal.target_amount|default('0')|replace({',': '.'}) %}
+              {% set current = goal.current_amount|default('0')|replace({',': '.'}) %}
+              {% set t = target + 0 %}
+              {% set c = current + 0 %}
+              {% set percent = (t > 0) ? ((c / t) * 100) : 0 %}
+              {% if percent > 100 %}{% set percent = 100 %}{% endif %}
+
+              <div class="col-md-6 mb-4">
+                <div class="goal-card">
+                  <div class="d-flex justify-content-between align-items-start" style="gap:12px">
+                    <div>
+                      <p class="goal-title">{{ goal.title }}</p>
+                      <div class="meta">Deadline: {{ goal.deadline ? goal.deadline|date('Y-m-d') : '' }}</div>
+                    </div>
+                    {% if goal.status == 'COMPLETED' %}
+                      <span class="badge-soft ok">COMPLETED</span>
+                    {% else %}
+                      <span class="badge-soft run">IN_PROGRESS</span>
+                    {% endif %}
+                  </div>
+
+                  <div style="height:12px"></div>
+
+                  <div class="meta">{{ c }} / {{ t }}</div>
+                  <div style="height:8px"></div>
+                  <div class="progress">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ percent }}%"></div>
+                  </div>
+
+                  <div style="height:14px"></div>
+
+                  {% if goal.status != 'COMPLETED' %}
+                    <div>
+                      {{ form_start(amountForms[goal.id], {'attr': {'class': 'form-inline', 'novalidate': 'novalidate'}}) }}
+                        <div class="form-group mr-2" style="flex:1;min-width:160px">
+                          {{ form_widget(amountForms[goal.id].amount, {'attr': {'class': 'form-control', 'style': 'width: 100%'}}) }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Ajouter montant</button>
+                        <div style="width:100%" class="small-error">{{ form_errors(amountForms[goal.id].amount) }}</div>
+                      {{ form_end(amountForms[goal.id]) }}
+                    </div>
+                  {% else %}
+                    <div class="alert alert-success py-2 mb-0" style="border-radius: 12px; font-weight: 700; font-size: 0.9rem;">
+                      <i class="fa fa-check-circle mr-1"></i> Objectif atteint !
+                    </div>
+                  {% endif %}
+
+                  <div style="height:10px"></div>
+
+                  <button type="button" class="btn btn-outline-danger btn-sm" 
+                          data-toggle="modal" data-target="#deleteGoalModal" 
+                          data-goal-id="{{ goal.id }}" data-goal-title="{{ goal.title }}">
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmation de suppression -->
+  <div class="modal fade" id="deleteGoalModal" tabindex="-1" role="dialog" aria-labelledby="deleteGoalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content" style="border-radius: 18px; border: none; box-shadow: 0 15px 35px rgba(0,0,0,0.2);">
+        <div class="modal-header" style="background: #fff; border-bottom: 1px solid rgba(0,0,0,0.05); border-top-left-radius: 18px; border-top-right-radius: 18px; padding: 20px;">
+          <h5 class="modal-title" id="deleteGoalModalLabel" style="font-weight: 800; color: #111827;">Confirmer la suppression</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" style="padding: 25px; font-size: 1.05rem; color: #4b5563;">
+          Êtes-vous sûr de vouloir supprimer le goal <strong id="modal-goal-title" style="color: #0f766e;"></strong> ? Cette action est irréversible.
+        </div>
+        <div class="modal-footer" style="border-top: 1px solid rgba(0,0,0,0.05); padding: 15px 20px;">
+          <button type="button" class="btn btn-light" data-dismiss="modal" style="font-weight: 700; border-radius: 12px; padding: 10px 20px;">Annuler</button>
+          <form id="delete-goal-form" method="post" action="">
+            <input type="hidden" name="_token" id="modal-csrf-token" value="">
+            <button type="submit" class="btn btn-danger" style="font-weight: 700; border-radius: 12px; padding: 10px 20px; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25);">Supprimer définitivement</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+  <script>
+    $(document).ready(function() {
+      $('#deleteGoalModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var goalId = button.data('goal-id');
+        var goalTitle = button.data('goal-title');
+        
+        var modal = $(this);
+        modal.find('#modal-goal-title').text(goalTitle);
+        
+        // Mettre à jour l'action du formulaire dynamiquement
+        var actionUrl = "{{ path('user_goal_delete', {'id': 'PLACEHOLDER'}) }}";
+        actionUrl = actionUrl.replace('PLACEHOLDER', goalId);
+        modal.find('#delete-goal-form').attr('action', actionUrl);
+        
+        // Récupérer le token CSRF correct pour ce goal spécifique
+        // On peut utiliser une astuce en stockant les tokens dans un objet JS ou en les récupérant via un attribut data
+        var csrfToken = "";
+        {% for goal in goals %}
+          if (goalId == "{{ goal.id }}") {
+            csrfToken = "{{ csrf_token('delete_goal_' ~ goal.id) }}";
+          }
+        {% endfor %}
+        modal.find('#modal-csrf-token').val(csrfToken);
+      });
+    });
+  </script>
+</body>
+
+</html>

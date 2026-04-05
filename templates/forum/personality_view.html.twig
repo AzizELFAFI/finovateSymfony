@@ -1,0 +1,194 @@
+{% extends 'base.html.twig' %}
+{% block title %}Analyse de Personnalité - FINOVATE{% endblock %}
+{% block body %}
+{% include 'forum/_navbar.html.twig' with {activeTab: 'personality'} %}
+<div class="forums-content">
+    <div class="page-container">
+        <div class="personality-header">
+            <div style="font-size:64px;margin-bottom:15px">🎭</div>
+            <h1>Analyse de Personnalité</h1>
+            <p>Basée sur votre activité dans les forums — propulsée par IA</p>
+        </div>
+
+        <div class="card title-card">
+            <p class="personality-title">{{ personality.title }}</p>
+        </div>
+
+        <div class="card">
+            <h3 class="card-title">📝 Description</h3>
+            <p class="desc-text">{{ personality.description }}</p>
+        </div>
+
+        <div class="card stats-card">
+            <h3 class="card-title">📈 Votre Activité</h3>
+            <div class="stats-grid">
+                <div class="stat-item"><span class="stat-num">{{ stats.posts }}</span><span class="stat-label">Posts</span></div>
+                <div class="stat-item"><span class="stat-num">{{ stats.comments }}</span><span class="stat-label">Commentaires</span></div>
+                <div class="stat-item"><span class="stat-num">{{ stats.votes }}</span><span class="stat-label">Votes</span></div>
+                <div class="stat-item"><span class="stat-num">{{ stats.forums }}</span><span class="stat-label">Forums</span></div>
+                <div class="stat-item"><span class="stat-num">{{ stats.shares }}</span><span class="stat-label">Partages</span></div>
+            </div>
+        </div>
+
+        <div class="card sentiment-card">
+            <h3 class="card-title">📊 Analyse de Sentiment</h3>
+            <div class="sentiment-bars">
+                <div class="sentiment-row">
+                    <span class="sentiment-label positive">😊 Positif</span>
+                    <div class="bar-track"><div class="bar-fill positive-fill" style="width:{{ personality.sentiment.positive }}%"></div></div>
+                    <span class="sentiment-pct">{{ personality.sentiment.positive }}%</span>
+                </div>
+                <div class="sentiment-row">
+                    <span class="sentiment-label neutral">😐 Neutre</span>
+                    <div class="bar-track"><div class="bar-fill neutral-fill" style="width:{{ personality.sentiment.neutral }}%"></div></div>
+                    <span class="sentiment-pct">{{ personality.sentiment.neutral }}%</span>
+                </div>
+                <div class="sentiment-row">
+                    <span class="sentiment-label negative">😔 Négatif</span>
+                    <div class="bar-track"><div class="bar-fill negative-fill" style="width:{{ personality.sentiment.negative }}%"></div></div>
+                    <span class="sentiment-pct">{{ personality.sentiment.negative }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card traits-card">
+            <h3 class="card-title">✨ Traits de Personnalité</h3>
+            <div class="traits-container">
+                {% for trait in personality.traits %}
+                <div class="trait-item">{{ trait }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <p class="footer-text">💡 Analyse générée par intelligence artificielle (Groq / LLaMA 3)</p>
+
+        {# ── Growth Plan ── #}
+        {% if growthPlan is defined and growthPlan %}
+        <div class="growth-section">
+            <div class="growth-header">
+                <div style="font-size:36px;margin-bottom:10px">🚀</div>
+                <h2>Plan de Croissance Personnalisé</h2>
+                <p>Basé sur votre activité, voici comment développer votre audience</p>
+            </div>
+
+            <div class="growth-goal">
+                <span class="goal-icon">🎯</span>
+                <span class="goal-text">{{ growthPlan.weeklyGoal }}</span>
+            </div>
+
+            <div class="growth-grid">
+                <div class="growth-card">
+                    <div class="gc-icon">⏰</div>
+                    <div class="gc-title">Meilleure heure pour poster</div>
+                    <div class="gc-value">{{ growthPlan.bestPostingTime }}</div>
+                    <div class="gc-sub">C'est quand votre audience est la plus active</div>
+                </div>
+                <div class="growth-card">
+                    <div class="gc-icon">📅</div>
+                    <div class="gc-title">Posts recommandés par jour</div>
+                    <div class="gc-value">{{ growthPlan.postsPerDay }} posts</div>
+                    <div class="gc-sub">Pour maintenir une présence régulière</div>
+                </div>
+            </div>
+
+            <div class="growth-card-full">
+                <div class="gcf-title">📁 Forums recommandés pour vous</div>
+                <div class="forum-tags">
+                    {% for forum in growthPlan.recommendedForums %}
+                    <span class="forum-tag-pill">{{ forum }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="growth-card-full">
+                <div class="gcf-title">💡 Idées de contenu pour cette semaine</div>
+                <div class="ideas-list">
+                    {% for idea in growthPlan.contentIdeas %}
+                    <div class="idea-item">
+                        <span class="idea-num">{{ loop.index }}</span>
+                        <span>{{ idea }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="growth-card-full tips-card">
+                <div class="gcf-title">✅ Conseils actionnables</div>
+                <div class="tips-list">
+                    {% for tip in growthPlan.tips %}
+                    <div class="tip-item">
+                        <span class="tip-check">✓</span>
+                        <span>{{ tip }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: sans-serif; background-color: #f7f9fc; }
+.forums-content { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+.page-container { max-width: 800px; margin: 0 auto; }
+.personality-header { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); padding: 40px 30px; border-radius: 15px; text-align: center; margin-bottom: 20px; }
+.personality-header h1 { color: #9c27b0; font-size: 28px; font-weight: bold; margin-bottom: 8px; }
+.personality-header p { color: #666; font-size: 16px; }
+.card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+.title-card { background: #fff9c4; }
+.personality-title { color: #f57c00; font-size: 20px; font-weight: bold; }
+.card-title { color: #333; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+.desc-text { color: #555; font-size: 15px; line-height: 1.6; }
+.stats-card { background: #f0fdf4; }
+.stats-grid { display: flex; gap: 20px; flex-wrap: wrap; }
+.stat-item { display: flex; flex-direction: column; align-items: center; background: white; padding: 14px 20px; border-radius: 10px; min-width: 80px; }
+.stat-num { font-size: 24px; font-weight: bold; color: #237f4e; }
+.stat-label { font-size: 12px; color: #666; margin-top: 4px; }
+.sentiment-card { background: #e8f5e9; border: 2px solid #4caf50; }
+.sentiment-card .card-title { color: #2e7d32; }
+.sentiment-bars { display: flex; flex-direction: column; gap: 12px; }
+.sentiment-row { display: flex; align-items: center; gap: 12px; }
+.sentiment-label { width: 100px; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+.sentiment-label.positive { color: #4caf50; }
+.sentiment-label.neutral { color: #ff9800; }
+.sentiment-label.negative { color: #f44336; }
+.bar-track { flex: 1; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 5px; transition: width 1s ease; }
+.positive-fill { background: #4caf50; }
+.neutral-fill { background: #ff9800; }
+.negative-fill { background: #f44336; }
+.sentiment-pct { width: 35px; font-size: 13px; font-weight: 600; color: #555; text-align: right; }
+.traits-card { background: #e3f2fd; }
+.traits-card .card-title { color: #1976d2; }
+.traits-container { display: flex; flex-wrap: wrap; gap: 10px; }
+.trait-item { background: white; color: #1976d2; padding: 8px 18px; border-radius: 20px; font-size: 14px; font-weight: 600; border: 2px solid #1976d2; }
+.footer-text { text-align: center; color: #999; font-size: 12px; font-style: italic; margin-top: 10px; }
+/* Growth Plan */
+.growth-section { margin-top: 30px; }
+.growth-header { text-align: center; background: linear-gradient(135deg, #237f4e, #1a5f3a); border-radius: 14px; padding: 30px 20px; margin-bottom: 20px; color: white; }
+.growth-header h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.growth-header p { font-size: 14px; opacity: 0.85; }
+.growth-goal { background: #fff9c4; border: 2px solid #f59e0b; border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.goal-icon { font-size: 24px; flex-shrink: 0; }
+.goal-text { font-size: 15px; font-weight: 600; color: #92400e; }
+.growth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.growth-card { background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.gc-icon { font-size: 28px; margin-bottom: 8px; }
+.gc-title { font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.gc-value { font-size: 24px; font-weight: 800; color: #237f4e; margin-bottom: 4px; }
+.gc-sub { font-size: 12px; color: #aaa; }
+.growth-card-full { background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.gcf-title { font-size: 15px; font-weight: 700; color: #1a1a1b; margin-bottom: 14px; }
+.forum-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.forum-tag-pill { background: #e8f5ee; color: #237f4e; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #b7dfca; }
+.ideas-list { display: flex; flex-direction: column; gap: 8px; }
+.idea-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #f9f9f9; border-radius: 8px; font-size: 14px; color: #333; }
+.idea-num { width: 24px; height: 24px; border-radius: 50%; background: #237f4e; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.tips-card { background: #f0fdf4; border-color: #b7dfca; }
+.tips-list { display: flex; flex-direction: column; gap: 10px; }
+.tip-item { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #333; }
+.tip-check { width: 22px; height: 22px; border-radius: 50%; background: #237f4e; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+</style>
+{% endblock %}

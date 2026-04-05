@@ -1,0 +1,173 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ forum.title }} - Posts{% endblock %}
+{% block body %}
+{% include 'forum/_navbar.html.twig' with {activeTab: ''} %}
+
+<div class="fp-page">
+
+    {# ── FORUM HEADER: half image / half info ── #}
+    <div class="fp-forum-header">
+        {% if forum.imageUrl %}
+        <div class="fp-forum-img">
+            <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}">
+        </div>
+        {% endif %}
+        <div class="fp-forum-info {% if not forum.imageUrl %}fp-forum-info-full{% endif %}">
+            <span class="fp-forum-label">FORUM</span>
+            <h1 class="fp-forum-title">{{ forum.title }}</h1>
+            {% if forum.description %}
+            <p class="fp-forum-desc">{{ forum.description }}</p>
+            {% endif %}
+            <div class="fp-forum-meta">
+                <span>👥 {{ forum.members|length }} membres</span>
+                <span>📝 {{ forum.posts|length }} posts</span>
+                {% if forum.creator %}
+                <span>par {{ forum.creator.firstname }} {{ forum.creator.lastname }}</span>
+                {% endif %}
+            </div>
+            <a href="{{ path('app_post_create', {id: forum.id}) }}" class="fp-btn-new">+ Nouveau Post</a>
+        </div>
+    </div>
+
+    {# ── SEARCH + SORT ── #}
+    <div class="fp-search-wrap">
+        <form class="fp-search" method="get" id="postSearchForm" autocomplete="off">
+            <div class="fp-search-input-wrap">
+                <span>🔍</span>
+                <input type="text" name="q" id="postSearchInput" placeholder="Rechercher un post..." value="{{ search }}" oninput="autocompletePosts(this.value)">
+                <ul class="fp-autocomplete" id="postSuggestions"></ul>
+            </div>
+            <select name="sort" onchange="this.form.submit()" class="fp-sort">
+                <option value="recent"    {% if sort == 'recent'    %}selected{% endif %}>Plus récent</option>
+                <option value="oldest"    {% if sort == 'oldest'    %}selected{% endif %}>Plus ancien</option>
+                <option value="popular"   {% if sort == 'popular'   %}selected{% endif %}>Plus populaire</option>
+                <option value="commented" {% if sort == 'commented' %}selected{% endif %}>Plus commenté</option>
+            </select>
+            <button type="submit" class="fp-btn-search">Chercher</button>
+        </form>
+    </div>
+
+    {# ── POSTS LIST ── #}
+    <div class="fp-posts">
+        {% if posts is empty %}
+        <div class="fp-empty">
+            <p>Aucun post trouvé.</p>
+            <a href="{{ path('app_post_create', {id: forum.id}) }}" class="fp-btn-new" style="display:inline-block;margin-top:16px">+ Créer le premier post</a>
+        </div>
+        {% else %}
+        {% for post in posts %}
+        <a href="{{ path('app_post_detail', {id: post.id}) }}" class="fp-post-card">
+            {% if post.imageUrl %}
+            <div class="fp-post-img">
+                <img src="/{{ post.imageUrl }}" alt="{{ post.title }}">
+            </div>
+            {% else %}
+            <div class="fp-post-img fp-post-img-placeholder">📝</div>
+            {% endif %}
+            <div class="fp-post-info">
+                <span class="fp-post-label">POST</span>
+                <h2 class="fp-post-title">{{ post.title }}</h2>
+                <p class="fp-post-excerpt">{{ post.content|slice(0, 160) }}{% if post.content|length > 160 %}…{% endif %}</p>
+                <div class="fp-post-meta">
+                    <span>👤 {{ post.author ? post.author.firstname ~ ' ' ~ post.author.lastname : 'Anonyme' }}</span>
+                    <span>📅 {{ post.createdAt|date('d/m/Y') }}</span>
+                    <span>💬 {{ post.comments|length }}</span>
+                    <span>👍 {{ post.upvoteCount }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+</div>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: white; }
+.fp-page { max-width: 1000px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* ── FORUM HEADER ── */
+.fp-forum-header { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #1a1a1b; margin-bottom: 24px; min-height: 280px; }
+.fp-forum-img { overflow: hidden; border-right: 1px solid #1a1a1b; }
+.fp-forum-img img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 280px; }
+.fp-forum-info { padding: 36px 40px; display: flex; flex-direction: column; justify-content: center; gap: 12px; background: #f0fdf4; }
+.fp-forum-info-full { grid-column: 1 / -1; }
+.fp-forum-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #237f4e; }
+.fp-forum-title { font-size: 28px; font-weight: 800; color: #1a1a1b; line-height: 1.2; font-family: Georgia, serif; }
+.fp-forum-desc { font-size: 14px; color: #555; line-height: 1.6; }
+.fp-forum-meta { display: flex; gap: 16px; font-size: 13px; color: #888; flex-wrap: wrap; }
+.fp-btn-new { display: inline-block; background: #1a1a1b; color: white; padding: 10px 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; letter-spacing: 0.5px; align-self: flex-start; }
+.fp-btn-new:hover { background: #333; }
+
+/* ── SEARCH ── */
+.fp-search-wrap { margin-bottom: 20px; }
+.fp-search { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border: 1px solid #1a1a1b; background: white; }
+.fp-search-input-wrap { flex: 1; position: relative; display: flex; align-items: center; gap: 8px; }
+.fp-search-input-wrap input { flex: 1; padding: 8px 12px; border: 1px solid #e0e0e0; font-size: 14px; outline: none; }
+.fp-search-input-wrap input:focus { border-color: #1a1a1b; }
+.fp-autocomplete { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: white; border: 1px solid #1a1a1b; z-index: 200; list-style: none; display: none; }
+.fp-autocomplete li { padding: 10px 14px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f0f0f0; }
+.fp-autocomplete li:hover { background: #f0fdf4; color: #237f4e; }
+.fp-sort { padding: 8px 10px; border: 1px solid #e0e0e0; font-size: 14px; outline: none; cursor: pointer; }
+.fp-btn-search { background: #1a1a1b; color: white; border: none; padding: 9px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.fp-btn-search:hover { background: #333; }
+
+/* ── POSTS ── */
+.fp-posts { display: flex; flex-direction: column; gap: 12px; }
+.fp-post-card { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #1a1a1b; text-decoration: none; color: inherit; transition: background 0.15s; }
+.fp-post-card:hover { background: #fafafa; }
+.fp-post-img { overflow: hidden; border-right: 1px solid #1a1a1b; height: 90px; position: relative; }
+.fp-post-img img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.fp-post-img-placeholder { display: flex; align-items: center; justify-content: center; font-size: 28px; background: #f9f9f9; height: 90px; }
+.fp-post-info { padding: 12px 18px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+.fp-post-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #237f4e; }
+.fp-post-title { font-size: 15px; font-weight: 800; color: #1a1a1b; line-height: 1.3; font-family: Georgia, serif; }
+.fp-post-excerpt { font-size: 12px; color: #666; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fp-post-meta { display: flex; gap: 10px; font-size: 11px; color: #aaa; flex-wrap: wrap; }
+.fp-empty { text-align: center; padding: 60px; border: 1px solid #1a1a1b; color: #888; }
+
+@media (max-width: 640px) {
+    .fp-forum-header { grid-template-columns: 1fr; }
+    .fp-forum-img { border-right: none; border-bottom: 1px solid #1a1a1b; }
+    .fp-post-card { grid-template-columns: 1fr; }
+    .fp-post-img { border-right: none; border-bottom: 1px solid #1a1a1b; }
+}
+</style>
+
+<script>
+var searchTimeout;
+var forumId = '{{ forum.id }}';
+
+function autocompletePosts(val) {
+    clearTimeout(searchTimeout);
+    var list = document.getElementById('postSuggestions');
+    if (val.length < 1) { list.style.display = 'none'; return; }
+    searchTimeout = setTimeout(function() {
+        fetch('{{ path('api_search_posts') }}?q=' + encodeURIComponent(val) + '&forum=' + forumId)
+            .then(r => r.json())
+            .then(data => {
+                list.innerHTML = '';
+                if (!data.length) { list.style.display = 'none'; return; }
+                data.forEach(function(item) {
+                    var li = document.createElement('li');
+                    li.textContent = item.title;
+                    li.onclick = function() {
+                        document.getElementById('postSearchInput').value = item.title;
+                        list.style.display = 'none';
+                        document.getElementById('postSearchForm').submit();
+                    };
+                    list.appendChild(li);
+                });
+                list.style.display = 'block';
+            });
+    }, 200);
+}
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.fp-search-input-wrap')) document.getElementById('postSuggestions').style.display = 'none';
+});
+document.getElementById('postSearchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('postSuggestions').style.display = 'none';
+});
+</script>
+{% endblock %}

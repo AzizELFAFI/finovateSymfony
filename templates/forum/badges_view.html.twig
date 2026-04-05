@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mes Badges - FINOVATE{% endblock %}
+{% block body %}
+{% include 'forum/_navbar.html.twig' with {activeTab: 'badges'} %}
+<div class="forums-content">
+    <div class="page-container">
+        <h2 class="section-title">🏆 Mes Badges</h2>
+        <p class="section-sub">Collectionnez des badges en participant activement aux forums !</p>
+
+        {% if badges is empty %}
+        <div class="empty-state">
+            <div style="font-size:72px;margin-bottom:16px">🎯</div>
+            <h3>Aucun badge encore</h3>
+            <p>Participez aux forums pour debloquer vos premiers badges !</p>
+            <div class="hints">
+                <div class="hint">📝 Publiez votre premier post</div>
+                <div class="hint">💬 Commentez 5 fois</div>
+                <div class="hint">👍 Votez 5 fois en une journee</div>
+                <div class="hint">📤 Partagez 3 posts</div>
+            </div>
+        </div>
+        {% else %}
+        <div class="badges-grid">
+            {% for ub in badges %}
+            <div class="badge-card">
+                <div class="badge-icon-wrap">
+                    <span class="badge-emoji">{{ ub.badgeType.icon }}</span>
+                </div>
+                <h3 class="badge-name">{{ ub.badgeType.name }}</h3>
+                <p class="badge-desc">{{ ub.badgeType.description }}</p>
+                <span class="badge-date">Obtenu le {{ ub.earnedAt|date('d/m/Y') }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: sans-serif; background-color: #f7f9fc; }
+.forums-content { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+.page-container { max-width: 1100px; margin: 0 auto; }
+.section-title { color: #1a1a1b; font-size: 26px; font-weight: bold; margin-bottom: 6px; }
+.section-sub { color: #7c7c7c; font-size: 14px; margin-bottom: 28px; }
+.badges-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 18px; }
+.badge-card { background: white; border-radius: 16px; padding: 24px 18px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 2px solid transparent; transition: all 0.3s; cursor: default; }
+.badge-card:hover { border-color: #237f4e; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(35,127,78,0.15); }
+.badge-icon-wrap { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #f0fdf4, #d1fae5); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+.badge-emoji { font-size: 36px; }
+.badge-name { color: #1a1a1b; font-size: 15px; font-weight: bold; margin-bottom: 6px; }
+.badge-desc { color: #7c7c7c; font-size: 12px; line-height: 1.5; margin-bottom: 10px; }
+.badge-date { color: #aaa; font-size: 11px; }
+.empty-state { text-align: center; padding: 60px 20px; background: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.empty-state h3 { color: #1a1a1b; font-size: 22px; font-weight: bold; margin-bottom: 10px; }
+.empty-state p { color: #7c7c7c; margin-bottom: 24px; }
+.hints { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.hint { background: #f0fdf4; border: 1px solid #b7dfca; color: #237f4e; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+</style>
+{% endblock %}

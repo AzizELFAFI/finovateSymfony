@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+{% block title %}Creer un Forum{% endblock %}
+{% block body %}
+{% include 'forum/_navbar.html.twig' with {activeTab: 'my'} %}
+<div class="dialog-wrapper">
+    <div class="dialog-overlay" onclick="window.location.href='{{ path('app_forum_my') }}'"></div>
+    <div class="dialog-container">
+        <div class="dialog-header">
+            <h2>Creer un forum</h2>
+            <a href="{{ path('app_forum_my') }}" class="btn-close">x</a>
+        </div>
+        <form method="post" enctype="multipart/form-data" id="forumForm" onsubmit="return validateForum()">
+            <div class="form-group">
+                <label>Nom du forum *</label>
+                <input type="text" name="title" id="forumTitle" placeholder="Finance & Investissement" required minlength="3">
+                <span class="field-error" id="titleError"></span>
+            </div>
+            <div class="form-group">
+                <label>Description * <small>(minimum 2 lignes)</small></label>
+                <textarea name="description" id="forumDesc" rows="4" placeholder="Décrivez votre forum en au moins 2 lignes..." required></textarea>
+                <span class="field-error" id="descError"></span>
+            </div>
+            <div class="form-group">
+                <label>Image * <small>(obligatoire)</small></label>
+                <div class="upload-area" onclick="document.getElementById('forumImg').click()">
+                    <span id="uploadLabel">Cliquez pour choisir une image</span>
+                    <img id="forumPreview" style="display:none;max-width:100%;max-height:150px;border-radius:8px;margin-top:8px">
+                    <input type="file" id="forumImg" name="image" accept="image/*" style="display:none" onchange="previewImg(this,'forumPreview','uploadLabel')" required>
+                </div>
+                <span class="field-error" id="imgError"></span>
+            </div>
+            <div class="dialog-actions">
+                <a href="{{ path('app_forum_my') }}" class="btn-cancel">Annuler</a>
+                <button type="submit" class="btn-submit">Créer</button>
+            </div>
+        </form>
+    </div>
+</div>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:sans-serif; background:#f7f9fc; }
+.dialog-wrapper { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:100; }
+.dialog-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); }
+.dialog-container { position:relative; background:white; border-radius:16px; padding:30px; width:520px; max-width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.25); z-index:101; }
+.dialog-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.dialog-header h2 { font-size:20px; font-weight:bold; }
+.btn-close { background:#eee; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; text-decoration:none; color:#333; font-size:16px; }
+.form-group { margin-bottom:18px; }
+.form-group label { font-weight:600; font-size:14px; display:block; margin-bottom:6px; }
+input[type=text], textarea { width:100%; padding:11px; border-radius:10px; border:1px solid #ddd; background:#fafafa; font-family:inherit; font-size:14px; }
+input:focus, textarea:focus { border-color:#237f4e; outline:none; }
+.upload-area { border:2px dashed #ccc; border-radius:10px; padding:20px; text-align:center; cursor:pointer; transition:0.2s; }
+.upload-area:hover { border-color:#237f4e; background:#f0fdf4; }
+.dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+.btn-submit { background:#237f4e; color:white; border:none; padding:10px 25px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+.btn-cancel { background:#eee; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; text-decoration:none; color:#333; font-size:14px; }
+.field-error { color: #e53e3e; font-size: 12px; margin-top: 4px; display: block; }
+</style>
+<script>
+function previewImg(input, imgId, labelId) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById(imgId).src = e.target.result;
+            document.getElementById(imgId).style.display = 'block';
+            document.getElementById(labelId).style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function validateForum() {
+    var ok = true;
+    var title = document.getElementById('forumTitle').value.trim();
+    var img   = document.getElementById('forumImg').files.length;
+
+    document.getElementById('titleError').textContent = '';
+    document.getElementById('imgError').textContent   = '';
+
+    if (title.length < 3) {
+        document.getElementById('titleError').textContent = 'Le titre doit contenir au moins 3 caractères.';
+        ok = false;
+    }
+    if (img === 0) {
+        document.getElementById('imgError').textContent = 'Une image est obligatoire.';
+        ok = false;
+    }
+    return ok;
+}
+</script>
+{% endblock %}

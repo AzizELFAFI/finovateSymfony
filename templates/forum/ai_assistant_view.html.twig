@@ -1,0 +1,370 @@
+{% extends 'base.html.twig' %}
+{% block title %}ChitChat — FINOVATE{% endblock %}
+{% block body %}
+{% include 'forum/_navbar.html.twig' with {activeTab: 'ai'} %}
+
+<div class="audi-page">
+    <div class="audi-header">
+        <h1 class="audi-title">ChitChat</h1>
+        <p class="audi-sub">Voice Intelligence — Finance Forum Assistant</p>
+    </div>
+
+    {# Central visualizer circle #}
+    <div class="audi-center">
+        <canvas id="visualizer" width="320" height="320"></canvas>
+        <div class="audi-circle" id="audiCircle">
+            <div class="audi-state" id="audiState">🎤</div>
+            <div class="audi-label" id="audiLabel">Appuyez pour parler</div>
+        </div>
+        <button class="audi-mic-btn" id="micBtn"
+            onmousedown="startListening()" onmouseup="stopListening()"
+            ontouchstart="startListening(event)" ontouchend="stopListening(event)">
+        </button>
+    </div>
+
+    {# Status bar #}
+    <div class="audi-status" id="audiStatus"></div>
+
+    {# Transcript display #}
+    <div class="audi-transcript" id="audiTranscript" style="display:none"></div>
+
+    {# Text input fallback #}
+    <div class="audi-text-bar">
+        <input type="text" id="textInput" class="audi-text-input" placeholder="Ou tapez votre message..." onkeypress="handleKey(event)">
+        <button class="audi-send-btn" onclick="sendText()">➤</button>
+    </div>
+
+    {# Conversation history #}
+    <div class="audi-history" id="audiHistory"></div>
+</div>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0fdf4; }
+.audi-page { max-width: 700px; margin: 0 auto; padding: 20px 20px 40px; display: flex; flex-direction: column; align-items: center; min-height: calc(100vh - 56px); }
+
+/* Header */
+.audi-header { text-align: center; margin-bottom: 24px; }
+.audi-title { font-size: 42px; font-weight: 900; letter-spacing: 8px; background: linear-gradient(135deg, #237f4e, #4ade80); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.audi-sub { font-size: 13px; color: #64748b; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+/* Center visualizer */
+.audi-center { position: relative; width: 320px; height: 320px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+#visualizer { position: absolute; top: 0; left: 0; pointer-events: none; }
+.audi-circle { position: absolute; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #f0fdf4 0%, #dcfce7 100%); border: 2px solid rgba(35,127,78,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 2; transition: border-color 0.3s; pointer-events: none; box-shadow: 0 4px 20px rgba(35,127,78,0.15); }
+.audi-circle.listening { border-color: #237f4e; box-shadow: 0 0 30px rgba(35,127,78,0.3); }
+.audi-circle.speaking { border-color: #4ade80; box-shadow: 0 0 30px rgba(74,222,128,0.3); }
+.audi-state { font-size: 32px; }
+.audi-label { font-size: 11px; color: #64748b; text-align: center; letter-spacing: 0.5px; }
+.audi-mic-btn { position: absolute; width: 160px; height: 160px; border-radius: 50%; background: transparent; border: none; cursor: pointer; z-index: 3; }
+
+/* Status */
+.audi-status { font-size: 13px; color: #237f4e; text-align: center; min-height: 20px; margin-bottom: 8px; letter-spacing: 0.5px; font-weight: 500; }
+
+/* Transcript */
+.audi-transcript { background: white; border: 1px solid rgba(35,127,78,0.3); border-radius: 12px; padding: 12px 16px; font-size: 14px; color: #1a1a1b; text-align: center; margin-bottom: 12px; width: 100%; max-width: 500px; font-style: italic; }
+
+/* Text input */
+.audi-text-bar { display: flex; gap: 8px; width: 100%; max-width: 500px; margin-bottom: 24px; }
+.audi-text-input { flex: 1; background: white; border: 1px solid #b7dfca; color: #1a1a1b; padding: 10px 16px; border-radius: 24px; font-size: 14px; outline: none; }
+.audi-text-input:focus { border-color: #237f4e; }
+.audi-send-btn { background: linear-gradient(135deg, #237f4e, #1a5f3a); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 16px; cursor: pointer; flex-shrink: 0; }
+
+/* History */
+.audi-history { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 10px; }
+.hist-item { padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; }
+.hist-user { background: #dcfce7; border: 1px solid #b7dfca; align-self: flex-end; max-width: 85%; color: #1a1a1b; }
+.hist-user::before { content: '🎤 '; font-size: 12px; }
+.hist-ai { background: white; border: 1px solid #e0e0e0; align-self: flex-start; max-width: 85%; color: #1a1a1b; }
+.hist-ai::before { content: '💬 ChitChat: '; font-size: 12px; color: #237f4e; font-weight: 600; }
+</style>
+
+<script>
+var chatHistory = [];
+var chatUrl     = '{{ path("api_ai_chat") }}';
+var recognition = null;
+var isListening = false;
+var audioCtx    = null;
+var analyser    = null;
+var micStream   = null;
+var animFrame   = null;
+var transcriptResult = '';
+var currentUtterance = null;
+var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// ── Visualizer ────────────────────────────────────────────────────────────
+var canvas  = document.getElementById('visualizer');
+var ctx     = canvas.getContext('2d');
+var cx = 160, cy = 160, baseR = 80;
+var idleAngle = 0;
+
+function drawIdle() {
+    ctx.clearRect(0, 0, 320, 320);
+    idleAngle += 0.008;
+    var dots = 60;
+    for (var i = 0; i < dots; i++) {
+        var angle = (i / dots) * Math.PI * 2 + idleAngle;
+        var wave  = Math.sin(idleAngle * 3 + i * 0.3) * 4;
+        var r     = baseR + 8 + wave;
+        var x     = cx + Math.cos(angle) * r;
+        var y     = cy + Math.sin(angle) * r;
+        var alpha = 0.3 + Math.abs(Math.sin(idleAngle + i * 0.1)) * 0.3;
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(35,127,78,' + alpha + ')';
+        ctx.fill();
+    }
+    animFrame = requestAnimationFrame(drawIdle);
+}
+
+function drawActive(dataArray) {
+    ctx.clearRect(0, 0, 320, 320);
+    var dots = dataArray.length;
+    for (var i = 0; i < dots; i++) {
+        var angle  = (i / dots) * Math.PI * 2 - Math.PI / 2;
+        var val    = dataArray[i] / 255;
+        var r      = baseR + 10 + val * 70;
+        var x      = cx + Math.cos(angle) * r;
+        var y      = cy + Math.sin(angle) * r;
+        var size   = 2 + val * 4;
+        var hue   = 120 + val * 40;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = 'hsl(' + hue + ',80%,65%)';
+        ctx.fill();
+    }
+}
+
+function startVisualizer(stream) {
+    cancelAnimationFrame(animFrame);
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 128;
+    audioCtx.createMediaStreamSource(stream).connect(analyser);
+    var buf = new Uint8Array(analyser.frequencyBinCount);
+    function loop() {
+        analyser.getByteFrequencyData(buf);
+        drawActive(buf);
+        animFrame = requestAnimationFrame(loop);
+    }
+    loop();
+}
+
+function stopVisualizer() {
+    cancelAnimationFrame(animFrame);
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    drawIdle();
+}
+
+// Start idle animation
+drawIdle();
+
+// ── Speech Recognition ────────────────────────────────────────────────────
+function initRecognition() {
+    if (!SpeechRecognition) return null;
+    var r = new SpeechRecognition();
+    r.lang = 'fr-FR';
+    r.interimResults = true;
+    r.continuous = true;
+    r.maxAlternatives = 1;
+
+    r.onresult = function(e) {
+        var interim = '';
+        transcriptResult = ''; // reset each time to get full result
+        for (var i = 0; i < e.results.length; i++) {
+            if (e.results[i].isFinal) {
+                transcriptResult += e.results[i][0].transcript;
+            } else {
+                interim += e.results[i][0].transcript;
+            }
+        }
+        var display = transcriptResult || interim;
+        if (display) {
+            document.getElementById('audiTranscript').textContent = display;
+            document.getElementById('audiTranscript').style.display = 'block';
+        }
+    };
+
+    r.onend = function() {
+        // Edge fires onend before onresult — wait longer
+        setTimeout(function() {
+            if (isListening) stopListening();
+        }, 800);
+    };
+
+    r.onerror = function(e) {
+        console.warn('STT:', e.error);
+        if (e.error === 'no-speech') {
+            setStatus('Aucune parole détectée, réessayez');
+            isListening = false;
+            stopVisualizer();
+            if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+            setCircle('idle', '🎤', 'Appuyez pour parler');
+        } else {
+            setStatus('Erreur micro: ' + e.error);
+            if (isListening) stopListening();
+        }
+    };
+    return r;
+}
+
+async function startListening(e) {
+    if (e) e.preventDefault();
+    if (isListening) return;
+    isListening = true;
+    transcriptResult = '';
+
+    // Stop any ongoing speech
+    window.speechSynthesis && window.speechSynthesis.cancel();
+
+    setCircle('listening', '🎤', 'En écoute...');
+    setStatus('🔴 Parlez maintenant...');
+    document.getElementById('audiTranscript').style.display = 'none';
+    document.getElementById('audiTranscript').textContent = '';
+
+    recognition = initRecognition();
+    if (recognition) {
+        try { recognition.start(); } catch(ex) {}
+    }
+
+    try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        startVisualizer(micStream);
+    } catch(err) {
+        setStatus('Accès micro refusé');
+    }
+}
+
+function stopListening(e) {
+    if (e) e.preventDefault();
+    if (!isListening) return;
+    isListening = false;
+
+    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    if (recognition) { try { recognition.stop(); } catch(ex) {} recognition = null; }
+    stopVisualizer();
+
+    setCircle('idle', '⏳', 'Traitement...');
+    setStatus('');
+
+    setTimeout(function() {
+        var text = transcriptResult.trim();
+        if (text) {
+            addHistory('user', text);
+            chatHistory.push({ role: 'user', content: text });
+            sendToAI(text);
+        } else {
+            setCircle('idle', '🎤', 'Appuyez pour parler');
+            setStatus('Aucune parole détectée');
+            document.getElementById('audiTranscript').style.display = 'none';
+        }
+    }, 1000);
+}
+
+// ── AI ────────────────────────────────────────────────────────────────────
+async function sendToAI(msg) {
+    setCircle('speaking', '💭', 'Réflexion...');
+    setStatus('ChitChat réfléchit...');
+
+    try {
+        var res  = await fetch(chatUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, history: chatHistory.slice(-10) })
+        });
+        var data = await res.json();
+        var reply = data.reply || 'Désolé, une erreur est survenue.';
+        chatHistory.push({ role: 'assistant', content: reply });
+        addHistory('ai', reply);
+        speakReply(reply);
+    } catch(err) {
+        setCircle('idle', '🎤', 'Appuyez pour parler');
+        setStatus('Erreur de connexion');
+    }
+}
+
+function speakReply(text) {
+    if (!window.speechSynthesis) {
+        setCircle('idle', '🎤', 'Appuyez pour parler');
+        return;
+    }
+    window.speechSynthesis.cancel();
+    setCircle('speaking', '🔊', 'AUDI parle...');
+    setStatus('');
+
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'fr-FR';
+    u.rate = 1.0;
+
+    // Animate circle while speaking
+    var speakAnim = null;
+    var t = 0;
+    function animSpeak() {
+        t += 0.05;
+        ctx.clearRect(0, 0, 320, 320);
+        var dots = 60;
+        for (var i = 0; i < dots; i++) {
+            var angle = (i / dots) * Math.PI * 2;
+            var wave  = Math.sin(t * 4 + i * 0.2) * 20 + Math.sin(t * 2 + i * 0.5) * 10;
+            var r     = baseR + 10 + wave;
+            var x     = cx + Math.cos(angle) * r;
+            var y     = cy + Math.sin(angle) * r;
+            var hue   = 280 + Math.sin(t + i * 0.1) * 40;
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'hsl(' + hue + ',80%,65%)';
+            ctx.fill();
+        }
+        speakAnim = requestAnimationFrame(animSpeak);
+    }
+    cancelAnimationFrame(animFrame);
+    animSpeak();
+
+    u.onend = function() {
+        cancelAnimationFrame(speakAnim);
+        drawIdle();
+        setCircle('idle', '🎤', 'Appuyez pour parler');
+        document.getElementById('audiTranscript').style.display = 'none';
+    };
+
+    window.speechSynthesis.speak(u);
+}
+
+// ── Text input ────────────────────────────────────────────────────────────
+function sendText() {
+    var input = document.getElementById('textInput');
+    var msg   = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    document.getElementById('audiTranscript').textContent = msg;
+    document.getElementById('audiTranscript').style.display = 'block';
+    addHistory('user', msg);
+    chatHistory.push({ role: 'user', content: msg });
+    sendToAI(msg);
+}
+
+function handleKey(e) { if (e.key === 'Enter') sendText(); }
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function setCircle(state, icon, label) {
+    var circle = document.getElementById('audiCircle');
+    circle.className = 'audi-circle ' + (state !== 'idle' ? state : '');
+    document.getElementById('audiState').textContent = icon;
+    document.getElementById('audiLabel').textContent = label;
+}
+
+function setStatus(msg) {
+    document.getElementById('audiStatus').textContent = msg;
+}
+
+function addHistory(role, text) {
+    var hist = document.getElementById('audiHistory');
+    var div  = document.createElement('div');
+    div.className = 'hist-item hist-' + role;
+    div.textContent = text;
+    hist.insertBefore(div, hist.firstChild);
+    // Keep last 10
+    while (hist.children.length > 10) hist.removeChild(hist.lastChild);
+}
+</script>
+{% endblock %}

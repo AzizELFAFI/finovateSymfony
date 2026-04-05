@@ -1,0 +1,185 @@
+{% extends 'forum dashboard/_layout.html.twig' %}
+{% block title %}Dashboard Admin — FINOVATE{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Vue d'ensemble 👋</h1>
+        <p class="page-sub">Bienvenue dans le panneau d'administration FINOVATE</p>
+    </div>
+    <button class="btn-scan" id="scanBtn" onclick="runScan()">🤖 Scanner le contenu</button>
+</div>
+
+{# ── Stat cards ── #}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">📁</div>
+        <div class="stat-body">
+            <div class="stat-value">{{ stats.forums }}</div>
+            <div class="stat-label">Forums</div>
+            <div class="stat-delta">+{{ stats.forumsToday }} aujourd'hui</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-body">
+            <div class="stat-value">{{ stats.posts }}</div>
+            <div class="stat-label">Posts</div>
+            <div class="stat-delta">+{{ stats.postsToday }} aujourd'hui</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">💬</div>
+        <div class="stat-body">
+            <div class="stat-value">{{ stats.comments }}</div>
+            <div class="stat-label">Commentaires</div>
+            <div class="stat-delta">+{{ stats.commentsToday }} aujourd'hui</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-body">
+            <div class="stat-value">{{ stats.users }}</div>
+            <div class="stat-label">Utilisateurs</div>
+            <div class="stat-delta">+{{ stats.usersToday }} aujourd'hui</div>
+        </div>
+    </div>
+    <div class="stat-card stat-danger">
+        <div class="stat-icon">🚨</div>
+        <div class="stat-body">
+            <div class="stat-value">{{ stats.flagged }}</div>
+            <div class="stat-label">Contenus signalés</div>
+            <div class="stat-delta">⚠ À examiner</div>
+        </div>
+    </div>
+</div>
+
+{# ── Charts ── #}
+<div class="charts-grid">
+    <div class="chart-card">
+        <div class="chart-header">
+            <span class="chart-title">Activité — 30 derniers jours</span>
+            <div class="chart-legend"><span class="leg-dot green"></span>Posts <span class="leg-dot purple"></span>Commentaires</div>
+        </div>
+        <canvas id="activityChart" height="110"></canvas>
+    </div>
+</div>
+
+{# ── Recent flags ── #}
+<div class="section-header">
+    <h2 class="section-title">🚨 Contenus récemment signalés</h2>
+    <a href="{{ path('admin_ai_flags') }}" class="link-all">Voir tout →</a>
+</div>
+
+{% if recentFlags is empty %}
+    <div class="empty-state">✅ Aucun contenu signalé non examiné.</div>
+{% else %}
+    <div class="flags-list">
+        {% for flag in recentFlags %}
+        <div class="flag-row sev-{{ flag.severity }}">
+            <div class="flag-sev">
+                {% if flag.severity == 'high' %}🔴{% elseif flag.severity == 'medium' %}🟡{% else %}🟢{% endif %}
+                {{ flag.severity|upper }}
+            </div>
+            <div class="flag-body">
+                <div class="flag-type">{{ flag.flagType == 'misinformation' ? '📰 Désinformation' : '☠️ Toxique' }} — {{ flag.contentType|capitalize }} #{{ flag.contentId }}</div>
+                <div class="flag-verdict">{{ flag.verdict|slice(0, 120) }}{% if flag.verdict|length > 120 %}…{% endif %}</div>
+            </div>
+            <div class="flag-date">{{ flag.detectedAt|date('d/m H:i') }}</div>
+            <div class="flag-actions">
+                <form method="post" action="{{ path('admin_ignore_flag', {id: flag.id}) }}" style="display:inline">
+                    <button class="btn-sm btn-ghost">Ignorer</button>
+                </form>
+                <a href="{{ path('admin_ai_flags') }}" class="btn-sm btn-danger">Examiner</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div id="scanResult" style="display:none" class="scan-result"></div>
+
+<style>
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+.page-title { font-size: 24px; font-weight: 700; color: #1a1a1b; }
+.page-sub { color: #64748b; font-size: 14px; margin-top: 4px; }
+.btn-scan { background: linear-gradient(135deg, #237f4e, #1a5f3a); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; display: flex; gap: 14px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.stat-card.stat-danger { border-color: rgba(239,68,68,0.3); background: #fff5f5; }
+.stat-icon { font-size: 28px; }
+.stat-value { font-size: 28px; font-weight: 700; color: #1a1a1b; line-height: 1; }
+.stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
+.stat-delta { font-size: 11px; color: #237f4e; margin-top: 4px; }
+.stat-danger .stat-delta { color: #ef4444; }
+.charts-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 28px; }
+.chart-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.chart-title { font-size: 14px; font-weight: 600; color: #1a1a1b; }
+.chart-legend { display: flex; gap: 12px; font-size: 12px; color: #64748b; align-items: center; }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.leg-dot.green { background: #237f4e; }
+.leg-dot.purple { background: #667eea; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.section-title { font-size: 16px; font-weight: 600; color: #1a1a1b; }
+.link-all { font-size: 13px; color: #237f4e; text-decoration: none; }
+.empty-state { background: #f0fdf4; border: 1px solid #b7dfca; border-radius: 10px; padding: 24px; text-align: center; color: #64748b; font-size: 14px; }
+.flags-list { display: flex; flex-direction: column; gap: 8px; }
+.flag-row { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.flag-row.sev-high { border-left: 3px solid #ef4444; }
+.flag-row.sev-medium { border-left: 3px solid #f59e0b; }
+.flag-row.sev-low { border-left: 3px solid #22c55e; }
+.flag-sev { font-size: 11px; font-weight: 700; min-width: 70px; color: #64748b; }
+.flag-body { flex: 1; }
+.flag-type { font-size: 13px; font-weight: 600; color: #1a1a1b; }
+.flag-verdict { font-size: 12px; color: #64748b; margin-top: 3px; }
+.flag-date { font-size: 11px; color: #64748b; min-width: 70px; text-align: right; }
+.flag-actions { display: flex; gap: 8px; }
+.btn-sm { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; }
+.btn-ghost { background: #f1f5f9; color: #64748b; }
+.btn-danger { background: rgba(239,68,68,0.1); color: #ef4444; }
+.scan-result { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-size: 14px; background: #f0fdf4; border: 1px solid #b7dfca; color: #237f4e; }
+@media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('activityChart'), {
+    type: 'line',
+    data: {
+        labels: {{ chartData.labels|json_encode|raw }},
+        datasets: [
+            { label: 'Posts', data: {{ chartData.posts|json_encode|raw }}, borderColor: '#237f4e', backgroundColor: 'rgba(35,127,78,0.1)', tension: 0.4, fill: true, pointRadius: 2 },
+            { label: 'Commentaires', data: {{ chartData.comments|json_encode|raw }}, borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,0.1)', tension: 0.4, fill: true, pointRadius: 2 }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: '#e5e7eb' }, ticks: { color: '#64748b', maxTicksLimit: 10 } },
+            y: { grid: { color: '#e5e7eb' }, ticks: { color: '#64748b' }, beginAtZero: true }
+        }
+    }
+});
+
+async function runScan() {
+    var btn = document.getElementById('scanBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Scan en cours...';
+    try {
+        var res  = await fetch('{{ path("admin_ai_scan") }}', { method: 'POST' });
+        var data = await res.json();
+        var el   = document.getElementById('scanResult');
+        el.style.display = 'block';
+        el.textContent = '✅ Scan terminé — ' + data.scanned + ' éléments analysés, ' + data.flagged + ' signalés.';
+        setTimeout(() => location.reload(), 2000);
+    } catch(e) {
+        alert('Erreur lors du scan.');
+    }
+    btn.disabled = false;
+    btn.textContent = '🤖 Scanner le contenu';
+}
+</script>
+{% endblock %}

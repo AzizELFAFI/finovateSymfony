@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+{% block title %}Modifier le Post{% endblock %}
+{% block body %}
+{% include 'forum/_navbar.html.twig' with {activeTab: ''} %}
+<div class="dialog-wrapper">
+    <div class="dialog-overlay" onclick="window.location.href='{{ path('app_post_detail', {id: post.id}) }}'"></div>
+    <div class="dialog-container">
+        <div class="dialog-header">
+            <h2>Modifier le post</h2>
+            <a href="{{ path('app_post_detail', {id: post.id}) }}" class="btn-close">x</a>
+        </div>
+        <form method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Titre</label>
+                <input type="text" name="title" value="{{ post.title }}" required>
+            </div>
+            <div class="form-group">
+                <label>Contenu</label>
+                <textarea name="content" rows="7" required>{{ post.content }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Image (laisser vide pour garder l'actuelle)</label>
+                {% if post.imageUrl %}
+                <img src="/{{ post.imageUrl }}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px">
+                {% endif %}
+                <input type="file" name="image" accept="image/*">
+            </div>
+            <div class="dialog-actions">
+                <a href="{{ path('app_post_detail', {id: post.id}) }}" class="btn-cancel">Annuler</a>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:sans-serif; background:#f7f9fc; }
+.dialog-wrapper { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:100; }
+.dialog-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); }
+.dialog-container { position:relative; background:white; border-radius:16px; padding:30px; width:580px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); z-index:101; }
+.dialog-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; padding-bottom:15px; border-bottom:2px solid #f0f0f0; }
+.dialog-header h2 { font-size:20px; font-weight:bold; }
+.btn-close { background:#f5f5f5; border:none; font-size:16px; color:#666; cursor:pointer; width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:50%; text-decoration:none; }
+.form-group { margin-bottom:20px; }
+.form-group label { display:block; margin-bottom:8px; font-weight:600; font-size:14px; }
+input[type=text], textarea, input[type=file] { width:100%; padding:12px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; font-family:inherit; outline:none; background:#fafafa; }
+input:focus, textarea:focus { border-color:#237f4e; background:white; }
+textarea { resize:vertical; min-height:140px; }
+.dialog-actions { display:flex; justify-content:flex-end; gap:12px; margin-top:25px; padding-top:20px; border-top:1px solid #f0f0f0; }
+.btn-cancel { padding:10px 24px; background:#f3f4f6; color:#374151; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; }
+.btn-submit { padding:10px 28px; background:#237f4e; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+</style>
+{% endblock %}

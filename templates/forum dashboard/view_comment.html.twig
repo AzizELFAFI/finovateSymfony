@@ -1,0 +1,196 @@
+{% extends 'forum dashboard/_layout.html.twig' %}
+{% block title %}Commentaire #{{ comment.id }}{% endblock %}
+
+{% block admin_content %}
+<div class="view-header">
+    <a href="{{ path('admin_moderation') }}?type=comment" class="btn-back-mod">← Retour à la modération</a>
+    <button class="btn-delete-top" onclick="openDeleteModal()">🗑️ Supprimer ce commentaire</button>
+</div>
+
+<div class="view-card">
+    <div class="view-meta-row">
+        <div class="view-type-badge">💬 Commentaire</div>
+        <div class="view-date">{{ comment.createdAt|date('d/m/Y à H:i') }}</div>
+    </div>
+    <div class="view-body">{{ comment.content }}</div>
+    <div class="view-refs">
+        📝 Post : <a href="{{ path('admin_view_post', {id: comment.post.id}) }}" class="ref-link">{{ comment.post.title }}</a>
+        &nbsp;·&nbsp;
+        📁 Forum : <a href="{{ path('admin_view_forum', {id: comment.post.forum.id}) }}" class="ref-link">{{ comment.post.forum.title }}</a>
+    </div>
+</div>
+
+<div class="view-author-card">
+    <div class="vac-label">👤 Auteur</div>
+    {% if comment.author %}
+    <div class="vac-user">
+        <div class="vac-avatar">{{ comment.author.firstname|first|upper }}{{ comment.author.lastname|first|upper }}</div>
+        <div>
+            <div class="vac-name">{{ comment.author.firstname }} {{ comment.author.lastname }}</div>
+            <div class="vac-email">{{ comment.author.email }}</div>
+        </div>
+        <button class="btn-gerer" onclick="openPanel()">⚙️ Gérer</button>
+    </div>
+    {% else %}<p class="no-author">Auteur inconnu</p>{% endif %}
+</div>
+
+{# Slide-in panel #}
+{% if comment.author %}
+<div class="panel-overlay" id="panelOverlay" style="display:none" onclick="closePanel()"></div>
+<div class="detail-panel" id="detailPanel" style="display:none">
+    <div class="panel-header">
+        <div class="panel-avatar">{{ comment.author.firstname|first|upper }}{{ comment.author.lastname|first|upper }}</div>
+        <div>
+            <div class="panel-name">{{ comment.author.firstname }} {{ comment.author.lastname }}</div>
+            <div class="panel-email">{{ comment.author.email }}</div>
+        </div>
+        <button onclick="closePanel()" class="panel-close">×</button>
+    </div>
+    <div class="panel-actions">
+        <div class="action-section">
+            <div class="action-label">📧 1ère infraction — Avertissement</div>
+            <div class="action-row">
+                <input type="text" id="warnReason" class="action-input" placeholder="Raison...">
+                <button class="btn-warn" onclick="warnUser({{ comment.author.id }})">Envoyer</button>
+            </div>
+        </div>
+        <div class="action-section">
+            <div class="action-label">⏱ 2ème infraction — Restriction</div>
+            <div class="restrict-grid">
+                <label class="toggle-label"><input type="checkbox" id="rCanPost"> Peut poster</label>
+                <label class="toggle-label"><input type="checkbox" id="rCanComment"> Peut commenter</label>
+                <label class="toggle-label"><input type="checkbox" id="rCanForum"> Peut créer forum</label>
+            </div>
+            <div class="action-row">
+                <input type="number" id="rDays" value="7" min="1" class="action-input-sm">
+                <input type="text" id="rReason" class="action-input" placeholder="Raison...">
+                <button class="btn-restrict" onclick="restrictUser({{ comment.author.id }})">Restreindre</button>
+            </div>
+        </div>
+        <div class="action-section action-danger">
+            <div class="action-label">🚫 3ème infraction — Bannissement définitif</div>
+            <div class="action-row">
+                <input type="text" id="banReason" class="action-input" placeholder="Raison...">
+                <button class="btn-ban" onclick="banUser({{ comment.author.id }})">Bannir</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="modal-overlay" id="deleteModal" style="display:none">
+    <div class="modal">
+        <div class="modal-header"><span>🗑️ Supprimer ce commentaire</span><button onclick="closeModal()" class="modal-close">×</button></div>
+        <p class="modal-sub">Raison :</p>
+        <select id="deleteReason" class="reason-select">
+            <option>Contenu toxique ou offensant</option>
+            <option>Violation des règles de la communauté</option>
+            <option>Spam ou contenu répétitif</option>
+            <option>Misinformation / Fausses informations</option>
+        </select>
+        <div class="modal-footer">
+            <button onclick="closeModal()" class="btn-cancel">Annuler</button>
+            <button onclick="confirmDelete({{ comment.id }})" class="btn-confirm">Confirmer →</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.btn-back-mod { color: #64748b; font-size: 13px; text-decoration: none; padding: 7px 14px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; }
+.btn-delete-top { background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.view-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px; margin-bottom: 16px; }
+.view-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.view-type-badge { background: rgba(245,158,11,0.15); color: #fbbf24; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.view-date { font-size: 12px; color: #4a5568; }
+.view-body { font-size: 15px; color: #1a1a1b; line-height: 1.8; white-space: pre-wrap; margin-bottom: 16px; }
+.view-refs { font-size: 12px; color: #4a5568; }
+.ref-link { color: #818cf8; text-decoration: none; }
+.view-author-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; }
+.vac-label { font-size: 11px; font-weight: 600; color: #4a5568; text-transform: uppercase; margin-bottom: 12px; }
+.vac-user { display: flex; align-items: center; gap: 14px; }
+.vac-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: white; flex-shrink: 0; }
+.vac-name { font-size: 14px; font-weight: 600; color: #1a1a1b; }
+.vac-email { font-size: 12px; color: #64748b; }
+.btn-view-user { margin-left: auto; color: #818cf8; font-size: 12px; text-decoration: none; padding: 6px 12px; border: 1px solid rgba(102,126,234,0.3); border-radius: 6px; }
+.btn-gerer { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; margin-left: auto; }
+.panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; }
+.detail-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 400px; background: white; border-left: 1px solid #e5e7eb; z-index: 201; overflow-y: auto; padding: 24px; }
+.panel-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.panel-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: white; flex-shrink: 0; }
+.panel-name { font-size: 16px; font-weight: 700; color: #1a1a1b; }
+.panel-email { font-size: 12px; color: #64748b; margin-top: 2px; }
+.panel-close { margin-left: auto; background: none; border: none; color: #64748b; font-size: 22px; cursor: pointer; }
+.panel-actions { display: flex; flex-direction: column; gap: 14px; }
+.action-section { background: #f0fdf4; border-radius: 10px; padding: 14px; border: 1px solid #e5e7eb; }
+.action-section.action-danger { border-color: rgba(239,68,68,0.3); }
+.action-label { font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 10px; }
+.action-row { display: flex; gap: 8px; align-items: center; }
+.action-input { flex: 1; background: white; border: 1px solid #e5e7eb; color: #1a1a1b; padding: 7px 12px; border-radius: 6px; font-size: 12px; outline: none; }
+.action-input-sm { width: 65px; background: white; border: 1px solid #e5e7eb; color: #1a1a1b; padding: 7px 10px; border-radius: 6px; font-size: 12px; outline: none; }
+.restrict-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.toggle-label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; cursor: pointer; }
+.toggle-label input { accent-color: #237f4e; }
+.btn-warn { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.btn-restrict { background: rgba(102,126,234,0.15); color: #818cf8; border: 1px solid rgba(102,126,234,0.3); padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.btn-ban { background: #fef2f2; color: #dc2626; border: 1px solid rgba(239,68,68,0.3); padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.no-author { color: #4a5568; font-size: 13px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: white; border: 1px solid #e5e7eb; border-radius: 14px; width: 420px; padding: 24px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 700; color: #1a1a1b; margin-bottom: 14px; }
+.modal-close { background: none; border: none; color: #64748b; font-size: 20px; cursor: pointer; }
+.modal-sub { font-size: 13px; color: #64748b; margin-bottom: 10px; }
+.reason-select { width: 100%; background: #f0fdf4; border: 1px solid #e5e7eb; color: #1a1a1b; padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+.btn-cancel { background: #f0fdf4; color: #64748b; border: 1px solid #e5e7eb; padding: 9px 18px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.btn-confirm { background: #ef4444; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+</style>
+
+<script>
+function openDeleteModal() { document.getElementById('deleteModal').style.display = 'flex'; }
+function closeModal() { document.getElementById('deleteModal').style.display = 'none'; }
+function openPanel()  { document.getElementById('panelOverlay').style.display = 'block'; document.getElementById('detailPanel').style.display = 'block'; }
+function closePanel() { document.getElementById('panelOverlay').style.display = 'none';  document.getElementById('detailPanel').style.display = 'none'; }
+
+async function confirmDelete(id) {
+    var reason = document.getElementById('deleteReason').value;
+    var form = new FormData(); form.append('reason', reason);
+    var res  = await fetch('/forum/admin/delete/comment/' + id, { method: 'POST', body: form });
+    var data = await res.json();
+    if (data.success) window.location.href = '{{ path("admin_moderation") }}?type=comment';
+    else alert('Erreur : ' + data.message);
+}
+
+async function warnUser(id) {
+    var reason = document.getElementById('warnReason').value || 'Comportement contraire aux règles';
+    var form = new FormData(); form.append('reason', reason);
+    var res  = await fetch('/forum/admin/users/' + id + '/warn', { method: 'POST', body: form });
+    var data = await res.json();
+    alert(data.success ? '✅ Avertissement envoyé.' : '❌ ' + (data.error || 'Erreur'));
+}
+
+async function restrictUser(id) {
+    var form = new FormData();
+    form.append('days',           document.getElementById('rDays').value);
+    form.append('canPost',        document.getElementById('rCanPost').checked ? '1' : '0');
+    form.append('canComment',     document.getElementById('rCanComment').checked ? '1' : '0');
+    form.append('canCreateForum', document.getElementById('rCanForum').checked ? '1' : '0');
+    form.append('reason',         document.getElementById('rReason').value || 'Infraction aux règles');
+    form.append('offense', '2');
+    var res  = await fetch('/forum/admin/users/' + id + '/restrict', { method: 'POST', body: form });
+    var data = await res.json();
+    alert(data.success ? '✅ Restriction appliquée.' : '❌ ' + (data.error || 'Erreur'));
+    if (data.success) { closePanel(); location.reload(); }
+}
+
+async function banUser(id) {
+    if (!confirm('Bannir définitivement cet utilisateur ?')) return;
+    var form = new FormData();
+    form.append('reason', document.getElementById('banReason').value || 'Infractions répétées');
+    var res  = await fetch('/forum/admin/users/' + id + '/ban', { method: 'POST', body: form });
+    var data = await res.json();
+    alert(data.success ? '✅ Utilisateur banni.' : '❌ ' + (data.error || 'Erreur'));
+    if (data.success) { closePanel(); location.reload(); }
+}
+</script>
+{% endblock %}

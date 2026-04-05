@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}Welcome!{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+        {% block stylesheets %}
+        {% endblock %}
+
+        {% block javascripts %}
+            {% block importmap %}{{ importmap('app') }}{% endblock %}
+        {% endblock %}
+
+        {% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
+        {% if frankenphpHotReload %}
+        <meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">
+        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
+        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
+        {% endif %}
+    </head>
+    <body>
+        {% block body %}{% endblock %}
+
+        {# Badge popup — shows when new badges are earned #}
+        {% if app.flashes('new_badges') is not empty %}
+        {% set badgeFlashes = app.flashes('new_badges') %}
+        <div id="badge-overlay" class="badge-overlay">
+            <div class="badge-popup" id="badgePopup">
+                <div class="badge-popup-sparkles">✨</div>
+                <h2>Nouveau Badge Debloque !</h2>
+                <div id="badgeList"></div>
+                <button onclick="closeBadgePopup()" class="badge-popup-close">Super ! 🎉</button>
+            </div>
+        </div>
+        <script>
+        var badges = [];
+        {% for flash in badgeFlashes %}
+        try { badges = badges.concat(JSON.parse({{ flash|json_encode|raw }})); } catch(e) {}
+        {% endfor %}
+        if (badges.length > 0) {
+            var list = document.getElementById('badgeList');
+            badges.forEach(function(b) {
+                var div = document.createElement('div');
+                div.className = 'badge-item-popup';
+                div.innerHTML = '<span class="bp-icon">' + b.icon + '</span><div><strong>' + b.name + '</strong><p>' + b.desc + '</p></div>';
+                list.appendChild(div);
+            });
+            document.getElementById('badge-overlay').style.display = 'flex';
+            // animate in
+            setTimeout(function() {
+                document.getElementById('badgePopup').classList.add('pop-in');
+            }, 50);
+        }
+        function closeBadgePopup() {
+            var popup = document.getElementById('badgePopup');
+            popup.classList.add('pop-out');
+            setTimeout(function() {
+                document.getElementById('badge-overlay').style.display = 'none';
+            }, 400);
+        }
+        </script>
+        <style>
+        .badge-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .badge-popup { background: white; border-radius: 20px; padding: 40px 36px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transform: scale(0.5) translateY(60px); opacity: 0; transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+        .badge-popup.pop-in { transform: scale(1) translateY(0); opacity: 1; }
+        .badge-popup.pop-out { transform: scale(0.8) translateY(40px); opacity: 0; transition: all 0.3s ease-in; }
+        .badge-popup-sparkles { font-size: 48px; margin-bottom: 10px; animation: spin 1s ease-in-out; }
+        @keyframes spin { 0%{transform:rotate(-20deg) scale(0.5)} 50%{transform:rotate(10deg) scale(1.2)} 100%{transform:rotate(0deg) scale(1)} }
+        .badge-popup h2 { color: #1a1a1b; font-size: 22px; font-weight: bold; margin-bottom: 20px; }
+        .badge-item-popup { display: flex; align-items: center; gap: 16px; background: #f0fdf4; border: 2px solid #b7dfca; border-radius: 12px; padding: 14px 18px; margin-bottom: 12px; text-align: left; }
+        .bp-icon { font-size: 40px; flex-shrink: 0; }
+        .badge-item-popup strong { color: #1a1a1b; font-size: 16px; display: block; margin-bottom: 3px; }
+        .badge-item-popup p { color: #7c7c7c; font-size: 13px; margin: 0; }
+        .badge-popup-close { margin-top: 10px; background: linear-gradient(135deg, #237f4e, #1a5f3a); color: white; border: none; padding: 12px 32px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .badge-popup-close:hover { transform: scale(1.05); box-shadow: 0 4px 14px rgba(35,127,78,0.4); }
+        </style>
+        {% endif %}
+    </body>
+</html>

@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+{% block title %}Forums Rejoints - FINOVATE{% endblock %}
+{% block body %}
+{% include 'forum/_navbar.html.twig' with {activeTab: 'joined'} %}
+<div class="forums-content">
+    <div class="page-container">
+        <div class="page-header">
+            <div>
+                <h1>🤝 Forums Rejoints</h1>
+                <p>Les forums auxquels vous participez</p>
+            </div>
+            <a href="{{ path('app_forum_home') }}" class="btn-explore">🔍 Explorer les Forums</a>
+        </div>
+
+        {% if memberships is empty %}
+        <div class="empty-state">
+            <div style="font-size:64px;margin-bottom:20px">🤝</div>
+            <h3>Aucun forum rejoint</h3>
+            <p>Explorez les forums et rejoignez ceux qui vous intéressent.</p>
+            <a href="{{ path('app_forum_home') }}" class="btn-explore" style="display:inline-block;margin-top:20px">🔍 Explorer les Forums</a>
+        </div>
+        {% else %}
+        <div class="forums-grid">
+            {% for membership in memberships %}
+            <div class="forum-card" onclick="window.location.href='{{ path('app_forum_posts', {id: membership.forum.id}) }}'">
+                {% if membership.forum.imageUrl %}
+                <img src="/{{ membership.forum.imageUrl }}" alt="{{ membership.forum.title }}" class="forum-img">
+                {% else %}
+                <div class="forum-icon">💼</div>
+                {% endif %}
+                <div class="forum-body">
+                    <h3 class="forum-title">{{ membership.forum.title }}</h3>
+                    <p class="forum-desc">{{ membership.forum.description|slice(0,90) }}...</p>
+                    <div class="forum-stats">
+                        <span>👥 {{ membership.forum.members|length }} membres</span>
+                        <span>📝 {{ membership.forum.posts|length }} posts</span>
+                    </div>
+                    <div class="forum-footer" onclick="event.stopPropagation()">
+                        <span class="joined-date">Rejoint le {{ membership.joinedAt|date('d/m/Y') }}</span>
+                        <form method="post" action="{{ path('app_forum_leave', {id: membership.forum.id}) }}">
+                            <button type="submit" class="btn-leave">Quitter</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f7f9fc; }
+.forums-content { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+.page-container { max-width: 1200px; margin: 0 auto; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.page-header h1 { color: #1a1a1b; font-size: 26px; font-weight: bold; margin-bottom: 4px; }
+.page-header p { color: #7c7c7c; font-size: 14px; }
+.btn-explore { background: #237f4e; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; }
+.btn-explore:hover { background: #1a5f3a; }
+.forums-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+.forum-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 2px solid transparent; transition: all 0.25s; cursor: pointer; }
+.forum-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); border-color: #237f4e; }
+.forum-img { width: 100%; height: 130px; object-fit: cover; display: block; }
+.forum-icon { font-size: 44px; padding: 18px 20px 0; }
+.forum-body { padding: 14px 20px 18px; }
+.forum-title { color: #1a1a1b; font-size: 17px; font-weight: bold; margin: 0 0 6px 0; }
+.forum-desc { color: #7c7c7c; font-size: 13px; line-height: 1.5; margin: 0 0 12px 0; }
+.forum-stats { display: flex; gap: 14px; font-size: 13px; color: #5f6368; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px; }
+.forum-footer { display: flex; justify-content: space-between; align-items: center; }
+.joined-date { font-size: 11px; color: #aaa; }
+.btn-leave { padding: 7px 14px; border: 1px solid #f44336; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; background: #fff0f0; color: #f44336; transition: all 0.2s; }
+.btn-leave:hover { background: #f44336; color: white; }
+.empty-state { text-align: center; padding: 80px 20px; background: white; border-radius: 14px; }
+.empty-state h3 { color: #1a1a1b; font-size: 22px; font-weight: bold; margin-bottom: 10px; }
+.empty-state p { color: #7c7c7c; }
+</style>
+{% endblock %}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="TemplateMo">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+
+    <title>Finovate - Déconnexion</title>
+
+    <base href="{{ asset('front/') }}">
+
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="assets/css/fontawesome.css">
+    <link rel="stylesheet" href="assets/css/templatemo-finance-business.css">
+    <link rel="stylesheet" href="assets/css/owl.css">
+
+  </head>
+
+  <body>
+
+    
+
+    <header class="">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_home') }}">Accueil</a>
+              </li>
+              <li class="nav-item" id="nav-login">
+                <a class="nav-link" href="{{ path('front_login') }}">Connexion</a>
+              </li>
+              <li class="nav-item" id="nav-dashboard" style="display: none;">
+                <a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a>
+              </li>
+              <li class="nav-item" id="nav-logout" style="display: none;">
+                <a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <div class="page-heading header-text">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h1>Déconnexion</h1>
+            <span>Vous allez être redirigé...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callback-form contact-us">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-6 col-md-10 mx-auto">
+            <div class="contact-form p-4" style="border-radius: 0; background-color: #e8f5e9;">
+              <p class="mb-0">Suppression de votre session en cours.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      (function () {
+        var loginItem = document.getElementById('nav-login');
+        var dashboardItem = document.getElementById('nav-dashboard');
+        var logoutItem = document.getElementById('nav-logout');
+
+        if (loginItem && dashboardItem && logoutItem) {
+          var token = null;
+          try {
+            token = localStorage.getItem('finovate_token');
+          } catch (e) {}
+
+          var isAuthed = !!token;
+          loginItem.style.display = isAuthed ? 'none' : '';
+          dashboardItem.style.display = isAuthed ? '' : 'none';
+          logoutItem.style.display = isAuthed ? '' : 'none';
+        }
+
+        try {
+          localStorage.removeItem('finovate_token');
+        } catch (e) {}
+
+        setTimeout(function () {
+          window.location.href = "{{ path('front_home') }}";
+        }, 150);
+      })();
+    </script>
+
+  </body>
+</html>

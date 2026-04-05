@@ -1,0 +1,397 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ post.title }} - FINOVATE{% endblock %}
+{% block body %}
+{% include 'forum/_navbar.html.twig' with {activeTab: ''} %}
+<div class="pd-page">
+
+    {# ── HERO: title left / image right ── #}
+    <div class="pd-hero">
+        <div class="pd-hero-left">
+            {% if post.forum %}
+            <a href="{{ path('app_forum_posts', {id: post.forum.id}) }}" class="pd-category">📁 {{ post.forum.title }}</a>
+            {% endif %}
+            <h1 class="pd-title">{{ post.title }}</h1>
+            <div class="pd-byline">
+                <div class="pd-avatar">{{ post.author ? post.author.firstname|first|upper : 'A' }}</div>
+                <div>
+                    <span class="pd-author">{{ post.author ? post.author.firstname ~ ' ' ~ post.author.lastname : 'Anonyme' }}</span>
+                    <span class="pd-date">{{ post.createdAt|date('d MMMM Y') }}</span>
+                </div>
+                <div class="pd-owner-btns">
+                    <a href="{{ path('app_post_edit', {id: post.id}) }}" class="pd-icon-btn" title="Modifier">✏️</a>
+                    <form method="post" action="{{ path('app_post_delete', {id: post.id}) }}" style="display:inline" onsubmit="return confirm('Supprimer ce post ?')">
+                        <button type="submit" class="pd-icon-btn pd-icon-red" title="Supprimer">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {# Action buttons under title #}
+            <div class="pd-actions">
+                <form method="post" action="{{ path('app_post_vote', {id: post.id}) }}" style="display:inline">
+                    <input type="hidden" name="type" value="UPVOTE">
+                    <button type="submit" class="pd-action-btn {% if userVote and userVote.voteType == 'UPVOTE' %}active-up{% endif %}">
+                        👍 {{ post.upvoteCount }}
+                    </button>
+                </form>
+                <form method="post" action="{{ path('app_post_vote', {id: post.id}) }}" style="display:inline">
+                    <input type="hidden" name="type" value="DOWNVOTE">
+                    <button type="submit" class="pd-action-btn pd-down {% if userVote and userVote.voteType == 'DOWNVOTE' %}active-down{% endif %}">
+                        👎 {{ post.downvoteCount }}
+                    </button>
+                </form>
+                <button class="pd-action-btn pd-share" onclick="document.getElementById('shareModal').style.display='flex'">📤 Partager</button>
+                {% if post.author is null or post.author.id != 18 %}
+                <button class="pd-action-btn pd-report" onclick="document.getElementById('reportModal').style.display='flex'">🚩 Signaler</button>
+                {% endif %}
+                <span class="pd-comment-count">💬 {{ post.comments|length }}</span>
+            </div>
+
+            {# AI toolbar — under vote/share #}
+            <div class="pd-ai-bar-hero">
+                <button class="pd-ai-btn" onclick="summarizePost()">📝 Résumer</button>
+                <div class="pd-translate">
+                    <select id="translateLang" class="pd-lang-sel">
+                        <option value="English">Anglais</option>
+                        <option value="Arabic">Arabe</option>
+                        <option value="Spanish">Espagnol</option>
+                        <option value="German">Allemand</option>
+                        <option value="French">Français</option>
+                    </select>
+                    <button class="pd-ai-btn" onclick="translatePost()">🌍 Traduire</button>
+                </div>
+                <button class="pd-ai-btn pd-ai-warn" onclick="checkMisinformation()">🔍 Vérifier</button>
+            </div>
+        </div>
+        {% if post.imageUrl %}
+        <div class="pd-hero-right">
+            <img src="/{{ post.imageUrl }}" alt="{{ post.title }}" class="pd-hero-img">
+        </div>
+        {% endif %}
+    </div>
+
+    {# ── CONTENT ── #}
+    <div class="pd-content-wrap">
+        <div id="aiResultBox" style="display:none" class="pd-ai-result">
+            <div class="pd-ai-result-header">
+                <span id="aiResultLabel"></span>
+                <button onclick="document.getElementById('aiResultBox').style.display='none'">✕</button>
+            </div>
+            <div id="aiResultContent"></div>
+        </div>
+        <div class="pd-body" id="postContent">{{ post.content }}</div>
+    </div>
+
+    {# ── MODALS ── #}
+    <div class="pd-modal-overlay" id="reportModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+        <div class="pd-modal">
+            <div class="pd-modal-header"><span>🚩 Signaler ce post</span><button onclick="document.getElementById('reportModal').style.display='none'">×</button></div>
+            <form method="post" action="{{ path('app_post_report', {id: post.id}) }}">
+                <p class="pd-modal-sub">Pourquoi signalez-vous ce post ?</p>
+                <div class="pd-reasons">
+                    <label class="pd-reason"><input type="radio" name="reason" value="Spam ou contenu répétitif" required> Spam ou contenu répétitif</label>
+                    <label class="pd-reason"><input type="radio" name="reason" value="Informations trompeuses ou fausses"> Informations trompeuses ou fausses</label>
+                    <label class="pd-reason"><input type="radio" name="reason" value="Contenu offensant ou haineux"> Contenu offensant ou haineux</label>
+                    <label class="pd-reason"><input type="radio" name="reason" value="Arnaque ou fraude financière"> Arnaque ou fraude financière</label>
+                    <label class="pd-reason"><input type="radio" name="reason" value="Autre"> Autre</label>
+                </div>
+                <textarea name="details" class="pd-modal-textarea" placeholder="Détails supplémentaires..." rows="3"></textarea>
+                <div class="pd-modal-footer">
+                    <button type="button" onclick="document.getElementById('reportModal').style.display='none'" class="pd-btn-cancel">Annuler</button>
+                    <button type="submit" class="pd-btn-submit">Envoyer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="pd-modal-overlay" id="shareModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+        <div class="pd-modal">
+            <div class="pd-modal-header"><span>📤 Partager ce post</span><button onclick="document.getElementById('shareModal').style.display='none'">×</button></div>
+            <form method="post" action="{{ path('app_post_share', {id: post.id}) }}">
+                <div class="pd-share-preview">
+                    <div class="pd-share-author">{{ post.author ? post.author.firstname ~ ' ' ~ post.author.lastname : 'Anonyme' }}</div>
+                    <div class="pd-share-title">{{ post.title }}</div>
+                </div>
+                <select name="target_forum_id" class="pd-modal-textarea" style="padding:10px;margin-bottom:10px" required>
+                    <option value="">Choisir un forum...</option>
+                    {% for forum in shareForums %}
+                    <option value="{{ forum.id }}">{{ forum.title }}</option>
+                    {% endfor %}
+                </select>
+                <textarea name="comment" class="pd-modal-textarea" placeholder="Ajouter quelque chose..." rows="3"></textarea>
+                <div class="pd-modal-footer">
+                    <button type="button" onclick="document.getElementById('shareModal').style.display='none'" class="pd-btn-cancel">Annuler</button>
+                    <button type="submit" class="pd-btn-submit" style="background:#237f4e">📤 Partager</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# ── COMMENTS ── #}
+    <div class="pd-comments">
+        <div class="pd-comments-header">
+            <h2>Commentaires</h2>
+            <span class="pd-comments-count">{{ post.comments|length }}</span>
+        </div>
+
+        <div id="toxicBanner" style="display:none" class="pd-toxic">
+            <span>⚠️</span><p id="toxicMessage"></p>
+            <button onclick="document.getElementById('toxicBanner').style.display='none'">✕</button>
+        </div>
+
+        <form class="pd-add-comment" method="post" action="{{ path('app_post_comment', {id: post.id}) }}" id="commentForm" onsubmit="return handleCommentSubmit(event, this)">
+            <div class="pd-add-avatar">{{ post.author ? post.author.firstname|first|upper : 'A' }}</div>
+            <div class="pd-add-body">
+                <div class="autocomplete-wrap">
+                    <textarea name="content" id="mainCommentInput" placeholder="Partagez votre avis..." rows="3" required oninput="onCommentInput(this)"></textarea>
+                    <div id="autocompleteSuggestion" class="autocomplete-suggestion" style="display:none"></div>
+                </div>
+                <div id="moderationWarning" class="pd-mod-warn" style="display:none">
+                    <span id="moderationText"></span>
+                    <div class="pd-mod-actions">
+                        <button type="button" onclick="dismissWarning()">✏️ Reformuler</button>
+                        <button type="button" onclick="publishAnyway()">Publier quand même</button>
+                    </div>
+                </div>
+                <button type="submit" class="pd-submit-comment" id="publishBtn">Publier</button>
+            </div>
+        </form>
+
+        <div class="pd-comments-list">
+            {% for comment in post.comments %}
+            <div class="pd-comment" id="cb-{{ comment.id }}">
+                <div class="pd-c-avatar">{{ comment.author ? comment.author.firstname|first|upper : '?' }}</div>
+                <div class="pd-c-body">
+                    <div class="pd-c-meta">
+                        <span class="pd-c-author">{{ comment.author ? comment.author.firstname ~ ' ' ~ comment.author.lastname : 'Anonyme' }}</span>
+                        <span class="pd-c-time">{{ comment.createdAt|date('d/m/Y H:i') }}</span>
+                    </div>
+                    <p class="pd-c-text" id="ct-{{ comment.id }}">{{ comment.content }}</p>
+                    <form id="ef-{{ comment.id }}" class="pd-edit-form" method="post" action="{{ path('app_comment_edit', {id: comment.id}) }}" style="display:none">
+                        <textarea name="content" rows="2">{{ comment.content }}</textarea>
+                        <div class="pd-edit-actions">
+                            <button type="submit" class="pd-btn-save">Enregistrer</button>
+                            <button type="button" onclick="toggleEdit({{ comment.id }})">Annuler</button>
+                        </div>
+                    </form>
+                    <div class="pd-c-actions">
+                        <button class="pd-c-vote" onclick="voteComment(this, 'up-{{ comment.id }}', 'down-{{ comment.id }}')">👍 <span id="up-{{ comment.id }}">0</span></button>
+                        <button class="pd-c-vote" onclick="voteComment(this, 'down-{{ comment.id }}', 'up-{{ comment.id }}')">👎 <span id="down-{{ comment.id }}">0</span></button>
+                        <button class="pd-c-link" onclick="showReply({{ comment.id }})">↩ Répondre</button>
+                        <button class="pd-c-link" onclick="toggleEdit({{ comment.id }})">✏️ Modifier</button>
+                        <form method="post" action="{{ path('app_comment_delete', {id: comment.id}) }}" style="display:inline" onsubmit="return confirm('Supprimer ?')">
+                            <button type="submit" class="pd-c-link pd-c-del">🗑️</button>
+                        </form>
+                    </div>
+                    <form id="rf-{{ comment.id }}" class="pd-reply-form" method="post" action="{{ path('app_post_comment', {id: post.id}) }}" style="display:none">
+                        <textarea name="content" rows="2" placeholder="Répondre à {{ comment.author ? comment.author.firstname : 'ce commentaire' }}..." required></textarea>
+                        <div class="pd-edit-actions">
+                            <button type="submit" class="pd-btn-save">Répondre</button>
+                            <button type="button" onclick="hideReply({{ comment.id }})">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="pd-no-comments">Soyez le premier à commenter !</div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: white; }
+.pd-page { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* ── HERO ── */
+.pd-hero { display: grid; grid-template-columns: 1fr 1fr; min-height: 420px; background: #faf9f7; border: 1px solid #1a1a1b; margin-bottom: 0; }
+.pd-hero-left { padding: 48px 48px 40px; display: flex; flex-direction: column; justify-content: center; gap: 16px; border-right: 1px solid #1a1a1b; background: #f0fdf4; }
+.pd-category { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #237f4e; text-decoration: none; }
+.pd-category:hover { text-decoration: underline; }
+.pd-title { font-size: 36px; font-weight: 800; color: #1a1a1b; line-height: 1.2; font-family: Georgia, 'Times New Roman', serif; }
+.pd-byline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pd-avatar { width: 38px; height: 38px; border-radius: 50%; background: #237f4e; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+.pd-author { font-size: 13px; font-weight: 700; color: #1a1a1b; display: block; }
+.pd-date { font-size: 12px; color: #999; display: block; }
+.pd-owner-btns { display: flex; gap: 6px; margin-left: auto; }
+.pd-icon-btn { background: #f0f0f0; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; text-decoration: none; }
+.pd-icon-btn:hover { background: #e0e0e0; }
+.pd-icon-red:hover { background: #fee2e2 !important; }
+.pd-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid #e8e8e8; max-width: 340px; }
+.pd-action-btn { padding: 7px 14px; border: 1px solid #e0e0e0; background: white; border-radius: 20px; font-size: 13px; cursor: pointer; font-weight: 500; transition: all 0.15s; white-space: nowrap; }
+.pd-action-btn:hover { border-color: #237f4e; background: #f0fdf4; color: #237f4e; }
+.pd-action-btn.active-up { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; font-weight: 700; }
+.pd-down:hover { border-color: #f44336; background: #ffebee; color: #c62828; }
+.pd-action-btn.active-down { border-color: #f44336; background: #ffebee; color: #c62828; font-weight: 700; }
+.pd-share:hover { border-color: #2196f3; background: #e3f2fd; color: #1565c0; }
+.pd-report:hover { border-color: #ff9800; background: #fff3e0; color: #e65100; }
+.pd-comment-count { font-size: 13px; color: #999; margin-left: auto; }
+.pd-hero-right { overflow: hidden; }
+.pd-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 420px; }
+
+/* ── CONTENT ── */
+.pd-content-wrap { max-width: 760px; margin: 0 auto; padding: 40px 0; }
+.pd-ai-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 28px; }
+.pd-ai-bar-hero { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid #e8e8e8; }
+.pd-ai-btn { background: #f0fdf4; color: #237f4e; border: 1px solid #b7dfca; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.pd-ai-btn:hover { background: #237f4e; color: white; }
+.pd-ai-warn { background: #fff8e1; color: #f57c00; border-color: #ffe082; }
+.pd-ai-warn:hover { background: #f57c00; color: white; }
+.pd-translate { display: flex; align-items: center; gap: 6px; }
+.pd-lang-sel { padding: 7px 10px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 13px; outline: none; }
+.pd-ai-result { background: #f8f9ff; border: 1px solid #c5cae9; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+.pd-ai-result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: 600; color: #3949ab; font-size: 14px; }
+.pd-ai-result-header button { background: none; border: none; font-size: 16px; cursor: pointer; color: #999; }
+#aiResultContent { font-size: 14px; color: #333; line-height: 1.6; white-space: pre-wrap; }
+.pd-body { font-size: 17px; color: #2d2d2d; line-height: 1.9; white-space: pre-wrap; font-family: Georgia, serif; }
+
+/* ── COMMENTS ── */
+.pd-comments { max-width: 760px; margin: 0 auto; padding: 40px 0; border-top: 2px solid #1a1a1b; }
+.pd-comments-header { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+.pd-comments-header h2 { font-size: 22px; font-weight: 800; color: #1a1a1b; font-family: Georgia, serif; }
+.pd-comments-count { background: #1a1a1b; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+.pd-toxic { background: #fff3e0; border: 1px solid #ffb74d; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; }
+.pd-toxic span { font-size: 20px; }
+.pd-toxic p { flex: 1; font-size: 14px; color: #e65100; }
+.pd-toxic button { background: none; border: none; font-size: 18px; cursor: pointer; color: #999; }
+.pd-add-comment { display: flex; gap: 14px; margin-bottom: 40px; padding-bottom: 40px; border-bottom: 1px solid #e8e8e8; }
+.pd-add-avatar { width: 42px; height: 42px; border-radius: 50%; background: #237f4e; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+.pd-add-body { flex: 1; }
+.pd-add-body textarea { width: 100%; padding: 12px 16px; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 15px; font-family: inherit; resize: vertical; outline: none; background: white; }
+.pd-add-body textarea:focus { border-color: #1a1a1b; }
+.pd-submit-comment { margin-top: 10px; background: #1a1a1b; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; }
+.pd-submit-comment:hover { background: #333; }
+.pd-mod-warn { background: #fff3e0; border: 1px solid #ffb74d; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #e65100; margin: 8px 0; }
+.pd-mod-actions { display: flex; gap: 8px; margin-top: 8px; }
+.pd-mod-actions button { padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; background: white; }
+.pd-mod-actions button:first-child { background: #237f4e; color: white; border-color: #237f4e; }
+.pd-comments-list { display: flex; flex-direction: column; gap: 0; }
+.pd-comment { display: flex; gap: 16px; padding: 20px 0; }
+.pd-comment:last-child { border-bottom: none; }
+.pd-c-avatar { width: 40px; height: 40px; border-radius: 50%; background: #e8f5ee; color: #237f4e; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; border: 1px solid #b7dfca; }
+.pd-c-body { flex: 1; position: relative; background: white; border: 1px solid #1a1a1b; border-radius: 0 12px 12px 12px; padding: 14px 18px; }
+.pd-c-body::before { content: ''; position: absolute; top: 0; left: -10px; width: 0; height: 0; border-top: 10px solid #1a1a1b; border-left: 10px solid transparent; }
+.pd-c-body::after { content: ''; position: absolute; top: 1px; left: -8px; width: 0; height: 0; border-top: 9px solid white; border-left: 9px solid transparent; }
+.pd-c-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.pd-c-author { font-weight: 700; font-size: 14px; color: #1a1a1b; }
+.pd-c-time { font-size: 12px; color: #bbb; }
+.pd-c-text { font-size: 15px; color: #333; line-height: 1.7; margin-bottom: 12px; }
+.pd-c-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pd-c-vote { background: none; border: 1px solid #e0e0e0; border-radius: 20px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.pd-c-vote:hover { border-color: #1a1a1b; }
+.pd-c-link { background: none; border: none; font-size: 13px; color: #999; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+.pd-c-link:hover { color: #1a1a1b; background: #f0f0f0; }
+.pd-c-del:hover { color: #c62828 !important; background: #fee2e2 !important; }
+.pd-edit-form, .pd-reply-form { margin-top: 12px; }
+.pd-edit-form textarea, .pd-reply-form textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical; outline: none; }
+.pd-edit-actions { display: flex; gap: 8px; margin-top: 8px; }
+.pd-btn-save { background: #1a1a1b; color: white; border: none; padding: 7px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.pd-edit-actions button:not(.pd-btn-save) { background: #f3f4f6; color: #555; border: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.pd-no-comments { text-align: center; color: #bbb; padding: 40px; font-size: 15px; font-style: italic; }
+/* Modals */
+.pd-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.pd-modal { background: white; border-radius: 14px; width: 460px; max-width: 95vw; padding: 24px; }
+.pd-modal-header { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: #1a1a1b; margin-bottom: 14px; }
+.pd-modal-header button { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; }
+.pd-modal-sub { font-size: 13px; color: #666; margin-bottom: 14px; }
+.pd-reasons { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.pd-reason { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e0e0e0; cursor: pointer; font-size: 13px; }
+.pd-reason:has(input:checked) { border-color: #1a1a1b; background: #f9f9f9; }
+.pd-modal-textarea { width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-family: inherit; resize: vertical; outline: none; margin-bottom: 16px; display: block; }
+.pd-modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+.pd-btn-cancel { background: #f5f5f5; color: #666; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.pd-btn-submit { background: #1a1a1b; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.pd-share-preview { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.pd-share-author { font-size: 12px; font-weight: 700; color: #237f4e; margin-bottom: 4px; }
+.pd-share-title { font-size: 14px; font-weight: 600; color: #1a1a1b; }
+/* Autocomplete */
+.autocomplete-wrap { position: relative; }
+.autocomplete-suggestion { position: absolute; bottom: 100%; left: 0; right: 0; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #888; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 10; }
+.autocomplete-suggestion:hover { background: #f0fdf4; color: #237f4e; }
+/* Misinfo */
+.misinfo-flagged { color: #c62828; }
+.misinfo-ok { color: #2e7d32; }
+.misinfo-issue { background: #ffebee; border-left: 3px solid #f44336; padding: 6px 10px; margin: 4px 0; border-radius: 4px; font-size: 13px; }
+@media (max-width: 768px) { .pd-hero { grid-template-columns: 1fr; } .pd-hero-right { display: none; } .pd-hero-left { padding: 28px 20px; } .pd-title { font-size: 26px; } }
+</style>
+
+<script>
+var POST_TITLE   = {{ post.title|json_encode|raw }};
+var POST_CONTENT = {{ post.content|json_encode|raw }};
+
+function voteComment(btn, myId, otherId) {
+    var mySpan = document.getElementById(myId), otherSpan = document.getElementById(otherId);
+    var isUp = myId.startsWith('up-');
+    var votedClass = isUp ? 'voted-up' : 'voted-down';
+    var otherBtn = otherSpan.closest('button');
+    if (btn.classList.contains(votedClass)) {
+        btn.classList.remove(votedClass);
+        mySpan.textContent = Math.max(0, parseInt(mySpan.textContent) - 1);
+    } else {
+        if (otherBtn.classList.contains(isUp ? 'voted-down' : 'voted-up')) {
+            otherBtn.classList.remove(isUp ? 'voted-down' : 'voted-up');
+            otherSpan.textContent = Math.max(0, parseInt(otherSpan.textContent) - 1);
+        }
+        btn.classList.add(votedClass);
+        mySpan.textContent = parseInt(mySpan.textContent) + 1;
+    }
+}
+function showReply(id) { var f = document.getElementById('rf-'+id); f.style.display = f.style.display==='none'?'block':'none'; if(f.style.display==='block') f.querySelector('textarea').focus(); }
+function hideReply(id) { document.getElementById('rf-'+id).style.display='none'; }
+function toggleEdit(id) { var f=document.getElementById('ef-'+id),t=document.getElementById('ct-'+id),show=f.style.display==='none'; f.style.display=show?'block':'none'; t.style.display=show?'none':'block'; if(show) f.querySelector('textarea').focus(); }
+
+function showAiBox(label, html) {
+    document.getElementById('aiResultLabel').textContent = label;
+    document.getElementById('aiResultContent').innerHTML = html;
+    document.getElementById('aiResultBox').style.display = 'block';
+}
+async function summarizePost() {
+    showAiBox('📝 Résumé IA', '<em>Chargement...</em>');
+    try { var res=await fetch('{{ path("api_ai_summarize") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:POST_TITLE,content:POST_CONTENT})}); var d=await res.json(); showAiBox('📝 Résumé IA',d.summary||''); } catch(e){showAiBox('Erreur','Impossible de résumer.');}
+}
+async function translatePost() {
+    var lang=document.getElementById('translateLang').value;
+    showAiBox('🌍 Traduction','<em>En cours...</em>');
+    try { var res=await fetch('{{ path("api_ai_translate") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:POST_TITLE+'\n\n'+POST_CONTENT,lang:lang})}); var d=await res.json(); showAiBox('🌍 Traduction ('+lang+')',d.translation||''); } catch(e){showAiBox('Erreur','Impossible de traduire.');}
+}
+async function checkMisinformation() {
+    showAiBox('🔍 Vérification','<em>Analyse...</em>');
+    try {
+        var res=await fetch('{{ path("api_ai_misinformation") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:POST_TITLE,content:POST_CONTENT})});
+        var d=await res.json(); var html='';
+        if(d.flagged){html='<p class="misinfo-flagged">⚠️ '+(d.verdict||'')+'</p>';(d.issues||[]).forEach(function(i){html+='<div class="misinfo-issue">• '+i+'</div>';});}
+        else{html='<p class="misinfo-ok">✅ '+(d.verdict||'Aucun problème détecté.')+'</p>';}
+        showAiBox('🔍 Vérification des faits',html);
+    } catch(e){showAiBox('Erreur','Impossible de vérifier.');}
+}
+
+var moderationBypassed=false, autocompleteTimer=null;
+function onCommentInput(textarea) {
+    if(!moderationBypassed) document.getElementById('moderationWarning').style.display='none';
+    moderationBypassed=false;
+    clearTimeout(autocompleteTimer);
+    var text=textarea.value, suggestion=document.getElementById('autocompleteSuggestion');
+    suggestion.style.display='none';
+    if(text.trim().length<10) return;
+    autocompleteTimer=setTimeout(async function(){
+        try{var res=await fetch('{{ path("api_ai_autocomplete") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text})});var d=await res.json();if(d.suggestion&&d.suggestion.trim()){suggestion.textContent='💡 '+d.suggestion;suggestion.style.display='block';suggestion.onclick=function(){textarea.value=text.trimEnd()+' '+d.suggestion.trim();suggestion.style.display='none';textarea.focus();};}}catch(e){}
+    },900);
+}
+async function handleCommentSubmit(e,form){
+    if(moderationBypassed) return true;
+    e.preventDefault();
+    var text=document.getElementById('mainCommentInput').value.trim();
+    if(!text) return false;
+    try{var res=await fetch('{{ path("api_ai_moderate") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text})});var d=await res.json();if(!d.safe){var w=document.getElementById('moderationWarning');document.getElementById('moderationText').textContent='⚠️ '+(d.warning||'Ce commentaire semble inapproprié.');w.style.display='block';return false;}}catch(e){}
+    form.submit(); return false;
+}
+function dismissWarning(){document.getElementById('moderationWarning').style.display='none';document.getElementById('mainCommentInput').focus();}
+function publishAnyway(){moderationBypassed=true;document.getElementById('moderationWarning').style.display='none';document.getElementById('commentForm').submit();}
+
+(async function checkToxicity(){
+    var comments=[];document.querySelectorAll('.pd-c-text').forEach(function(el){comments.push(el.textContent.trim());});
+    if(comments.length<2) return;
+    try{var res=await fetch('{{ path("api_ai_toxicity") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comments:comments.slice(-10)})});var d=await res.json();if(d.toxic&&d.suggestion){document.getElementById('toxicMessage').textContent=d.suggestion;document.getElementById('toxicBanner').style.display='flex';}}catch(e){}
+})();
+</script>
+{% endblock %}
