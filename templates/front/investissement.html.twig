@@ -197,7 +197,6 @@
             <a href="{{ path('user_goals') }}">Goals</a>
             <a href="{{ path('user_bills') }}">Factures</a>
             <a href="{{ path('investissement_index') }}" class="active">Investissement</a>
-            <a href="{{ path('investissement_mes_demandes') }}">Mes demandes</a>
             <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
             <a href="{{ path('front_logout') }}">Déconnexion</a>
           </div>
@@ -217,6 +216,10 @@
                 <div class="meta">Montants collectés et objectifs de financement</div>
               </div>
               <div class="d-flex flex-wrap" style="gap:10px;justify-content:flex-end">
+                <a href="{{ path('investissement_mes_demandes') }}" class="btn btn-outline-success"
+                  style="border-radius:12px;font-weight:800;white-space:nowrap">
+                  <i class="fa fa-list-alt mr-1"></i> Mes demandes
+                </a>
                 <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#manageMyProjectsModal"
                   style="border-radius:12px;font-weight:800;white-space:nowrap">
                   <i class="fa fa-folder-open mr-1"></i> Gérer mes projets
