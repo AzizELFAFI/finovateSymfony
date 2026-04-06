@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Finovate - Nouveau Projet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('backoffice/assets/images/favicon_io/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('backoffice/assets/images/favicon_io/favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('backoffice/assets/images/favicon_io/favicon-16x16.png') }}">
+
+  <base href="{{ asset('backoffice/') }}">
+  <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+</head>
+
+<body>
+  <nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
+    <div class="d-flex align-items-center">
+      <a href="{{ path('backoffice_projects') }}" class="btn btn-light btn-icon btn-sm me-3" title="Retour">
+        <i class="ti ti-arrow-left"></i>
+      </a>
+      <h1 class="fs-4 mb-0">Ajouter un projet</h1>
+    </div>
+  </nav>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="logo-area">
+      <a href="{{ path('backoffice_dashboard') }}" class="d-inline-flex align-items-center text-decoration-none">
+        <span class="logo-text ms-2 fw-bold" style="font-size: 1.25rem; letter-spacing: 0.2px;">Finovate</span>
+      </a>
+    </div>
+    <ul class="nav flex-column">
+      <li class="px-4 py-2"><small class="nav-text">Banque Virtuelle</small></li>
+      <li><a class="nav-link" href="{{ path('backoffice_dashboard') }}"><i class="ti ti-home"></i><span class="nav-text">Vue d'ensemble</span></a></li>
+      <li><a class="nav-link" href="{{ path('backoffice_users') }}"><i class="ti ti-users"></i><span class="nav-text">Gestion Utilisateurs</span></a></li>
+      <li><a class="nav-link active" href="{{ path('backoffice_projects') }}"><i class="ti ti-briefcase"></i><span class="nav-text">Gestion Projets</span></a></li>
+      <li class="px-4 pt-4 pb-2"><small class="nav-text">Session</small></li>
+      <li><a class="nav-link" href="{{ path('front_logout') }}"><i class="ti ti-logout"></i><span class="nav-text">Déconnexion</span></a></li>
+    </ul>
+  </aside>
+
+  <main id="content" class="content py-10">
+    <div class="container-fluid">
+      {% for label, messages in app.flashes %}
+        {% for message in messages %}
+          <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endfor %}
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+          <h4 class="mb-0">Nouveau projet</h4>
+        </div>
+        <div class="card-body">
+          {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+            {% set globalErrors = form_errors(form) %}
+            {% if globalErrors|trim is not empty %}
+              <div class="alert alert-danger" role="alert">{{ globalErrors }}</div>
+            {% endif %}
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="{{ form.title.vars.id }}" class="form-label">Titre</label>
+                {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }}
+                <div class="text-danger small">{{ form_errors(form.title) }}</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="{{ form.category.vars.id }}" class="form-label">Catégorie</label>
+                {{ form_widget(form.category, {'attr': {'class': 'form-control'}}) }}
+                <div class="text-danger small">{{ form_errors(form.category) }}</div>
+              </div>
+
+              <div class="col-12">
+                <label for="{{ form.description.vars.id }}" class="form-label">Description</label>
+                {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+                <div class="text-danger small">{{ form_errors(form.description) }}</div>
+              </div>
+
+              <div class="col-md-4">
+                <label for="{{ form.goalAmount.vars.id }}" class="form-label">Objectif</label>
+                {{ form_widget(form.goalAmount, {'attr': {'class': 'form-control'}}) }}
+                <div class="text-danger small">{{ form_errors(form.goalAmount) }}</div>
+              </div>
+
+              <div class="col-md-4">
+                <label for="{{ form.deadline.vars.id }}" class="form-label">Deadline</label>
+                {{ form_widget(form.deadline, {'attr': {'class': 'form-control'}}) }}
+                <div class="text-danger small">{{ form_errors(form.deadline) }}</div>
+              </div>
+
+              <div class="col-md-4">
+                <label for="{{ form.image.vars.id }}" class="form-label">Image</label>
+                {{ form_widget(form.image, {'attr': {'class': 'form-control'}}) }}
+                <div class="text-danger small">{{ form_errors(form.image) }}</div>
+              </div>
+
+              <div class="col-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Créer</button>
+                <a href="{{ path('backoffice_projects') }}" class="btn btn-outline-secondary">Annuler</a>
+              </div>
+            </div>
+
+          {{ form_end(form) }}
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center py-2 mt-6 text-secondary ">
+    <p class="mb-0">Copyright © 2026 Finovate. Tous droits réservés.</p>
+  </footer>
+
+  <script src="{{ asset('backoffice/assets/js/main.js') }}" type="module"></script>
+</body>
+
+</html>
