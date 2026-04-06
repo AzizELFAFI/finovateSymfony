@@ -11,8 +11,9 @@ class Transaction
 {
 
     #[ORM\Id]
-    #[ORM\Column(type: "integer")]
-    private int $id;
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: "bigint")]
+    private ?int $id = null;
 
     #[ORM\Column(type: "integer")]
     #[Assert\NotBlank(message: "L'expéditeur est obligatoire.")]
@@ -47,11 +48,6 @@ class Transaction
     public function getId()
     {
         return $this->id;
-    }
-
-    public function setId($value)
-    {
-        $this->id = $value;
     }
 
     public function getSender_id()
