@@ -15,7 +15,7 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         user:
-            pattern: ^/user
+            pattern: ^/(user|investissement)
             stateless: true
             provider: app_user_provider
             jwt: ~
@@ -46,6 +46,7 @@ security:
         - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/user, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/investissement, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
