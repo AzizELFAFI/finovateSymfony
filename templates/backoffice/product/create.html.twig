@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Finovate - Créer un Produit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('backoffice/assets/images/favicon_io/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('backoffice/assets/images/favicon_io/favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('backoffice/assets/images/favicon_io/favicon-16x16.png') }}">
+  <base href="{{ asset('backoffice/') }}">
+  <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+</head>
+<body>
+  <!-- TOPBAR -->
+  <nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
+    <div class="d-flex align-items-center">
+      <a href="{{ path('backoffice_products') }}" class="btn btn-light btn-icon btn-sm me-3">
+        <i class="ti ti-arrow-left"></i>
+      </a>
+      <h1 class="fs-4 mb-0">Créer un Produit</h1>
+    </div>
+  </nav>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar">
+    <div class="logo-area">
+      <a href="{{ path('backoffice_dashboard') }}" class="d-inline-flex align-items-center text-decoration-none">
+        <span class="logo-text ms-2 fw-bold" style="font-size: 1.25rem; letter-spacing: 0.2px;">Finovate</span>
+      </a>
+    </div>
+    <ul class="nav flex-column">
+      <li class="px-4 py-2"><small class="nav-text">Gestion</small></li>
+      <li><a class="nav-link" href="{{ path('backoffice_dashboard') }}"><i class="ti ti-home"></i><span class="nav-text">Vue d'ensemble</span></a></li>
+      <li><a class="nav-link" href="{{ path('backoffice_users') }}"><i class="ti ti-users"></i><span class="nav-text">Utilisateurs</span></a></li>
+      <li><a class="nav-link active" href="{{ path('backoffice_products') }}"><i class="ti ti-shopping-cart"></i><span class="nav-text">Produits</span></a></li>
+      <li><a class="nav-link" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
+      <li class="px-4 pt-4 pb-2"><small class="nav-text">Session</small></li>
+      <li><a class="nav-link" href="{{ path('front_logout') }}"><i class="ti ti-logout"></i><span class="nav-text">Déconnexion</span></a></li>
+    </ul>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main id="content" class="content py-10">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12 col-lg-8 mx-auto">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+              <h4 class="mb-0">Ajouter un nouveau produit</h4>
+            </div>
+            <div class="card-body">
+              {{ form_start(form) }}
+                <div class="form-group mb-3">
+                  {{ form_label(form.name) }}
+                  {{ form_widget(form.name) }}
+                  {% if form.name.vars.errors|length %}
+                    <div class="invalid-feedback" style="display: block;">
+                      {% for error in form.name.vars.errors %}
+                        {{ error.message }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                  {{ form_label(form.description) }}
+                  {{ form_widget(form.description) }}
+                  {% if form.description.vars.errors|length %}
+                    <div class="invalid-feedback" style="display: block;">
+                      {% for error in form.description.vars.errors %}
+                        {{ error.message }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      {{ form_label(form.pricePoints) }}
+                      {{ form_widget(form.pricePoints) }}
+                      {% if form.pricePoints.vars.errors|length %}
+                        <div class="invalid-feedback" style="display: block;">
+                          {% for error in form.pricePoints.vars.errors %}
+                            {{ error.message }}
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      {{ form_label(form.stock) }}
+                      {{ form_widget(form.stock) }}
+                      {% if form.stock.vars.errors|length %}
+                        <div class="invalid-feedback" style="display: block;">
+                          {% for error in form.stock.vars.errors %}
+                            {{ error.message }}
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group mb-3">
+                  {{ form_label(form.image) }}
+                  {{ form_widget(form.image) }}
+                  {% if form.image.vars.errors|length %}
+                    <div class="invalid-feedback" style="display: block;">
+                      {% for error in form.image.vars.errors %}
+                        {{ error.message }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="d-flex gap-2 pt-3">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-check"></i> Créer le produit
+                  </button>
+                  <a href="{{ path('backoffice_products') }}" class="btn btn-outline-secondary">
+                    <i class="ti ti-x"></i> Annuler
+                  </a>
+                </div>
+              {{ form_end(form) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="{{ asset('backoffice/assets/js/main.js') }}"></script>
+</body>
+</html>
