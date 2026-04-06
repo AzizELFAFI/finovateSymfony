@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate - Investissement</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  <style>
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 22px;
+    }
+
+    .project-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.06);
+      padding: 18px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-title { font-weight: 900; margin: 0; color: #0f172a; font-size: 1.1rem; }
+
+    .project-desc {
+      color: rgba(0, 0, 0, 0.62);
+      font-weight: 600;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      margin-top: 8px;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .meta { color: rgba(0, 0, 0, 0.55); font-weight: 600; font-size: 0.85rem; }
+
+    .progress { height: 10px; border-radius: 999px; }
+
+    .badge-soft {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.75rem;
+      letter-spacing: 0.2px;
+    }
+
+    .badge-soft.ok { background: rgba(16,185,129,0.15); color: #0f766e; }
+    .badge-soft.run { background: rgba(59,130,246,0.12); color: #1d4ed8; }
+    .badge-soft.warn { background: rgba(245,158,11,0.15); color: #b45309; }
+    .badge-soft.neutral { background: rgba(107,114,128,0.12); color: #374151; }
+
+    .category-pill {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      background: rgba(15, 118, 110, 0.08);
+      color: #0f766e;
+    }
+
+    .small-error { color: #dc3545; font-size: 0.85rem; }
+
+    .project-thumb {
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      max-height: 160px;
+      background: rgba(15, 118, 110, 0.06);
+    }
+
+    .project-thumb img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .manage-project-row {
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .manage-project-row .thumb-xs {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+          aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_services') }}">Nos services</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_contact') }}">Contact</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_one_page') }}">One-page</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Investissement</h1>
+          <span>Découvrez les projets et participez au financement</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-shell">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 mb-4">
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}">Dashboard</a>
+            <a href="{{ path('user_transactions') }}">Transactions</a>
+            <a href="{{ path('user_goals') }}">Goals</a>
+            <a href="{{ path('user_bills') }}">Factures</a>
+            <a href="{{ path('investissement_index') }}" class="active">Investissement</a>
+            <a href="{{ path('investissement_mes_demandes') }}">Mes demandes</a>
+            <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
+        </div>
+
+        <div class="col-lg-9">
+          <div class="card-shell mb-4">
+            {% for label, messages in app.flashes %}
+              {% for message in messages %}
+                <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+              {% endfor %}
+            {% endfor %}
+
+            <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:12px">
+              <div>
+                <h4 style="font-weight:900;margin:0">Projets disponibles</h4>
+                <div class="meta">Montants collectés et objectifs de financement</div>
+              </div>
+              <div class="d-flex flex-wrap" style="gap:10px;justify-content:flex-end">
+                <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#manageMyProjectsModal"
+                  style="border-radius:12px;font-weight:800;white-space:nowrap">
+                  <i class="fa fa-folder-open mr-1"></i> Gérer mes projets
+                </button>
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addProjectModal"
+                  style="border-radius:12px;font-weight:800;white-space:nowrap">
+                  <i class="fa fa-plus-circle mr-1"></i> Ajouter un projet
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-shell mb-4">
+            <form method="get" action="{{ path('investissement_index') }}" id="invest-filter-form" class="mb-0">
+              <input type="hidden" name="page" value="{{ pagination.page }}" id="invest-filter-page">
+              <div class="form-row align-items-end">
+                <div class="form-group col-md-4 mb-md-0">
+                  <label for="invest-search-q" class="meta mb-1" style="display:block">Recherche par titre</label>
+                  <input type="search" name="q" id="invest-search-q" class="form-control" value="{{ filterQ }}" placeholder="Tapez pour filtrer…" autocomplete="off">
+                </div>
+                <div class="form-group col-md-3 mb-md-0">
+                  <label for="invest-filter-status" class="meta mb-1" style="display:block">Statut du projet</label>
+                  <select name="status" id="invest-filter-status" class="form-control" onchange="document.getElementById('invest-filter-page').value='1'; this.form.submit();">
+                    <option value="" {{ filterStatus == '' ? 'selected' : '' }}>Tous</option>
+                    <option value="OPEN" {{ filterStatus == 'OPEN' ? 'selected' : '' }}>Ouverts</option>
+                    <option value="CLOSED" {{ filterStatus == 'CLOSED' ? 'selected' : '' }}>Clôturés</option>
+                  </select>
+                </div>
+                <div class="form-group col-md-3 mb-md-0">
+                  <label for="invest-filter-sort" class="meta mb-1" style="display:block">Trier par</label>
+                  <select name="sort" id="invest-filter-sort" class="form-control" onchange="document.getElementById('invest-filter-page').value='1'; this.form.submit();">
+                    <option value="id_desc" {{ filterSort == 'id_desc' ? 'selected' : '' }}>Plus récents</option>
+                    <option value="goal_asc" {{ filterSort == 'goal_asc' ? 'selected' : '' }}>Objectif croissant</option>
+                    <option value="goal_desc" {{ filterSort == 'goal_desc' ? 'selected' : '' }}>Objectif décroissant</option>
+                    <option value="current_asc" {{ filterSort == 'current_asc' ? 'selected' : '' }}>Collecte croissante</option>
+                    <option value="current_desc" {{ filterSort == 'current_desc' ? 'selected' : '' }}>Collecte décroissante</option>
+                    <option value="deadline_asc" {{ filterSort == 'deadline_asc' ? 'selected' : '' }}>Échéance proche</option>
+                    <option value="deadline_desc" {{ filterSort == 'deadline_desc' ? 'selected' : '' }}>Échéance lointaine</option>
+                  </select>
+                </div>
+                <div class="form-group col-md-2 mb-0">
+                  <button type="submit" class="btn btn-outline-success btn-block" style="border-radius:10px;font-weight:700">Filtrer</button>
+                </div>
+              </div>
+            </form>
+            {% if pagination.total > 0 %}
+              <p class="meta mb-0 mt-2">{{ pagination.total }} projet(s)</p>
+            {% endif %}
+          </div>
+
+          <div class="row">
+            {% if projects is empty %}
+              <div class="col-12">
+                <div class="alert alert-info" role="alert">
+                  Aucun projet pour le moment. Utilisez le bouton <strong>Ajouter un projet</strong> ci-dessus pour en créer un.
+                </div>
+              </div>
+            {% endif %}
+
+            {% for project in projects %}
+              {% set goal = project.goalAmount|default('0')|replace({',': '.'}) %}
+              {% set current = project.currentAmount|default('0')|replace({',': '.'}) %}
+              {% set g = goal + 0 %}
+              {% set c = current + 0 %}
+              {% set percent = (g > 0) ? ((c / g) * 100) : 0 %}
+              {% if percent > 100 %}{% set percent = 100 %}{% endif %}
+
+              {% set st = project.status|default('')|upper %}
+              <div class="col-md-6 mb-4">
+                <div class="project-card">
+                  {% if project.imagePath %}
+                    <div class="project-thumb">
+                      <img src="{{ asset(project.imagePath) }}" alt="">
+                    </div>
+                  {% endif %}
+                  <div class="d-flex justify-content-between align-items-start" style="gap:12px">
+                    <p class="project-title">{{ project.title }}</p>
+                    <div>
+                      {% if st == 'COMPLETED' or st == 'TERMINÉ' or st == 'TERMINE' %}
+                        <span class="badge-soft ok">{{ project.status ?? 'Terminé' }}</span>
+                      {% elseif st == 'ACTIVE' or st == 'OPEN' or st == 'OUVERT' %}
+                        <span class="badge-soft run">{{ project.status ?? 'Actif' }}</span>
+                      {% elseif st == 'PAUSED' or st == 'SUSPENDU' %}
+                        <span class="badge-soft warn">{{ project.status ?? 'En pause' }}</span>
+                      {% elseif project.status %}
+                        <span class="badge-soft neutral">{{ project.status }}</span>
+                      {% else %}
+                        <span class="badge-soft neutral">—</span>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <p class="project-desc">{{ project.description }}</p>
+
+                  {% if project.category %}
+                    <span class="category-pill">{{ project.category }}</span>
+                  {% else %}
+                    <span class="category-pill" style="opacity:.75">Sans catégorie</span>
+                  {% endif %}
+
+                  <div style="height:14px"></div>
+
+                  <div class="meta">{{ c|number_format(2, ',', ' ') }} / {{ g|number_format(2, ',', ' ') }} (objectif)</div>
+                  <div style="height:8px"></div>
+                  <div class="progress">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ percent }}%" aria-valuenow="{{ percent|round }}" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+
+                  <div style="height:16px"></div>
+
+                  {% set is_owner = project.owner and project.owner.id == app.user.id %}
+                  {% if is_owner %}
+                    <p class="meta mb-0 text-center" style="padding:10px 0">C’est votre projet — utilisez <strong>Gérer mes projets</strong> pour modifier ou supprimer.</p>
+                  {% else %}
+                    <button type="button" class="btn btn-success btn-block invest-trigger"
+                      style="border-radius:12px;font-weight:800"
+                      data-toggle="modal" data-target="#investModal"
+                      data-project-id="{{ project.id }}"
+                      data-project-title="{{ project.title|e('html_attr') }}">
+                      Investir
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          {% if pagination.pages > 1 %}
+            <nav class="mt-3 mb-4" aria-label="Pagination projets">
+              <ul class="pagination flex-wrap justify-content-center" style="gap:4px">
+                {% for p in 1..pagination.pages %}
+                  <li class="page-item {{ p == pagination.page ? 'active' : '' }}">
+                    <a class="page-link" style="border-radius:10px;font-weight:700;color:#0f766e"
+                      href="{{ path('investissement_index', { page: p, q: filterQ, status: filterStatus, sort: filterSort }) }}">{{ p }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </nav>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="addProjectModal" tabindex="-1" role="dialog" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+      <div class="modal-content" style="border-radius: 18px; border: 1px solid rgba(15, 118, 110, 0.14); box-shadow: 0 15px 35px rgba(0,0,0,0.12);">
+        <div class="modal-header" style="border-bottom: 1px solid rgba(15,118,110,0.1);">
+          <h5 class="modal-title" id="addProjectModalLabel" style="font-weight: 800; color: #0f766e;">Nouveau projet</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        {{ form_start(createForm, {'action': path('investissement_project_create'), 'method': 'POST', 'attr': {'novalidate': 'novalidate', 'enctype': 'multipart/form-data'}}) }}
+          <div class="modal-body">
+            {% set createGlobalErrors = form_errors(createForm) %}
+            {% if createGlobalErrors|trim is not empty %}
+              <div class="alert alert-danger" role="alert">{{ createGlobalErrors }}</div>
+            {% endif %}
+
+            <div class="form-group">
+              <label for="{{ createForm.title.vars.id }}">{{ createForm.title.vars.label }}</label>
+              {{ form_widget(createForm.title, {'attr': {'class': 'form-control'}}) }}
+              <div class="small-error">{{ form_errors(createForm.title) }}</div>
+            </div>
+
+            <div class="form-group">
+              <label for="{{ createForm.description.vars.id }}">{{ createForm.description.vars.label }}</label>
+              {{ form_widget(createForm.description, {'attr': {'class': 'form-control'}}) }}
+              <div class="small-error">{{ form_errors(createForm.description) }}</div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="{{ createForm.goalAmount.vars.id }}">{{ createForm.goalAmount.vars.label }}</label>
+                {{ form_widget(createForm.goalAmount, {'attr': {'class': 'form-control'}}) }}
+                <div class="small-error">{{ form_errors(createForm.goalAmount) }}</div>
+              </div>
+              <div class="form-group col-md-6">
+                <label for="{{ createForm.deadline.vars.id }}">{{ createForm.deadline.vars.label }}</label>
+                {{ form_widget(createForm.deadline, {'attr': {'class': 'form-control'}}) }}
+                <div class="small-error">{{ form_errors(createForm.deadline) }}</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="{{ createForm.category.vars.id }}">{{ createForm.category.vars.label }}</label>
+              {{ form_widget(createForm.category, {'attr': {'class': 'form-control'}}) }}
+              <div class="small-error">{{ form_errors(createForm.category) }}</div>
+            </div>
+
+            <div class="form-group mb-0">
+              <label for="{{ createForm.image.vars.id }}">{{ createForm.image.vars.label }}</label>
+              {{ form_widget(createForm.image, {'attr': {'class': 'form-control-file'}}) }}
+              <small class="form-text text-muted">JPEG, PNG ou WebP — 5 Mo max.</small>
+              <div class="small-error">{{ form_errors(createForm.image) }}</div>
+            </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid rgba(15,118,110,0.1);">
+            <button type="button" class="btn btn-light" data-dismiss="modal" style="font-weight:700;border-radius:10px">Annuler</button>
+            <button type="submit" class="btn btn-success" style="font-weight:800;border-radius:10px">Créer le projet</button>
+          </div>
+        {{ form_end(createForm) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="manageMyProjectsModal" tabindex="-1" role="dialog" aria-labelledby="manageMyProjectsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+      <div class="modal-content" style="border-radius: 18px; border: 1px solid rgba(15, 118, 110, 0.14); box-shadow: 0 15px 35px rgba(0,0,0,0.12);">
+        <div class="modal-header" style="border-bottom: 1px solid rgba(15,118,110,0.1);">
+          <h5 class="modal-title" id="manageMyProjectsModalLabel" style="font-weight: 800; color: #0f766e;">Gérer mes projets</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="manage-projects-list"{% if openEditProjectPanel %} style="display:none"{% endif %}>
+            {% if myProjects is empty %}
+              <p class="text-muted mb-0" style="font-weight:600">Vous n’avez pas encore de projet. Utilisez <strong>Ajouter un projet</strong> pour en créer un.</p>
+            {% endif %}
+            {% for p in myProjects %}
+              <div class="manage-project-row d-flex align-items-center flex-wrap" style="gap:10px">
+                {% if p.imagePath %}
+                  <img class="thumb-xs" src="{{ asset(p.imagePath) }}" alt="">
+                {% endif %}
+                <div style="flex:1;min-width:160px">
+                  <div style="font-weight:900">{{ p.title }}</div>
+                  <div class="meta">{{ p.category ?? 'Sans catégorie' }}</div>
+                </div>
+                <div class="d-flex flex-wrap" style="gap:8px">
+                  <button type="button" class="btn btn-success btn-sm js-open-edit-project" style="border-radius:10px;font-weight:800"
+                    data-project-id="{{ p.id }}">Modifier</button>
+                  <form method="post" action="{{ path('investissement_project_delete', { id: p.id }) }}" class="d-inline"
+                    onsubmit="return confirm('Supprimer ce projet et ses investissements ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete_project_' ~ p.id) }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius:10px;font-weight:800">Supprimer</button>
+                  </form>
+                </div>
+              </div>
+              {% set pend = pendingByProject[p.id] ?? [] %}
+              {% if pend is not empty %}
+                <div class="mt-2 pt-2" style="border-top:1px dashed rgba(15,118,110,0.2);">
+                  <div class="meta mb-2" style="font-weight:800;color:#0f766e">Demandes d’investissement en attente</div>
+                  {% for inv in pend %}
+                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-2 p-2" style="background:rgba(16,185,129,0.06);border-radius:10px;gap:8px">
+                      <div style="min-width:200px">
+                        <strong>{{ inv.user.email }}</strong>
+                        <div class="meta">{{ inv.amount }} — demandé le {{ inv.investmentDate|date('d/m/Y H:i') }}</div>
+                      </div>
+                      <div class="d-flex flex-wrap" style="gap:6px">
+                        <form method="post" action="{{ path('investissement_demande_accepter', { id: inv.id }) }}" class="d-inline">
+                          <input type="hidden" name="_token" value="{{ csrf_token('invest_demande_owner_' ~ inv.id) }}">
+                          <button type="submit" class="btn btn-success btn-sm" style="border-radius:8px;font-weight:800">Accepter</button>
+                        </form>
+                        <form method="post" action="{{ path('investissement_demande_refuser', { id: inv.id }) }}" class="d-inline"
+                          onsubmit="return confirm('Refuser cette demande ?');">
+                          <input type="hidden" name="_token" value="{{ csrf_token('invest_demande_owner_' ~ inv.id) }}">
+                          <button type="submit" class="btn btn-outline-secondary btn-sm" style="border-radius:8px;font-weight:700">Refuser</button>
+                        </form>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <div id="manage-projects-edit"{% if not openEditProjectPanel %} style="display:none"{% endif %}>
+            <button type="button" class="btn btn-link p-0 mb-3 js-back-manage-list" style="font-weight:700;color:#0f766e">&larr; Retour à la liste</button>
+            {{ form_start(editProjectForm, {'attr': {'id': 'edit-project-inner-form', 'novalidate': 'novalidate', 'enctype': 'multipart/form-data'}}) }}
+              {% set eg = form_errors(editProjectForm) %}
+              {% if eg|trim is not empty %}
+                <div class="alert alert-danger" role="alert">{{ eg }}</div>
+              {% endif %}
+
+              <div class="form-group">
+                <label for="{{ editProjectForm.title.vars.id }}">{{ editProjectForm.title.vars.label }}</label>
+                {{ form_widget(editProjectForm.title, {'attr': {'class': 'form-control'}}) }}
+                <div class="small-error">{{ form_errors(editProjectForm.title) }}</div>
+              </div>
+
+              <div class="form-group">
+                <label for="{{ editProjectForm.description.vars.id }}">{{ editProjectForm.description.vars.label }}</label>
+                {{ form_widget(editProjectForm.description, {'attr': {'class': 'form-control'}}) }}
+                <div class="small-error">{{ form_errors(editProjectForm.description) }}</div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="{{ editProjectForm.goalAmount.vars.id }}">{{ editProjectForm.goalAmount.vars.label }}</label>
+                  {{ form_widget(editProjectForm.goalAmount, {'attr': {'class': 'form-control'}}) }}
+                  <div class="small-error">{{ form_errors(editProjectForm.goalAmount) }}</div>
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="{{ editProjectForm.deadline.vars.id }}">{{ editProjectForm.deadline.vars.label }}</label>
+                  {{ form_widget(editProjectForm.deadline, {'attr': {'class': 'form-control'}}) }}
+                  <div class="small-error">{{ form_errors(editProjectForm.deadline) }}</div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="{{ editProjectForm.category.vars.id }}">{{ editProjectForm.category.vars.label }}</label>
+                {{ form_widget(editProjectForm.category, {'attr': {'class': 'form-control'}}) }}
+                <div class="small-error">{{ form_errors(editProjectForm.category) }}</div>
+              </div>
+
+              <div id="edit-project-image-preview-wrap" class="form-group mb-0" style="display:none">
+                <div class="meta mb-1">Image actuelle</div>
+                <img id="edit-project-image-preview" src="" alt="" class="rounded" style="max-height:140px;max-width:100%;object-fit:cover;border:1px solid rgba(15,118,110,0.15)">
+              </div>
+
+              <div class="form-group">
+                <label for="{{ editProjectForm.image.vars.id }}">{{ editProjectForm.image.vars.label }}</label>
+                {{ form_widget(editProjectForm.image, {'attr': {'class': 'form-control-file'}}) }}
+                <small class="form-text text-muted">{{ editProjectForm.image.vars.help }}</small>
+                <div class="small-error">{{ form_errors(editProjectForm.image) }}</div>
+              </div>
+
+              <div class="d-flex flex-wrap mt-3" style="gap:10px">
+                <button type="button" class="btn btn-light js-back-manage-list" style="font-weight:700;border-radius:10px">Annuler</button>
+                <button type="submit" class="btn btn-success" style="font-weight:800;border-radius:10px">Enregistrer</button>
+              </div>
+            {{ form_end(editProjectForm) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="investModal" tabindex="-1" role="dialog" aria-labelledby="investModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content" style="border-radius: 18px; border: 1px solid rgba(15, 118, 110, 0.14); box-shadow: 0 15px 35px rgba(0,0,0,0.12);">
+        <div class="modal-header" style="border-bottom: 1px solid rgba(15,118,110,0.1);">
+          <h5 class="modal-title" id="investModalLabel" style="font-weight: 800; color: #0f766e;">Demande d’investissement</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form id="invest-form" method="post" action="">
+          <div class="modal-body">
+            <p class="text-muted" style="font-weight:600">Projet : <strong id="invest-modal-project-title" style="color:#111827"></strong></p>
+            <p class="small text-muted" style="font-weight:600">Le propriétaire devra accepter la demande. Aucun débit avant acceptation.</p>
+            <div class="form-group">
+              <label for="invest-amount">Montant souhaité</label>
+              <input type="text" class="form-control" id="invest-amount" name="amount" inputmode="decimal" placeholder="0.00" required autocomplete="off">
+            </div>
+            <input type="hidden" name="_token" value="{{ csrf_token('investissement_invest') }}">
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid rgba(15,118,110,0.1);">
+            <button type="button" class="btn btn-light" data-dismiss="modal" style="font-weight:700;border-radius:10px">Annuler</button>
+            <button type="submit" class="btn btn-success" style="font-weight:800;border-radius:10px">Envoyer la demande</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script>
+    window.FINOVATE_MY_PROJECTS = {{ myProjectsDataJson|raw }};
+  </script>
+  <script>
+    $(function () {
+      var investPathTpl = "{{ path('investissement_invest', { id: 999999 }) }}";
+      var editPathTpl = "{{ path('investissement_project_edit', { id: 999999 }) }}";
+
+      function finovateFindProject(id) {
+        var list = window.FINOVATE_MY_PROJECTS || [];
+        for (var i = 0; i < list.length; i++) {
+          if (String(list[i].id) === String(id)) {
+            return list[i];
+          }
+        }
+        return null;
+      }
+
+      function finovateSetEditFormAction(projectId) {
+        $('#edit-project-inner-form').attr('action', editPathTpl.replace('999999', String(projectId)));
+      }
+
+      function finovateShowManageList() {
+        $('#manage-projects-list').show();
+        $('#manage-projects-edit').hide();
+      }
+
+      function finovateShowEditPanel() {
+        $('#manage-projects-list').hide();
+        $('#manage-projects-edit').show();
+      }
+
+      function finovateFillEditFormFromData(d) {
+        var $f = $('#edit-project-inner-form');
+        $f.find('[name="edit_project_request[title]"]').val(d.title);
+        $f.find('[name="edit_project_request[description]"]').val(d.description);
+        $f.find('[name="edit_project_request[goalAmount]"]').val(d.goalAmount);
+        $f.find('[name="edit_project_request[deadline]"]').val(d.deadline || '');
+        $f.find('[name="edit_project_request[category]"]').val(d.category || '');
+        $f.find('[name="edit_project_request[image]"]').val('');
+        var $wrap = $('#edit-project-image-preview-wrap');
+        var $img = $('#edit-project-image-preview');
+        if (d.imagePath) {
+          $img.attr('src', '/' + String(d.imagePath).replace(/^\//, ''));
+          $wrap.show();
+        } else {
+          $wrap.hide();
+        }
+      }
+
+      $('#investModal').on('show.bs.modal', function (event) {
+        var btn = $(event.relatedTarget);
+        var id = btn.data('project-id');
+        var title = btn.data('project-title');
+        $(this).find('#invest-modal-project-title').text(title);
+        $(this).find('#invest-form').attr('action', investPathTpl.replace('999999', String(id)));
+        $(this).find('#invest-amount').val('');
+      });
+
+      $(document).on('click', '.js-open-edit-project', function () {
+        var id = $(this).data('project-id');
+        var d = finovateFindProject(id);
+        if (!d) {
+          return;
+        }
+        finovateSetEditFormAction(id);
+        finovateFillEditFormFromData(d);
+        finovateShowEditPanel();
+      });
+
+      $(document).on('click', '.js-back-manage-list', function () {
+        finovateShowManageList();
+      });
+
+      {% if showProjectFormModal %}
+      $('#addProjectModal').modal('show');
+      $('#addProjectModal').on('hidden.bs.modal', function () {
+        if (window.location.search.indexOf('nouveau=1') !== -1) {
+          window.history.replaceState({}, document.title, '{{ path("investissement_index") }}');
+        }
+      });
+      {% endif %}
+
+      {% if openManageProjectsModal %}
+      $('#manageMyProjectsModal').modal('show');
+      {% endif %}
+
+      {% if openEditProjectPanel and editProjectIdForAction %}
+      finovateSetEditFormAction({{ editProjectIdForAction }});
+      (function () {
+        var d = finovateFindProject({{ editProjectIdForAction }});
+        if (d && d.imagePath) {
+          $('#edit-project-image-preview').attr('src', '/' + String(d.imagePath).replace(/^\//, ''));
+          $('#edit-project-image-preview-wrap').show();
+        }
+      })();
+      {% endif %}
+
+      $('#manageMyProjectsModal').on('hidden.bs.modal', function () {
+        if (window.location.search.indexOf('gerer=1') !== -1) {
+          window.history.replaceState({}, document.title, '{{ path("investissement_index") }}');
+        }
+        finovateShowManageList();
+      });
+
+      var investSearchTimer;
+      $('#invest-search-q').on('input', function () {
+        clearTimeout(investSearchTimer);
+        investSearchTimer = setTimeout(function () {
+          $('#invest-filter-page').val('1');
+          $('#invest-filter-form').trigger('submit');
+        }, 450);
+      });
+    });
+  </script>
+</body>
+
+</html>
