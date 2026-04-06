@@ -231,7 +231,7 @@ final class ApiAuthController extends AbstractController
     }
 
     #[Route('/api/me', name: 'api_me_update', methods: ['PUT'])]
-    public function updateMe(Request $request, Security $security, EntityManagerInterface $entityManager): JsonResponse
+    public function updateMe(Request $request, Security $security, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         $user = $security->getUser();
 
@@ -321,12 +321,23 @@ final class ApiAuthController extends AbstractController
             } catch (\Throwable) {
                 return $this->json(['message' => 'Date de naissance invalide.'], 422);
             }
+
+            $today = new \DateTimeImmutable('today');
+            $birthImmutable = \DateTimeImmutable::createFromMutable($birthdate)->setTime(0, 0, 0);
+            $age = $birthImmutable->diff($today)->y;
+            if ($age < 18) {
+                return $this->json(['message' => 'Vous devez avoir au moins 18 ans pour créer un compte.'], 422);
+            }
+
             $user->setBirthdate($birthdate);
         }
 
         if ($cin !== null) {
             if ($cin === '') {
                 return $this->json(['message' => 'CIN invalide.'], 422);
+            }
+            if (!preg_match('/^\d{8}$/', $cin)) {
+                return $this->json(['message' => 'Le CIN doit contenir exactement 8 chiffres.'], 422);
             }
             $user->setCin($cin);
         }
@@ -336,7 +347,24 @@ final class ApiAuthController extends AbstractController
             if ($digits === '') {
                 return $this->json(['message' => 'Téléphone invalide.'], 422);
             }
+            if (!preg_match('/^\d{8}$/', $digits)) {
+                return $this->json(['message' => 'Le numéro de téléphone doit contenir exactement 8 chiffres.'], 422);
+            }
             $user->setPhone_number((int) $digits);
+        }
+
+        $violations = $validator->validate($user);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $property = (string) $violation->getPropertyPath();
+                $errors[$property][] = (string) $violation->getMessage();
+            }
+
+            return $this->json([
+                'message' => 'Données invalides.',
+                'errors' => $errors,
+            ], 422);
         }
 
         try {

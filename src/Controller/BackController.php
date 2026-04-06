@@ -6,6 +6,8 @@ use App\Entity\User;
 use App\Entity\Transaction;
 use App\Entity\Goal;
 use App\Entity\Bill;
+use App\Entity\Project;
+use App\Entity\Investissement;
 use App\Entity\Forums;
 use App\Entity\Posts;
 use App\Entity\Comments;
@@ -18,6 +20,7 @@ use App\Form\UserAdClickType;
 use App\Service\FileUploadService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -256,12 +259,31 @@ final class BackController extends AbstractController
             ['date_paiement' => 'DESC']
         );
 
+        $projects = $em->getRepository(Project::class)->findBy(
+            ['owner' => $user],
+            ['created_at' => 'DESC']
+        );
+
+        $investissements = $em->getRepository(Investissement::class)->findByInvestorOrdered($user);
+
         return $this->render('backoffice/user-activity.html.twig', [
             'user' => $user,
             'transactions' => $transactions,
             'usersById' => $usersById,
             'goals' => $goals,
             'bills' => $bills,
+            'projects' => $projects,
+            'investissements' => $investissements,
+        ]);
+    }
+
+    #[Route('/projects', name: 'backoffice_projects', methods: ['GET'])]
+    public function projects(EntityManagerInterface $em): Response
+    {
+        $projects = $em->getRepository(Project::class)->findBy([], ['created_at' => 'DESC']);
+
+        return $this->render('backoffice/projects.html.twig', [
+            'projects' => $projects,
         ]);
     }
 

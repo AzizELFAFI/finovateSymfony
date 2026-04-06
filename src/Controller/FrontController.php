@@ -162,17 +162,6 @@ final class FrontController extends AbstractController
                     $beneficiary->setSolde((string) ($receiverBalance + $amount));
 
                     $tx = new Transaction();
-                    $generatedId = (int) (microtime(true) * 1000);
-                    $existing = $em->getRepository(Transaction::class)->find($generatedId);
-                    if ($existing instanceof Transaction) {
-                        $maxId = (int) $em->createQueryBuilder()
-                            ->select('MAX(t.id)')
-                            ->from(Transaction::class, 't')
-                            ->getQuery()
-                            ->getSingleScalarResult();
-                        $generatedId = $maxId + 1;
-                    }
-                    $tx->setId($generatedId);
                     $tx->setSender_id((int) $user->getId());
                     $tx->setReceiver_id((int) $beneficiary->getId());
                     $tx->setAmount((string) $amount);
