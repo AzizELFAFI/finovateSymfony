@@ -18,11 +18,13 @@ security:
             pattern: ^/(user|investissement)
             stateless: true
             provider: app_user_provider
+            entry_point: App\Security\JwtRedirectEntryPoint
             jwt: ~
         admin:
             pattern: ^/admin
             stateless: true
             provider: app_user_provider
+            entry_point: App\Security\JwtRedirectEntryPoint
             jwt: ~
         api:
             pattern: ^/api
@@ -42,11 +44,12 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+        - { path: ^/access-denied, roles: PUBLIC_ACCESS }
         - { path: ^/admin/users, roles: ROLE_ADMIN }
         - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
-        - { path: ^/user, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/investissement, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/user, roles: ROLE_USER }
+        - { path: ^/investissement, roles: ROLE_USER }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
