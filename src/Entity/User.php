@@ -9,6 +9,7 @@ use App\Entity\User_badges;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -330,4 +331,45 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToMany(mappedBy: "user_id", targetEntity: User_badges::class)]
     private Collection $user_badgess;
+
+    /**
+     * @var Collection<int, UserAdClick>
+     */
+    #[ORM\OneToMany(targetEntity: UserAdClick::class, mappedBy: 'user')]
+    private Collection $userAdClicks;
+
+    public function __construct()
+    {
+        $this->userAdClicks = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, UserAdClick>
+     */
+    public function getUserAdClicks(): Collection
+    {
+        return $this->userAdClicks;
+    }
+
+    public function addUserAdClick(UserAdClick $userAdClick): static
+    {
+        if (!$this->userAdClicks->contains($userAdClick)) {
+            $this->userAdClicks->add($userAdClick);
+            $userAdClick->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserAdClick(UserAdClick $userAdClick): static
+    {
+        if ($this->userAdClicks->removeElement($userAdClick)) {
+            // set the owning side to null (unless already changed)
+            if ($userAdClick->getUser() === $this) {
+                $userAdClick->setUser(null);
+            }
+        }
+
+        return $this;
+    }
 }

@@ -13,6 +13,13 @@ use App\Entity\Posts;
 use App\Entity\Comments;
 use App\Form\CreateProjectRequestType;
 use App\Model\CreateProjectRequest;
+use App\Entity\Product;
+use App\Entity\Ad;
+use App\Entity\UserAdClick;
+use App\Form\ProductType;
+use App\Form\AdType;
+use App\Form\UserAdClickType;
+use App\Service\FileUploadService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -104,7 +111,7 @@ final class BackController extends AbstractController
     }
 
     #[Route('/create-product', name: 'backoffice_create_product', methods: ['GET'])]
-    public function createProduct(): Response
+    public function createProductt(): Response
     {
         return $this->render('backoffice/create-product.html.twig');
     }
@@ -460,5 +467,257 @@ final class BackController extends AbstractController
         $file->move($uploadDir, $safe);
 
         return 'uploads/projects/' . $safe;
+    }
+
+    // ==================== PRODUCTS CRUD ====================
+
+    #[Route('/products', name: 'backoffice_products', methods: ['GET'])]
+    public function products(EntityManagerInterface $em, Request $request): Response
+    {
+        $search = $request->query->get('search');
+        $sort = (string) $request->query->get('sort', 'name');
+        $dir = strtoupper((string) $request->query->get('dir', 'ASC'));
+
+        $allowedSorts = ['name', 'pricePoints', 'stock'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'name';
+        }
+        if (!in_array($dir, ['ASC', 'DESC'], true)) {
+            $dir = 'ASC';
+        }
+
+        $queryBuilder = $em->getRepository(Product::class)->createQueryBuilder('p');
+
+        if ($search) {
+            $queryBuilder->where('p.name LIKE :search')
+                ->orWhere('p.description LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $queryBuilder->orderBy('p.' . $sort, $dir)
+            ->addOrderBy('p.id', 'DESC');
+
+        $products = $queryBuilder->getQuery()->getResult();
+
+        return $this->render('backoffice/product/index.html.twig', [
+            'products' => $products,
+            'search' => $search,
+            'sort' => $sort,
+            'dir' => $dir
+        ]);
+    }
+
+    #[Route('/products/create', name: 'backoffice_product_create', methods: ['GET', 'POST'])]
+    public function createProduct(Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    {
+        $product = new Product();
+        $form = $this->createForm(ProductType::class, $product);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('image')->getData();
+            if ($imageFile) {
+                $imagePath = $fileUploadService->uploadImage($imageFile);
+                $product->setImage($imagePath);
+            }
+
+            $em->persist($product);
+            $em->flush();
+
+            return $this->redirectToRoute('backoffice_products');
+        }
+
+        return $this->render('backoffice/product/create.html.twig', [
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/products/{id}/edit', name: 'backoffice_product_edit', methods: ['GET', 'POST'])]
+    public function editProduct(int $id, Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    {
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product instanceof Product) {
+            throw $this->createNotFoundException('Produit non trouvé');
+        }
+
+        $form = $this->createForm(ProductType::class, $product);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('image')->getData();
+            if ($imageFile) {
+                $oldImage = $product->getImage();
+                if ($oldImage) {
+                    $fileUploadService->deleteImage($oldImage);
+                }
+                $imagePath = $fileUploadService->uploadImage($imageFile);
+                $product->setImage($imagePath);
+            }
+
+            $em->flush();
+
+            return $this->redirectToRoute('backoffice_products');
+        }
+
+        return $this->render('backoffice/product/edit.html.twig', [
+            'form' => $form,
+            'product' => $product,
+        ]);
+    }
+
+    #[Route('/products/{id}/delete', name: 'backoffice_product_delete', methods: ['POST'])]
+    public function deleteProduct(int $id, Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    {
+        if (!$this->isCsrfTokenValid('delete_product_' . $id, (string) $request->request->get('_token'))) {
+            return $this->redirectToRoute('backoffice_products');
+        }
+
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product instanceof Product) {
+            return $this->redirectToRoute('backoffice_products');
+        }
+
+        if ($product->getImage()) {
+            $fileUploadService->deleteImage($product->getImage());
+        }
+
+        $em->remove($product);
+        $em->flush();
+
+        return $this->redirectToRoute('backoffice_products');
+    }
+
+    // ==================== ADS CRUD ====================
+
+    #[Route('/ads', name: 'backoffice_ads', methods: ['GET'])]
+    public function ads(EntityManagerInterface $em, Request $request): Response
+    {
+        $search = $request->query->get('search');
+        $sort = (string) $request->query->get('sort', 'title');
+        $dir = strtoupper((string) $request->query->get('dir', 'ASC'));
+
+        $allowedSorts = ['title', 'duration', 'rewardPoints'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'title';
+        }
+        if (!in_array($dir, ['ASC', 'DESC'], true)) {
+            $dir = 'ASC';
+        }
+
+        $queryBuilder = $em->getRepository(Ad::class)->createQueryBuilder('a');
+
+        if ($search) {
+            $queryBuilder->where('a.title LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $queryBuilder->orderBy('a.' . $sort, $dir)
+            ->addOrderBy('a.id', 'DESC');
+
+        $ads = $queryBuilder->getQuery()->getResult();
+
+        return $this->render('backoffice/ad/index.html.twig', [
+            'ads' => $ads,
+            'search' => $search,
+            'sort' => $sort,
+            'dir' => $dir
+        ]);
+    }
+
+    #[Route('/ads/create', name: 'backoffice_ad_create', methods: ['GET', 'POST'])]
+    public function createAd(Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    {
+        $ad = new Ad();
+        $form = $this->createForm(AdType::class, $ad);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('imagePath')->getData();
+            if ($imageFile) {
+                $imagePath = $fileUploadService->uploadImage($imageFile);
+                $ad->setImagePath($imagePath);
+            }
+
+            $em->persist($ad);
+            $em->flush();
+
+            return $this->redirectToRoute('backoffice_ads');
+        }
+
+        return $this->render('backoffice/ad/create.html.twig', [
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/ads/{id}/edit', name: 'backoffice_ad_edit', methods: ['GET', 'POST'])]
+    public function editAd(int $id, Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    {
+        $ad = $em->getRepository(Ad::class)->find($id);
+        if (!$ad instanceof Ad) {
+            throw $this->createNotFoundException('Annonce non trouvée');
+        }
+
+        $form = $this->createForm(AdType::class, $ad);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('imagePath')->getData();
+            if ($imageFile) {
+                $oldImage = $ad->getImagePath();
+                if ($oldImage) {
+                    $fileUploadService->deleteImage($oldImage);
+                }
+                $imagePath = $fileUploadService->uploadImage($imageFile);
+                $ad->setImagePath($imagePath);
+            }
+
+            $em->flush();
+
+            return $this->redirectToRoute('backoffice_ads');
+        }
+
+        return $this->render('backoffice/ad/edit.html.twig', [
+            'form' => $form,
+            'ad' => $ad,
+        ]);
+    }
+
+    #[Route('/ads/{id}/delete', name: 'backoffice_ad_delete', methods: ['POST'])]
+    public function deleteAd(int $id, Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    {
+        if (!$this->isCsrfTokenValid('delete_ad_' . $id, (string) $request->request->get('_token'))) {
+            return $this->redirectToRoute('backoffice_ads');
+        }
+
+        $ad = $em->getRepository(Ad::class)->find($id);
+        if (!$ad instanceof Ad) {
+            return $this->redirectToRoute('backoffice_ads');
+        }
+
+        if ($ad->getImagePath()) {
+            $fileUploadService->deleteImage($ad->getImagePath());
+        }
+
+        $em->remove($ad);
+        $em->flush();
+
+        return $this->redirectToRoute('backoffice_ads');
+    }
+
+    #[Route('/ads/{id}/clicks', name: 'backoffice_ad_clicks', methods: ['GET'])]
+    public function adClicks(int $id, EntityManagerInterface $em): Response
+    {
+        $ad = $em->getRepository(Ad::class)->find($id);
+        if (!$ad instanceof Ad) {
+            throw $this->createNotFoundException('Annonce non trouvée');
+        }
+
+        $clicks = $em->getRepository(UserAdClick::class)
+            ->findBy(['ad' => $ad], ['clickedAt' => 'DESC']);
+
+        return $this->render('backoffice/ad/clicks.html.twig', [
+            'ad' => $ad,
+            'clicks' => $clicks,
+        ]);
     }
 }

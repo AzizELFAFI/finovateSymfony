@@ -131,13 +131,15 @@
         <div class="col-lg-3 mb-4">
           <div class="sidebar">
             <div class="title">Mon espace</div>
-            <a href="{{ path('user_dashboard') }}">Dashboard</a>
-            <a href="{{ path('user_transactions') }}">Transactions</a>
-            <a href="{{ path('user_goals') }}">Goals</a>
-            <a href="{{ path('user_bills') }}">Factures</a>
-            <a href="{{ path('investissement_index') }}">Investissement</a>
-            <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
-            <a href="{{ path('front_logout') }}">Déconnexion</a>
+                <a href="#" id="nav-dashboard-side" >Dashboard</a>
+                <a href="{{ path('user_transactions') }}" id="nav-transactions">Transactions</a>
+                <a href="{{ path('user_goals') }}" id="nav-goals">Goals</a>
+                <a href="{{ path('user_bills') }}" id="nav-bills">Factures</a>
+                <a href="{{ path('investissement_index') }}" id="nav-investissement" class="active">Investissement</a>
+                <a href="{{ path('front_products') }}">Produits</a>
+                <a href="{{ path('front_ads') }}">Annonces</a>
+                <a href="#" id="nav-edit-profile">Modifier le profil</a>
+                <a href="{{ path('front_logout') }}">Déconnexion</a>
           </div>
         </div>
 
