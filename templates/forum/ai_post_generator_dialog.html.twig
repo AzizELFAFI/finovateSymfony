@@ -1,0 +1,208 @@
+{# AI Post Generator Dialog — included in posts.html.twig #}
+<div id="aiGeneratorDialog" style="display:none;position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px)" onclick="closeAiDialog()"></div>
+    <div style="position:relative;background:white;border-radius:16px;padding:30px;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);z-index:1">
+
+        {# Header #}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;padding-bottom:14px;border-bottom:2px solid #f0f0f0">
+            <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:26px">✨</span>
+                <h2 style="font-size:20px;font-weight:800;color:#1a1a1b">Générateur de Post IA</h2>
+            </div>
+            <button onclick="closeAiDialog()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1">×</button>
+        </div>
+
+        {# AI Generate card #}
+        <div id="aiGenCard">
+            <div class="ai-form-group">
+                <label>Thème du post</label>
+                <input type="text" id="aiThemeField" class="ai-input" placeholder="Ex: Blockchain et Finance, NFT, DeFi...">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div class="ai-form-group">
+                    <label>Ton</label>
+                    <select id="aiToneSelect" class="ai-input">
+                        <option value="professional">Professionnel</option>
+                        <option value="casual">Décontracté</option>
+                        <option value="educational">Éducatif</option>
+                    </select>
+                </div>
+                <div class="ai-form-group">
+                    <label>Longueur</label>
+                    <select id="aiLengthSelect" class="ai-input">
+                        <option value="short">Court</option>
+                        <option value="medium" selected>Moyen</option>
+                        <option value="long">Long</option>
+                    </select>
+                </div>
+            </div>
+            <button class="ai-btn-generate" id="aiGenBtn" onclick="aiGeneratePost()">🎨 Générer Post</button>
+            <p id="aiStatusText" style="text-align:center;color:#237f4e;font-size:13px;margin-top:8px;min-height:18px"></p>
+        </div>
+
+        {# Preview card #}
+        <div id="aiPreviewSection" style="display:none;margin-top:20px;border-top:2px solid #f0f0f0;padding-top:20px">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;color:#1a1a1b">📋 Aperçu du Post</h3>
+            <div class="ai-form-group">
+                <label>Titre</label>
+                <input type="text" id="aiPreviewTitle" class="ai-input">
+            </div>
+            <div class="ai-form-group">
+                <label>Contenu</label>
+                <textarea id="aiContentArea" class="ai-input" rows="7"></textarea>
+            </div>
+            <div class="ai-form-group">
+                <label>Image (optionnel)</label>
+                <div style="display:flex;gap:8px;margin-bottom:10px">
+                    <button type="button" class="ai-img-tab active" onclick="aiSwitchImgTab('upload',this)">📁 Uploader</button>
+                    <button type="button" class="ai-img-tab" onclick="aiSwitchImgTab('ai',this)">🤖 Générer avec IA</button>
+                </div>
+                <div id="aiTabUpload">
+                    <input type="file" id="aiPostImage" accept="image/*" class="ai-input" style="padding:8px" onchange="aiPreviewUpload(this)">
+                    <img id="aiUploadPreview" style="display:none;max-width:100%;margin-top:8px;border-radius:8px">
+                </div>
+                <div id="aiTabAi" style="display:none">
+                    <div style="display:flex;gap:8px;margin-bottom:8px">
+                        <input type="text" id="aiImgPrompt" class="ai-input" placeholder="Ex: A futuristic financial city at night...">
+                        <button type="button" id="aiGenImgBtn" onclick="aiGenerateImage()" style="background:linear-gradient(to right,#667eea,#764ba2);color:white;border:none;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">✨ Générer</button>
+                    </div>
+                    <div id="aiImgStatus" style="font-size:13px;color:#667eea;min-height:18px"></div>
+                    <img id="aiImagePreview" style="display:none;max-width:100%;margin-top:8px;border-radius:8px;cursor:pointer" title="Cliquez pour retirer">
+                    <input type="hidden" id="aiImageUrl" value="">
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:6px">
+                <button onclick="closeAiDialog()" style="flex:1;padding:12px;border:1px solid #ddd;background:white;border-radius:8px;font-size:14px;cursor:pointer;color:#555">Annuler</button>
+                <button onclick="aiPublishPost()" style="flex:2;padding:12px;background:#237f4e;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">✅ Publier le Post</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.ai-form-group { margin-bottom:16px }
+.ai-form-group label { display:block;font-size:13px;font-weight:700;color:#2c3e50;margin-bottom:6px }
+.ai-input { width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box }
+.ai-input:focus { border-color:#237f4e }
+.ai-btn-generate { width:100%;background:linear-gradient(to right,#667eea,#764ba2);color:white;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer }
+.ai-btn-generate:disabled { opacity:0.6;cursor:not-allowed }
+.ai-img-tab { padding:7px 14px;border:1px solid #e0e0e0;border-radius:20px;background:white;font-size:12px;cursor:pointer }
+.ai-img-tab.active { background:#667eea;color:white;border-color:#667eea }
+</style>
+
+<script>
+var _aiForumId = null;
+
+function openAiDialog(forumId) {
+    _aiForumId = forumId;
+    var d = document.getElementById('aiGeneratorDialog');
+    d.style.display = 'flex';
+    // reset
+    document.getElementById('aiStatusText').textContent = '';
+    document.getElementById('aiPreviewSection').style.display = 'none';
+    document.getElementById('aiThemeField').value = '';
+}
+
+function closeAiDialog() {
+    document.getElementById('aiGeneratorDialog').style.display = 'none';
+}
+
+function aiSwitchImgTab(tab, btn) {
+    document.querySelectorAll('.ai-img-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('aiTabUpload').style.display = tab === 'upload' ? 'block' : 'none';
+    document.getElementById('aiTabAi').style.display     = tab === 'ai'     ? 'block' : 'none';
+}
+
+function aiPreviewUpload(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var img = document.getElementById('aiUploadPreview');
+        img.src = e.target.result;
+        img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function aiGeneratePost() {
+    var theme  = document.getElementById('aiThemeField').value.trim();
+    var tone   = document.getElementById('aiToneSelect').value;
+    var length = document.getElementById('aiLengthSelect').value;
+    var btn    = document.getElementById('aiGenBtn');
+    var status = document.getElementById('aiStatusText');
+    if (!theme) { alert('Veuillez remplir le thème.'); return; }
+    btn.disabled = true;
+    status.textContent = '⏳ Génération en cours...';
+    try {
+        var res  = await fetch('{{ path("api_ai_generate_post") }}', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({theme, tone, length})
+        });
+        var data = await res.json();
+        document.getElementById('aiPreviewTitle').value = data.title   || theme;
+        document.getElementById('aiContentArea').value  = data.content || '';
+        document.getElementById('aiPreviewSection').style.display = 'block';
+        status.textContent = '✅ Post généré !';
+    } catch(e) { status.textContent = '❌ Erreur lors de la génération.'; }
+    btn.disabled = false;
+}
+
+async function aiGenerateImage() {
+    var prompt = document.getElementById('aiImgPrompt').value.trim();
+    if (!prompt) { alert('Entrez un prompt.'); return; }
+    var btn    = document.getElementById('aiGenImgBtn');
+    var status = document.getElementById('aiImgStatus');
+    btn.disabled = true;
+    status.textContent = '⏳ Génération de l\'image...';
+    try {
+        var res  = await fetch('{{ path("api_ai_generate_image") }}', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({prompt})
+        });
+        var data = await res.json();
+        var url  = data.image_url || '';
+        if (!url) throw new Error('No URL');
+        document.getElementById('aiImageUrl').value = url;
+        var preview = document.getElementById('aiImagePreview');
+        preview.src = url; preview.style.display = 'block';
+        preview.onclick = function() {
+            preview.style.display = 'none';
+            document.getElementById('aiImageUrl').value = '';
+        };
+        status.textContent = '✅ Image générée !';
+    } catch(e) { status.textContent = '❌ Erreur.'; }
+    btn.disabled = false;
+}
+
+async function aiPublishPost() {
+    var title   = document.getElementById('aiPreviewTitle').value.trim();
+    var content = document.getElementById('aiContentArea').value.trim();
+    var imgFile = document.getElementById('aiPostImage').files[0];
+    var aiUrl   = document.getElementById('aiImageUrl').value;
+    if (!title || !content) { alert('Le titre et le contenu sont requis.'); return; }
+
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/forum/' + _aiForumId + '/create-post';
+    form.enctype = 'multipart/form-data';
+
+    [['title', title], ['content', content], ['ai_image_url', aiUrl]].forEach(function([n, v]) {
+        var i = document.createElement('input');
+        i.type = 'hidden'; i.name = n; i.value = v;
+        form.appendChild(i);
+    });
+
+    if (imgFile) {
+        var dt = new DataTransfer();
+        dt.items.add(imgFile);
+        var fi = document.createElement('input');
+        fi.type = 'file'; fi.name = 'image'; fi.files = dt.files;
+        form.appendChild(fi);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>

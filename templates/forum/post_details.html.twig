@@ -1,7 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}{{ post.title }} - FINOVATE{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: ''} %}
+{% block content %}
 <div class="pd-page">
 
     {# ── HERO: title left / image right ── #}
@@ -22,6 +21,9 @@
                     <form method="post" action="{{ path('app_post_delete', {id: post.id}) }}" style="display:inline" onsubmit="return confirm('Supprimer ce post ?')">
                         <button type="submit" class="pd-icon-btn pd-icon-red" title="Supprimer">🗑️</button>
                     </form>
+                    {% if post.author and post.author.id != 18 %}
+                    <button class="pd-icon-btn" onclick="document.getElementById('blockModal').style.display='flex'" title="Bloquer/Restreindre">🚫</button>
+                    {% endif %}
                 </div>
             </div>
             {# Action buttons under title #}
@@ -102,6 +104,101 @@
         </div>
     </div>
 
+    {% if post.author and post.author.id != 18 %}
+    <div class="pd-modal-overlay" id="blockModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+        <div class="pd-modal" style="max-width:700px;width:95vw">
+            <div class="pd-modal-header">
+                <span>⚙️ Gérer — <strong>{{ post.author.firstname }} {{ post.author.lastname }}</strong></span>
+                <button onclick="document.getElementById('blockModal').style.display='none'">×</button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
+
+                {# ── LEFT: BLOCK ── #}
+                <div style="border:1px solid #fecaca;border-radius:10px;padding:18px;background:#fff5f5">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <span style="font-size:22px">🚫</span>
+                        <div>
+                            <div style="font-weight:800;font-size:14px;color:#e53e3e">Bloquer</div>
+                            <div style="font-size:11px;color:#888">Invisibilité mutuelle totale</div>
+                        </div>
+                    </div>
+                    {% if isAuthorBlocked %}
+                    <p style="font-size:12px;color:#237f4e;margin-bottom:10px">✅ Cet utilisateur est déjà bloqué.</p>
+                    <form method="post" action="{{ path('app_user_unblock', {id: post.author.id}) }}">
+                        <input type="hidden" name="redirect" value="{{ app.request.uri }}">
+                        <button type="submit" style="width:100%;padding:10px;background:#237f4e;color:white;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px">✅ Débloquer</button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="{{ path('app_user_block', {id: post.author.id}) }}">
+                        <input type="hidden" name="redirect" value="{{ app.request.uri }}">
+                        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Raison</label>
+                        <select name="reason" style="width:100%;padding:8px;border:1px solid #fecaca;border-radius:6px;font-size:12px;margin-bottom:8px;background:white">
+                            <option value="">Choisir une raison...</option>
+                            <option value="Contenu offensant ou haineux">Contenu offensant ou haineux</option>
+                            <option value="Harcèlement ou intimidation">Harcèlement ou intimidation</option>
+                            <option value="Spam ou publicité abusive">Spam ou publicité abusive</option>
+                            <option value="Informations trompeuses">Informations trompeuses</option>
+                            <option value="Comportement inapproprié">Comportement inapproprié</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                        <button type="submit" style="width:100%;padding:10px;background:#e53e3e;color:white;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px">🚫 Bloquer</button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                {# ── RIGHT: RESTRICT ── #}
+                <div style="border:1px solid #fde68a;border-radius:10px;padding:18px;background:#fffbeb">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <span style="font-size:22px">⏱</span>
+                        <div>
+                            <div style="font-weight:800;font-size:14px;color:#d97706">Restreindre</div>
+                            <div style="font-size:11px;color:#888">Il voit mais ne peut pas interagir</div>
+                        </div>
+                    </div>
+                    {% if isAuthorRestricted %}
+                    <p style="font-size:12px;color:#237f4e;margin-bottom:10px">✅ Cet utilisateur est déjà restreint.</p>
+                    <form method="post" action="{{ path('app_user_unrestrict', {id: post.author.id}) }}">
+                        <button type="submit" style="width:100%;padding:10px;background:#237f4e;color:white;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px">✅ Lever la restriction</button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="{{ path('app_user_restrict', {id: post.author.id}) }}">
+                        <input type="hidden" name="redirect" value="{{ app.request.uri }}">
+                        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Raison</label>
+                        <select name="reason" style="width:100%;padding:8px;border:1px solid #fde68a;border-radius:6px;font-size:12px;margin-bottom:8px;background:white">
+                            <option value="">Choisir une raison...</option>
+                            <option value="Commentaires irrespectueux">Commentaires irrespectueux</option>
+                            <option value="Votes abusifs">Votes abusifs</option>
+                            <option value="Partages non sollicités">Partages non sollicités</option>
+                            <option value="Comportement perturbateur">Comportement perturbateur</option>
+                            <option value="Spam de commentaires">Spam de commentaires</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Durée</label>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+                            <label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #fde68a;border-radius:6px;cursor:pointer;font-size:12px;background:white">
+                                <input type="radio" name="days" value="1"> 24h
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #fde68a;border-radius:6px;cursor:pointer;font-size:12px;background:white">
+                                <input type="radio" name="days" value="3"> 72h
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #fde68a;border-radius:6px;cursor:pointer;font-size:12px;background:white">
+                                <input type="radio" name="days" value="7"> 7 jours
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #fde68a;border-radius:6px;cursor:pointer;font-size:12px;background:white">
+                                <input type="radio" name="days" value=""> Jusqu'à levée
+                            </label>
+                        </div>
+                        <button type="submit" style="width:100%;padding:10px;background:#f59e0b;color:white;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px">⏱ Restreindre</button>
+                    </form>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="pd-modal-overlay" id="shareModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
         <div class="pd-modal">
             <div class="pd-modal-header"><span>📤 Partager ce post</span><button onclick="document.getElementById('shareModal').style.display='none'">×</button></div>
@@ -129,7 +226,7 @@
     <div class="pd-comments">
         <div class="pd-comments-header">
             <h2>Commentaires</h2>
-            <span class="pd-comments-count">{{ post.comments|length }}</span>
+            <span class="pd-comments-count">{{ filteredComments|length }}</span>
         </div>
 
         <div id="toxicBanner" style="display:none" class="pd-toxic">
@@ -156,7 +253,7 @@
         </form>
 
         <div class="pd-comments-list">
-            {% for comment in post.comments %}
+            {% for comment in filteredComments %}
             <div class="pd-comment" id="cb-{{ comment.id }}">
                 <div class="pd-c-avatar">{{ comment.author ? comment.author.firstname|first|upper : '?' }}</div>
                 <div class="pd-c-body">
@@ -395,3 +492,4 @@ function publishAnyway(){moderationBypassed=true;document.getElementById('modera
 })();
 </script>
 {% endblock %}
+

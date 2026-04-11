@@ -1,9 +1,7 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}Règles de la Communauté — FINOVATE{% endblock %}
 
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: 'policy'} %}
-
+{% block content %}
 <div class="forums-content">
     <div class="policy-wrap">
 
@@ -71,7 +69,6 @@
 </div>
 
 <style>
-body { background: #f0fdf4; }
 .forums-content { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
 .policy-wrap { max-width: 860px; margin: 0 auto; }
 .policy-hero { text-align: center; margin-bottom: 40px; }
@@ -104,3 +101,4 @@ body { background: #f0fdf4; }
 @media (max-width: 700px) { .rules-grid { grid-template-columns: 1fr; } .steps-row { flex-direction: column; } .step-arrow { display: none; } }
 </style>
 {% endblock %}
+

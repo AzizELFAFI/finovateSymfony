@@ -33,8 +33,8 @@ class Post
     #[ORM\Column(name: 'image_url', length: 500, nullable: true)]
     private ?string $imageUrl = null;
 
-    #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
-    private \DateTimeImmutable $createdAt;
+    #[ORM\Column(name: 'created_at', type: 'datetime')]
+    private \DateTime $createdAt;
 
     #[ORM\Column(name: 'updated_at', type: 'datetime')]
     private \DateTime $updatedAt;
@@ -53,7 +53,7 @@ class Post
         $this->comments = new ArrayCollection();
         $this->votes = new ArrayCollection();
         $this->sharedPosts = new ArrayCollection();
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
     }
 
@@ -68,8 +68,8 @@ class Post
     public function setAuthor(?User $author): static { $this->author = $author; return $this; }
     public function getImageUrl(): ?string { return $this->imageUrl; }
     public function setImageUrl(?string $imageUrl): static { $this->imageUrl = $imageUrl; return $this; }
-    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static { $this->createdAt = $createdAt; return $this; }
+    public function getCreatedAt(): \DateTime { return $this->createdAt; }
+    public function setCreatedAt(\DateTime $createdAt): static { $this->createdAt = $createdAt; return $this; }
     public function getUpdatedAt(): \DateTime { return $this->updatedAt; }
     public function setUpdatedAt(\DateTime $updatedAt): static { $this->updatedAt = $updatedAt; return $this; }
     public function getComments(): Collection { return $this->comments; }

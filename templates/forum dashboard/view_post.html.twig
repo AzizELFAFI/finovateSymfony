@@ -3,7 +3,7 @@
 
 {% block admin_content %}
 <div class="view-header">
-    <a href="{{ path('admin_moderation') }}?type=post" class="btn-back-mod">← Retour à la modération</a>
+    <a href="{{ path('admin_liste_posts') }}" class="btn-back-mod">← Retour aux posts</a>
     <button class="btn-delete-top" onclick="openDeleteModal()">🗑️ Supprimer ce post</button>
 </div>
 
@@ -202,7 +202,7 @@ async function confirmDelete(type, id) {
     var form = new FormData(); form.append('reason', reason);
     var res  = await fetch('/forum/admin/delete/' + type + '/' + id, { method: 'POST', body: form });
     var data = await res.json();
-    if (data.success) window.location.href = '{{ path("admin_moderation") }}?type=post';
+    if (data.success) window.location.href = '{{ path("admin_liste_posts") }}';
     else alert('Erreur : ' + data.message);
 }
 

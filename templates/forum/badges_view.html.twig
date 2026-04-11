@@ -1,7 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}Mes Badges - FINOVATE{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: 'badges'} %}
+{% block content %}
 <div class="forums-content">
     <div class="page-container">
         <h2 class="section-title">🏆 Mes Badges</h2>
@@ -58,3 +57,4 @@ body { font-family: sans-serif; background-color: #f7f9fc; }
 .hint { background: #f0fdf4; border: 1px solid #b7dfca; color: #237f4e; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; }
 </style>
 {% endblock %}
+

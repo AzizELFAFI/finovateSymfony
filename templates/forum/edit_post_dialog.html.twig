@@ -1,7 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}Modifier le Post{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: ''} %}
+{% block content %}
 <div class="dialog-wrapper">
     <div class="dialog-overlay" onclick="window.location.href='{{ path('app_post_detail', {id: post.id}) }}'"></div>
     <div class="dialog-container">
@@ -51,3 +50,4 @@ textarea { resize:vertical; min-height:140px; }
 .btn-submit { padding:10px 28px; background:#237f4e; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
 </style>
 {% endblock %}
+

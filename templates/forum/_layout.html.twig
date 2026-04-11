@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>{% block title %}Finovate{% endblock %}</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  {% block stylesheets %}{% endblock %}
+</head>
+<body>
+
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_services') }}">Nos services</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_contact') }}">Contact</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_one_page') }}">One-page</a></li>
+            <li class="nav-item active"><a class="nav-link" href="{{ path('app_forum_home') }}">Mon espace</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Mon espace</h1>
+          <span>Informations du compte connecté</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="request-form">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8">
+          <h4 class="welcome-title">Bienvenue, Amira Mhedhbi</h4>
+          <p class="welcome-sub">Voici un résumé de votre compte.</p>
+        </div>
+        <div class="col-md-4">
+          <a href="{{ path('front_logout') }}" class="border-button">Déconnexion</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% for msg in app.flashes('error') %}
+  <div style="background:#fee2e2;border-bottom:1px solid #fca5a5;color:#c62828;padding:10px 20px;font-size:14px;font-weight:600;text-align:center">🚫 {{ msg }}</div>
+  {% endfor %}
+  {% for msg in app.flashes('success') %}
+  <div style="background:#f0fdf4;border-bottom:1px solid #b7dfca;color:#237f4e;padding:10px 20px;font-size:14px;font-weight:600;text-align:center">✅ {{ msg }}</div>
+  {% endfor %}
+
+  <div class="more-info">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-12">
+          <div class="row">
+
+            {# ── Sidebar ── #}
+            {% set currentRoute = app.request.attributes.get('_route') %}
+            {% set _activeTab = {
+                'app_forum_home': 'home',
+                'app_forum_my': 'my',
+                'app_forum_joined': 'joined',
+                'app_forum_shared': 'shared',
+                'app_forum_alerts': 'alerts',
+                'app_forum_badges': 'badges',
+                'app_forum_recommendations': 'reco',
+                'app_forum_personality': 'personality',
+                'app_forum_ai_assistant': 'ai',
+                'forum_policy': 'policy',
+                'admin_admin_policy': 'policy',
+                'app_forum_blocked_users': 'blocked',
+                'app_forum_posts': 'posts',
+                'app_post_detail': 'post',
+                'app_post_create': 'posts',
+                'app_post_edit': 'post',
+                'app_forum_create': 'my',
+                'app_forum_edit': 'my'
+            }[currentRoute] ?? '' %}
+            {% set forumOpen = _activeTab in ['home','my','joined','shared','alerts','badges','reco','personality','ai','policy','blocked','posts','post'] %}
+            <div class="col-lg-3 mb-4">
+              <div class="sidebar" id="sidebar">
+                <div class="title">Mon espace</div>
+                <a href="{{ path('user_dashboard') }}">Dashboard</a>
+                <a href="{{ path('user_transactions') }}">Transactions</a>
+                <a href="{{ path('user_goals') }}">Goals</a>
+                <a href="{{ path('user_bills') }}">Factures</a>
+                <a href="{{ path('investissement_index') }}">Investissement</a>
+                <a href="{{ path('front_products') }}">Produits</a>
+                <a href="{{ path('front_ads') }}">Annonces</a>
+                <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
+
+                {# Forums folder #}
+                <a href="#" class="forum-folder {% if forumOpen %}active{% endif %}" onclick="toggleForums(event)">
+                  Forums <span class="f-arrow {% if forumOpen %}open{% endif %}">▶</span>
+                </a>
+                <div class="forum-sub {% if forumOpen %}show{% endif %}">
+                  <a href="{{ path('app_forum_home') }}"            class="{% if _activeTab == 'home' %}active{% endif %}">🏠 Tous les forums</a>
+                  <a href="{{ path('app_forum_my') }}"              class="{% if _activeTab == 'my' %}active{% endif %}">📁 Mes Forums</a>
+                  <a href="{{ path('app_forum_joined') }}"          class="{% if _activeTab == 'joined' %}active{% endif %}">👥 Rejoints</a>
+                  <a href="{{ path('app_forum_shared') }}"          class="{% if _activeTab == 'shared' %}active{% endif %}">📤 Partagés</a>
+                  <a href="{{ path('app_forum_alerts') }}"          class="{% if _activeTab == 'alerts' %}active{% endif %}">🔔 Alertes</a>
+                  <a href="{{ path('app_forum_badges') }}"          class="{% if _activeTab == 'badges' %}active{% endif %}">🏆 Badges</a>
+                  <a href="{{ path('app_forum_recommendations') }}" class="{% if _activeTab == 'reco' %}active{% endif %}">⭐ Recommandations</a>
+                  <a href="{{ path('app_forum_personality') }}"     class="{% if _activeTab == 'personality' %}active{% endif %}">🧠 Personnalité</a>
+                  <a href="{{ path('app_forum_ai_assistant') }}"    class="{% if _activeTab == 'ai' %}active{% endif %}">💬 ChitChat</a>
+                  <a href="{{ path('forum_policy') }}"              class="{% if _activeTab == 'policy' %}active{% endif %}">📜 Règles</a>
+                  <a href="{{ path('app_forum_blocked_users') }}"   class="{% if _activeTab == 'blocked' %}active{% endif %}">🚫 Bloqués</a>
+                </div>
+
+                <a href="{{ path('front_logout') }}">Déconnexion</a>
+              </div>
+            </div>
+
+            {# ── Content ── #}
+            <div class="col-lg-9">
+              <div class="content-panel">
+                {% block content %}{% endblock %}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .welcome-title { font-weight: 900; font-size: 1.65rem; letter-spacing: 0.2px; margin: 0; color: #0f766e; }
+    .welcome-sub { margin: 6px 0 0 0; color: rgba(0,0,0,0.55); font-weight: 600; }
+    .sidebar { border-radius: 18px; background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); border: 1px solid rgba(15,118,110,0.14); box-shadow: 0 14px 38px rgba(0,0,0,0.06); padding: 16px; position: sticky; top: 16px; }
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; letter-spacing: 0.2px; }
+    .sidebar > a, .forum-sub a { display: block; padding: 10px 12px; border-radius: 12px; color: #111827; font-weight: 700; text-decoration: none; border: 1px solid transparent; }
+    .sidebar > a:hover, .forum-sub a:hover { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.18); color: #0f766e; }
+    .sidebar > a.active, .forum-sub a.active { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.26); color: #0f766e; }
+    .forum-folder { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .f-arrow { font-size: 10px; transition: transform 0.2s; }
+    .f-arrow.open { transform: rotate(90deg); }
+    .forum-sub { display: none; padding-left: 10px; }
+    .forum-sub.show { display: block; }
+    .forum-sub a { padding: 7px 12px; font-size: 13px; border-left: 2px solid rgba(15,118,110,0.15); border-radius: 8px; margin-bottom: 1px; }
+    .forum-sub a:hover { border-left-color: #0f766e; }
+    .forum-sub a.active { background: rgba(16,185,129,0.12); border-left-color: #0f766e; color: #0f766e; }
+    .content-panel { border-radius: 18px; }
+  </style>
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ asset('front/assets/js/custom.js') }}"></script>
+
+  <script>
+  function toggleForums(e) {
+    e.preventDefault();
+    var btn = e.currentTarget;
+    var sub = btn.nextElementSibling;
+    var arrow = btn.querySelector('.f-arrow');
+    sub.classList.toggle('show');
+    arrow.classList.toggle('open');
+    btn.classList.toggle('active');
+  }
+  </script>
+
+  {% block javascripts %}{% endblock %}
+</body>
+</html>

@@ -21,6 +21,9 @@ use App\Service\AlertService;
 use App\Service\AiService;
 use App\Service\AdminRestrictionService;
 use App\Service\RecommendationService;
+use App\Service\UserRelationService;
+use App\Repository\UserBlockRepository;
+use App\Repository\UserPeerRestrictionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -32,19 +35,27 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[Route('/forum')]
 final class ForumController extends AbstractController
 {
-    private function currentUser(EntityManagerInterface $em): ?\App\Entity\User
+    private function getCurrentUserId(): int
     {
         $user = $this->getUser();
-        if ($user instanceof \App\Entity\User) {
-            return $em->find(\App\Entity\User::class, $user->getId());
+        if (!$user instanceof \App\Entity\User) {
+            throw $this->createAccessDeniedException('Not authenticated.');
         }
-        // Fallback: use the first available user in DB (demo mode)
-        return $em->getRepository(\App\Entity\User::class)->findOneBy([]);
+        return (int) $user->getId();
+    }
+
+    private function getCurrentUser(EntityManagerInterface $em): \App\Entity\User
+    {
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User) {
+            throw $this->createAccessDeniedException('Not authenticated.');
+        }
+        return $em->find(\App\Entity\User::class, $user->getId());
     }
 
     private function checkRestriction(string $action, AdminRestrictionService $restrictionService, EntityManagerInterface $em): ?Response
     {
-        $user = $this->currentUser($em);
+        $user = $em->find(\App\Entity\User::class, $this->getCurrentUserId());
         if (!$user) return null;
         if ($restrictionService->isRestricted($user, $action)) {
             $msg = match($action) {
@@ -55,6 +66,16 @@ final class ForumController extends AbstractController
             };
             $this->addFlash('error', $msg);
             return $this->redirectToRoute('app_forum_home');
+        }
+        return null;
+    }
+
+    private function checkPeerRestriction(?int $targetUserId, UserRelationService $relations, string $redirectRoute, array $redirectParams = []): ?Response
+    {
+        if (!$targetUserId) return null;
+        if ($relations->isPeerRestricted($targetUserId, $this->getCurrentUserId())) {
+            $this->addFlash('error', '🚫 Vous êtes restreint par cet utilisateur.');
+            return $this->redirectToRoute($redirectRoute, $redirectParams);
         }
         return null;
     }
@@ -95,7 +116,8 @@ final class ForumController extends AbstractController
         if (!$file) return null;
         $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeFilename = $slugger->slug($originalFilename);
-        $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+        $newFilename = $safeFilename . '-' . uniqid() . '.' . $ext;
         try {
             $file->move($this->getParameter('kernel.project_dir') . '/public/uploads/images', $newFilename);
             return 'uploads/images/' . $newFilename;
@@ -106,7 +128,7 @@ final class ForumController extends AbstractController
 
     private function getUser18(EntityManagerInterface $em): mixed
     {
-        return $this->currentUser($em);
+        return $em->getReference(\App\Entity\User::class, $this->getCurrentUserId());
     }
 
     // ── Forum pages ───────────────────────────────────────────────────────────
@@ -137,7 +159,7 @@ final class ForumController extends AbstractController
 
         $joinedIds = array_map(
             fn($uf) => $uf->getForum()->getId(),
-            $ufRepo->createQueryBuilder('uf')->where('uf.user = :uid')->setParameter('uid', $this->getUser()->getId())->getQuery()->getResult()
+            $ufRepo->createQueryBuilder('uf')->where('uf.user = :uid')->setParameter('uid', $this->getCurrentUserId())->getQuery()->getResult()
         );
 
         // 5 most recent this week
@@ -166,7 +188,7 @@ final class ForumController extends AbstractController
 
         // Horizontal strips: joined forums + recommended (most posts)
         $joinedForums = $ufRepo->createQueryBuilder('uf')
-            ->where('uf.user = :uid')->setParameter('uid', $this->getUser()->getId())
+            ->where('uf.user = :uid')->setParameter('uid', $this->getCurrentUserId())
             ->getQuery()->getResult();
         $joinedForumsList = array_map(fn($uf) => $uf->getForum(), $joinedForums);
 
@@ -214,7 +236,7 @@ final class ForumController extends AbstractController
     public function myForums(ForumRepository $forumRepo): Response
     {
         $forums = $forumRepo->createQueryBuilder('f')
-            ->where('f.creator = :uid')->setParameter('uid', $this->getUser()->getId())
+            ->where('f.creator = :uid')->setParameter('uid', $this->getCurrentUserId())
             ->getQuery()->getResult();
         return $this->render('forum/forums.html.twig', ['forums' => $forums]);
     }
@@ -223,7 +245,7 @@ final class ForumController extends AbstractController
     public function joinedForums(UserForumRepository $userForumRepo): Response
     {
         $memberships = $userForumRepo->createQueryBuilder('uf')
-            ->where('uf.user = :uid')->setParameter('uid', $this->getUser()->getId())
+            ->where('uf.user = :uid')->setParameter('uid', $this->getCurrentUserId())
             ->getQuery()->getResult();
         return $this->render('forum/joined_forums.html.twig', ['memberships' => $memberships]);
     }
@@ -232,7 +254,7 @@ final class ForumController extends AbstractController
     public function sharedPosts(SharedPostRepository $sharedPostRepo): Response
     {
         $sharedPosts = $sharedPostRepo->createQueryBuilder('sp')
-            ->where('sp.user = :uid')->setParameter('uid', $this->getUser()->getId())
+            ->where('sp.user = :uid')->setParameter('uid', $this->getCurrentUserId())
             ->orderBy('sp.sharedAt', 'DESC')
             ->getQuery()->getResult();
         return $this->render('forum/shared.html.twig', ['sharedPosts' => $sharedPosts]);
@@ -242,7 +264,7 @@ final class ForumController extends AbstractController
     public function badges(UserBadgeRepository $userBadgeRepo): Response
     {
         $badges = $userBadgeRepo->createQueryBuilder('ub')
-            ->where('ub.user = :uid')->setParameter('uid', $this->getUser()->getId())
+            ->where('ub.user = :uid')->setParameter('uid', $this->getCurrentUserId())
             ->getQuery()->getResult();
         return $this->render('forum/badges_view.html.twig', ['badges' => $badges]);
     }
@@ -257,7 +279,7 @@ final class ForumController extends AbstractController
             $forum = new Forum();
             $forum->setTitle($request->request->get('title'));
             $forum->setDescription($request->request->get('description'));
-            $forum->setCreator($this->getUser18($em));
+            $forum->setCreator($this->getCurrentUser($em));
             $imageUrl = $this->uploadImage($request, 'image', $slugger);
             if ($imageUrl) $forum->setImageUrl($imageUrl);
             $em->persist($forum);
@@ -284,22 +306,42 @@ final class ForumController extends AbstractController
     #[Route('/{id}/delete-forum', name: 'app_forum_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function deleteForum(Forum $forum, EntityManagerInterface $em): Response
     {
+        // Remove posts and their children first to avoid FK constraint violations
+        foreach ($forum->getPosts() as $post) {
+            foreach ($post->getComments() as $comment) {
+                $em->remove($comment);
+            }
+            foreach ($post->getVotes() as $vote) {
+                $em->remove($vote);
+            }
+            foreach ($post->getSharedPosts() as $shared) {
+                $em->remove($shared);
+            }
+            $em->remove($post);
+        }
+        // Remove memberships
+        foreach ($forum->getMembers() as $member) {
+            $em->remove($member);
+        }
+        $em->flush();
         $em->remove($forum);
         $em->flush();
         return $this->redirectToRoute('app_forum_my');
     }
 
     #[Route('/{id}/join', name: 'app_forum_join', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function joinForum(Forum $forum, EntityManagerInterface $em, UserForumRepository $ufRepo, AlertService $alerts): Response
+    public function joinForum(Forum $forum, EntityManagerInterface $em, UserForumRepository $ufRepo, AlertService $alerts, UserRelationService $relations): Response
     {
+        // Check if forum creator has peer-restricted me
+        if ($forum->getCreator() && ($r = $this->checkPeerRestriction($forum->getCreator()->getId(), $relations, 'app_forum_home'))) return $r;
         $existing = $ufRepo->createQueryBuilder('uf')
             ->where('uf.forum = :f AND uf.user = :uid')
-            ->setParameter('f', $forum)->setParameter('uid', $this->getUser()->getId())
+            ->setParameter('f', $forum)->setParameter('uid', $this->getCurrentUserId())
             ->getQuery()->getOneOrNullResult();
         if (!$existing) {
             $uf = new UserForum();
             $uf->setForum($forum);
-            $uf->setUser($this->getUser18($em));
+            $uf->setUser($this->getCurrentUser($em));
             $em->persist($uf);
 
             // Alert forum creator
@@ -312,7 +354,7 @@ final class ForumController extends AbstractController
                 );
             }
             $em->flush();
-            $newBadges = $alerts->checkAndAwardBadges($this->getUser()->getId());
+            $newBadges = $alerts->checkAndAwardBadges($this->getCurrentUserId());
             $em->flush();
             if ($newBadges) {
                 $this->addFlash('new_badges', json_encode($newBadges));
@@ -326,7 +368,7 @@ final class ForumController extends AbstractController
     {
         $membership = $ufRepo->createQueryBuilder('uf')
             ->where('uf.forum = :f AND uf.user = :uid')
-            ->setParameter('f', $forum)->setParameter('uid', $this->getUser()->getId())
+            ->setParameter('f', $forum)->setParameter('uid', $this->getCurrentUserId())
             ->getQuery()->getOneOrNullResult();
         if ($membership) {
             $em->remove($membership);
@@ -346,14 +388,21 @@ final class ForumController extends AbstractController
     // ── Post pages ────────────────────────────────────────────────────────────
 
     #[Route('/{id}/posts', name: 'app_forum_posts', requirements: ['id' => '\d+'])]
-    public function posts(Forum $forum, PostRepository $postRepo, Request $request): Response
+    public function posts(Forum $forum, PostRepository $postRepo, Request $request, UserBlockRepository $blockRepo): Response
     {
         $sort   = $request->query->get('sort', 'recent');
         $search = $request->query->get('q', '');
 
+        $hiddenIds = $blockRepo->findHiddenIds($this->getCurrentUserId());
+
         $qb = $postRepo->createQueryBuilder('p')
             ->where('p.forum = :forum')
             ->setParameter('forum', $forum);
+
+        if ($hiddenIds) {
+            $qb->andWhere('p.author IS NULL OR p.author NOT IN (:hidden)')
+               ->setParameter('hidden', $hiddenIds);
+        }
 
         if ($search) {
             $qb->andWhere('p.title LIKE :q OR p.content LIKE :q')
@@ -376,27 +425,43 @@ final class ForumController extends AbstractController
     }
 
     #[Route('/post/{id}', name: 'app_post_detail', requirements: ['id' => '\d+'])]
-    public function postDetail(Post $post, VoteRepository $voteRepo, UserForumRepository $ufRepo, ForumRepository $forumRepo): Response
+    public function postDetail(Post $post, VoteRepository $voteRepo, UserForumRepository $ufRepo, ForumRepository $forumRepo, UserBlockRepository $blockRepo, UserPeerRestrictionRepository $restrictRepo, UserRelationService $relations): Response
     {
+        $authorId = $post->getAuthor()?->getId();
+
         $userVote = $voteRepo->createQueryBuilder('v')
             ->where('v.post = :p AND v.user = :uid')
-            ->setParameter('p', $post)->setParameter('uid', $this->getUser()->getId())
+            ->setParameter('p', $post)->setParameter('uid', $this->getCurrentUserId())
             ->getQuery()->getOneOrNullResult();
 
         // Forums user can share to (created + joined)
         $myForums = $forumRepo->createQueryBuilder('f')
-            ->where('f.creator = :uid')->setParameter('uid', $this->getUser()->getId())
+            ->where('f.creator = :uid')->setParameter('uid', $this->getCurrentUserId())
             ->getQuery()->getResult();
         $joinedForums = array_map(
             fn($uf) => $uf->getForum(),
-            $ufRepo->createQueryBuilder('uf')->where('uf.user = :uid')->setParameter('uid', $this->getUser()->getId())->getQuery()->getResult()
+            $ufRepo->createQueryBuilder('uf')->where('uf.user = :uid')->setParameter('uid', $this->getCurrentUserId())->getQuery()->getResult()
         );
         $shareForums = array_unique(array_merge($myForums, $joinedForums), SORT_REGULAR);
 
+        // Filter comments from blocked users
+        $hiddenIds = $blockRepo->findHiddenIds($this->getCurrentUserId());
+        $comments  = array_filter(
+            $post->getComments()->toArray(),
+            fn($c) => !$c->getAuthor() || !in_array($c->getAuthor()->getId(), $hiddenIds)
+        );
+
+        // Is author peer-restricted by me?
+        $isAuthorRestricted = $authorId ? $relations->isPeerRestricted($this->getCurrentUserId(), $authorId) : false;
+        $isAuthorBlocked    = $authorId ? $relations->isBlocked($this->getCurrentUserId(), $authorId) : false;
+
         return $this->render('forum/post_details.html.twig', [
-            'post'        => $post,
-            'userVote'    => $userVote,
-            'shareForums' => $shareForums,
+            'post'               => $post,
+            'userVote'           => $userVote,
+            'shareForums'        => $shareForums,
+            'filteredComments'   => array_values($comments),
+            'isAuthorBlocked'    => $isAuthorBlocked,
+            'isAuthorRestricted' => $isAuthorRestricted,
         ]);
     }
 
@@ -411,7 +476,7 @@ final class ForumController extends AbstractController
             $post->setTitle($request->request->get('title'));
             $post->setContent($request->request->get('content'));
             $post->setForum($forum);
-            $post->setAuthor($this->getUser18($em));
+            $post->setAuthor($this->getCurrentUser($em));
             $imageUrl = $this->uploadImage($request, 'image', $slugger);
 
             // Fallback: use AI-generated image (already saved locally)
@@ -432,7 +497,7 @@ final class ForumController extends AbstractController
             $em->persist($post);
 
             // Alert forum creator about new post
-            if ($forum->getCreator() && $forum->getCreator()->getId() !== $this->getUser()->getId()) {
+            if ($forum->getCreator() && $forum->getCreator()->getId() !== $this->getCurrentUserId()) {
                 $alerts->create(
                     $forum->getCreator()->getId(),
                     \App\Entity\Alert::TYPE_NEW_POST,
@@ -440,7 +505,7 @@ final class ForumController extends AbstractController
                 );
             }
             $em->flush();
-            $newBadges = $alerts->checkAndAwardBadges($this->getUser()->getId());
+            $newBadges = $alerts->checkAndAwardBadges($this->getCurrentUserId());
             $em->flush();
             if ($newBadges) $this->addFlash('new_badges', json_encode($newBadges));
             return $this->redirectToRoute('app_forum_posts', ['id' => $forum->getId()]);
@@ -485,7 +550,7 @@ final class ForumController extends AbstractController
 
         $report = new \App\Entity\UserReport();
         $report->setPost($post);
-        $report->setReporter($this->getUser18($em));
+        $report->setReporter($this->getCurrentUser($em));
         $report->setReason($reason);
         if ($details) $report->setDetails($details);
         $em->persist($report);
@@ -496,12 +561,13 @@ final class ForumController extends AbstractController
     }
 
     #[Route('/post/{id}/vote', name: 'app_post_vote', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function vote(Post $post, Request $request, EntityManagerInterface $em, VoteRepository $voteRepo, AlertService $alerts): Response
+    public function vote(Post $post, Request $request, EntityManagerInterface $em, VoteRepository $voteRepo, AlertService $alerts, UserRelationService $relations): Response
     {
+        if ($post->getAuthor() && ($r = $this->checkPeerRestriction($post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
         $type = $request->request->get('type');
         $existing = $voteRepo->createQueryBuilder('v')
             ->where('v.post = :p AND v.user = :uid')
-            ->setParameter('p', $post)->setParameter('uid', $this->getUser()->getId())
+            ->setParameter('p', $post)->setParameter('uid', $this->getCurrentUserId())
             ->getQuery()->getOneOrNullResult();
 
         if ($existing) {
@@ -513,12 +579,12 @@ final class ForumController extends AbstractController
         } else {
             $vote = new Vote();
             $vote->setPost($post);
-            $vote->setUser($this->getUser18($em));
+            $vote->setUser($this->getCurrentUser($em));
             $vote->setVoteType($type);
             $em->persist($vote);
 
             // Alert post author
-            if ($post->getAuthor() && $post->getAuthor()->getId() !== $this->getUser()->getId()) {
+            if ($post->getAuthor() && $post->getAuthor()->getId() !== $this->getCurrentUserId()) {
                 $emoji = $type === 'UPVOTE' ? '👍' : '👎';
                 $alerts->create(
                     $post->getAuthor()->getId(),
@@ -529,7 +595,7 @@ final class ForumController extends AbstractController
             }
         }
         $em->flush();
-        $newBadges = $alerts->checkAndAwardBadges($this->getUser()->getId());
+        $newBadges = $alerts->checkAndAwardBadges($this->getCurrentUserId());
         $em->flush();
         if ($newBadges) $this->addFlash('new_badges', json_encode($newBadges));
         return $this->redirectToRoute('app_post_detail', ['id' => $post->getId()]);
@@ -538,8 +604,9 @@ final class ForumController extends AbstractController
     // ── Share ─────────────────────────────────────────────────────────────────
 
     #[Route('/post/{id}/share', name: 'app_post_share', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function sharePost(Post $post, Request $request, EntityManagerInterface $em, SharedPostRepository $spRepo, AlertService $alerts, ForumRepository $forumRepo): Response
+    public function sharePost(Post $post, Request $request, EntityManagerInterface $em, SharedPostRepository $spRepo, AlertService $alerts, ForumRepository $forumRepo, UserRelationService $relations): Response
     {
+        if ($post->getAuthor() && ($r = $this->checkPeerRestriction($post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
         $targetForumId = $request->request->get('target_forum_id');
         $comment       = trim($request->request->get('comment', ''));
 
@@ -556,7 +623,7 @@ final class ForumController extends AbstractController
         // Prevent duplicate shares to same forum
         $existing = $spRepo->createQueryBuilder('sp')
             ->where('sp.post = :p AND sp.user = :uid AND sp.targetForum = :f')
-            ->setParameter('p', $post)->setParameter('uid', $this->getUser()->getId())->setParameter('f', $targetForum)
+            ->setParameter('p', $post)->setParameter('uid', $this->getCurrentUserId())->setParameter('f', $targetForum)
             ->getQuery()->getOneOrNullResult();
 
         if (!$existing) {
@@ -570,19 +637,19 @@ final class ForumController extends AbstractController
             $sharedPostEntry->setTitle($sharedTitle);
             $sharedPostEntry->setContent($sharedContent);
             $sharedPostEntry->setForum($targetForum);
-            $sharedPostEntry->setAuthor($this->getUser18($em));
+            $sharedPostEntry->setAuthor($this->getCurrentUser($em));
             if ($post->getImageUrl()) $sharedPostEntry->setImageUrl($post->getImageUrl());
             $em->persist($sharedPostEntry);
 
             // Also track in SharedPost for history
             $shared = new SharedPost();
             $shared->setPost($post);
-            $shared->setUser($this->getUser18($em));
+            $shared->setUser($this->getCurrentUser($em));
             $shared->setTargetForum($targetForum);
             if ($comment) $shared->setComment($comment);
             $em->persist($shared);
 
-            if ($post->getAuthor() && $post->getAuthor()->getId() !== $this->getUser()->getId()) {
+            if ($post->getAuthor() && $post->getAuthor()->getId() !== $this->getCurrentUserId()) {
                 $alerts->create(
                     $post->getAuthor()->getId(),
                     \App\Entity\Alert::TYPE_SHARE,
@@ -591,7 +658,7 @@ final class ForumController extends AbstractController
                 );
             }
             $em->flush();
-            $newBadges = $alerts->checkAndAwardBadges($this->getUser()->getId());
+            $newBadges = $alerts->checkAndAwardBadges($this->getCurrentUserId());
             $em->flush();
             if ($newBadges) $this->addFlash('new_badges', json_encode($newBadges));
             $this->addFlash('success', 'Post partagé dans "' . $targetForum->getTitle() . '" !');
@@ -611,18 +678,19 @@ final class ForumController extends AbstractController
     // ── Comment CRUD ──────────────────────────────────────────────────────────
 
     #[Route('/post/{id}/comment', name: 'app_post_comment', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function addComment(Post $post, Request $request, EntityManagerInterface $em, AlertService $alerts, AdminRestrictionService $restrictionService): Response
+    public function addComment(Post $post, Request $request, EntityManagerInterface $em, AlertService $alerts, AdminRestrictionService $restrictionService, UserRelationService $relations): Response
     {
         if ($redirect = $this->checkRestriction('comment', $restrictionService, $em)) return $redirect;
+        if ($post->getAuthor() && ($r = $this->checkPeerRestriction($post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
         $content = trim($request->request->get('content', ''));
         if ($content) {
             $comment = new Comment();
             $comment->setContent($content);
             $comment->setPost($post);
-            $comment->setAuthor($this->getUser18($em));
+            $comment->setAuthor($this->getCurrentUser($em));
             $em->persist($comment);
 
-            if ($post->getAuthor() && $post->getAuthor()->getId() !== $this->getUser()->getId()) {
+            if ($post->getAuthor() && $post->getAuthor()->getId() !== $this->getCurrentUserId()) {
                 $alerts->create(
                     $post->getAuthor()->getId(),
                     \App\Entity\Alert::TYPE_COMMENT,
@@ -631,7 +699,7 @@ final class ForumController extends AbstractController
                 );
             }
             $em->flush();
-            $newBadges = $alerts->checkAndAwardBadges($this->getUser()->getId());
+            $newBadges = $alerts->checkAndAwardBadges($this->getCurrentUserId());
             $em->flush();
             if ($newBadges) $this->addFlash('new_badges', json_encode($newBadges));
         }
@@ -657,6 +725,72 @@ final class ForumController extends AbstractController
         $em->remove($comment);
         $em->flush();
         return $this->redirectToRoute('app_post_detail', ['id' => $postId]);
+    }
+
+    // ── Block / Restrict ──────────────────────────────────────────────────────
+
+    #[Route('/user/{id}/block', name: 'app_user_block', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function blockUser(int $id, Request $request, EntityManagerInterface $em, UserRelationService $relations): Response
+    {
+        $me     = $em->find(\App\Entity\User::class, $this->getCurrentUserId());
+        $target = $em->find(\App\Entity\User::class, $id);
+        if (!$me || !$target || $me->getId() === $target->getId()) {
+            return $this->redirectToRoute('app_forum_home');
+        }
+        $reason = trim($request->request->get('reason', ''));
+        $relations->block($me, $target, $reason);
+        $this->addFlash('success', '🚫 Utilisateur bloqué.');
+        return $this->redirectToRoute('app_forum_home');
+    }
+
+    #[Route('/user/{id}/unblock', name: 'app_user_unblock', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function unblockUser(int $id, EntityManagerInterface $em, UserRelationService $relations): Response
+    {
+        $me     = $em->find(\App\Entity\User::class, $this->getCurrentUserId());
+        $target = $em->find(\App\Entity\User::class, $id);
+        if ($me && $target) {
+            $relations->unblock($me, $target);
+            $this->addFlash('success', '✅ Utilisateur débloqué.');
+        }
+        return $this->redirectToRoute('app_forum_blocked_users');
+    }
+
+    #[Route('/user/{id}/restrict', name: 'app_user_restrict', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function restrictUser(int $id, Request $request, EntityManagerInterface $em, UserRelationService $relations): Response
+    {
+        $me     = $em->find(\App\Entity\User::class, $this->getCurrentUserId());
+        $target = $em->find(\App\Entity\User::class, $id);
+        if (!$me || !$target || $me->getId() === $target->getId()) {
+            return $this->redirectToRoute('app_forum_home');
+        }
+        $reason = trim($request->request->get('reason', ''));
+        $days   = $request->request->get('days', '') !== '' ? (int)$request->request->get('days') : null;
+        $relations->restrict($me, $target, $reason, $days);        $this->addFlash('success', '⏱ Utilisateur restreint.');
+        $redirect = $request->request->get('redirect', $request->headers->get('referer', '/forum'));
+        return $this->redirect($redirect);
+    }
+
+    #[Route('/user/{id}/unrestrict', name: 'app_user_unrestrict', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function unrestrictUser(int $id, EntityManagerInterface $em, UserRelationService $relations): Response
+    {
+        $me     = $em->find(\App\Entity\User::class, $this->getCurrentUserId());
+        $target = $em->find(\App\Entity\User::class, $id);
+        if ($me && $target) {
+            $relations->unrestrict($me, $target);
+            $this->addFlash('success', '✅ Restriction levée.');
+        }
+        return $this->redirectToRoute('app_forum_blocked_users');
+    }
+
+    #[Route('/blocked-users', name: 'app_forum_blocked_users')]
+    public function blockedUsers(EntityManagerInterface $em, UserBlockRepository $blockRepo, UserPeerRestrictionRepository $restrictRepo): Response
+    {
+        $blocks      = $blockRepo->findBy(['blocker' => $this->getCurrentUserId()]);
+        $restrictions = $restrictRepo->findBy(['restrictor' => $this->getCurrentUserId(), 'active' => true]);
+        return $this->render('forum/blocked_users.html.twig', [
+            'blocks'       => $blocks,
+            'restrictions' => $restrictions,
+        ]);
     }
 
     // ── Extra pages ───────────────────────────────────────────────────────────
@@ -703,18 +837,18 @@ final class ForumController extends AbstractController
     public function alerts(Request $request, AlertRepository $alertRepo): Response
     {
         $type   = $request->query->get('type', '');
-        $alerts = $alertRepo->findForUser($this->getUser()->getId(), $type ?: null);
+        $alerts = $alertRepo->findForUser($this->getCurrentUserId(), $type ?: null);
         return $this->render('forum/alerts_view.html.twig', [
             'alerts'      => $alerts,
             'activeType'  => $type,
-            'unreadCount' => $alertRepo->countUnread($this->getUser()->getId()),
+            'unreadCount' => $alertRepo->countUnread($this->getCurrentUserId()),
         ]);
     }
 
     #[Route('/alerts/mark-read', name: 'app_alerts_mark_read', methods: ['POST'])]
     public function markAllRead(EntityManagerInterface $em, AlertRepository $alertRepo): Response
     {
-        foreach ($alertRepo->findForUser($this->getUser()->getId()) as $alert) {
+        foreach ($alertRepo->findForUser($this->getCurrentUserId()) as $alert) {
             $alert->setIsRead(true);
         }
         $em->flush();
@@ -724,7 +858,7 @@ final class ForumController extends AbstractController
     #[Route('/alerts/delete-all', name: 'app_alerts_delete_all', methods: ['POST'])]
     public function deleteAllAlerts(EntityManagerInterface $em, AlertRepository $alertRepo): Response
     {
-        foreach ($alertRepo->findForUser($this->getUser()->getId()) as $alert) {
+        foreach ($alertRepo->findForUser($this->getCurrentUserId()) as $alert) {
             $em->remove($alert);
         }
         $em->flush();
@@ -748,11 +882,11 @@ final class ForumController extends AbstractController
         \App\Repository\SharedPostRepository $sharedRepo,
         AiService $ai
     ): Response {
-        $posts    = $postRepo->findBy(['author' => $this->getUser()->getId()]);
-        $comments = $commentRepo->findBy(['author' => $this->getUser()->getId()]);
-        $votes    = $voteRepo->findBy(['user' => $this->getUser()->getId()]);
-        $forums   = $ufRepo->findBy(['user' => $this->getUser()->getId()]);
-        $shares   = $sharedRepo->findBy(['user' => $this->getUser()->getId()]);
+        $posts    = $postRepo->findBy(['author' => $this->getCurrentUserId()]);
+        $comments = $commentRepo->findBy(['author' => $this->getCurrentUserId()]);
+        $votes    = $voteRepo->findBy(['user' => $this->getCurrentUserId()]);
+        $forums   = $ufRepo->findBy(['user' => $this->getCurrentUserId()]);
+        $shares   = $sharedRepo->findBy(['user' => $this->getCurrentUserId()]);
         $upvotes  = count(array_filter($votes, fn($v) => $v->getVoteType() === 'UPVOTE'));
 
         $stats = [
@@ -872,7 +1006,7 @@ final class ForumController extends AbstractController
     public function recommendations(ForumRecommendationRepository $recRepo): Response
     {
         $recommendations = $recRepo->createQueryBuilder('r')
-            ->where('r.user = :uid')->setParameter('uid', $this->getUser()->getId())
+            ->where('r.user = :uid')->setParameter('uid', $this->getCurrentUserId())
             ->orderBy('r.score', 'DESC')->getQuery()->getResult();
         return $this->render('forum/recommendations_view.html.twig', ['recommendations' => $recommendations]);
     }
@@ -880,7 +1014,7 @@ final class ForumController extends AbstractController
     #[Route('/recommendations/refresh', name: 'app_forum_recommendations_refresh', methods: ['POST'])]
     public function refreshRecommendations(RecommendationService $recService): Response
     {
-        $recService->refresh($this->getUser()->getId());
+        $recService->refresh($this->getCurrentUserId());
         return $this->redirectToRoute('app_forum_recommendations');
     }
 
@@ -890,3 +1024,4 @@ final class ForumController extends AbstractController
         return $this->render('forum/policy.html.twig');
     }
 }
+

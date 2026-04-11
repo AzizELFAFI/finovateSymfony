@@ -88,30 +88,6 @@ class AdminDashboardController extends AbstractController
 
     // ── Moderation ────────────────────────────────────────────────────────────
 
-    #[Route('/moderation', name: 'moderation')]
-    public function moderation(
-        Request $request,
-        AdminModerationService $moderation
-    ): Response {
-        $type   = $request->query->get('type', 'post');
-        $sort   = $request->query->get('sort', 'recent');
-        $search = $request->query->get('q', '');
-        $page   = max(1, (int) $request->query->get('page', 1));
-
-        $data    = $moderation->getPaginatedContent($type, $sort, $search, $page);
-        $reasons = DeletionReason::cases();
-
-        return $this->render('forum dashboard/moderation.html.twig', [
-            'items'   => $data['items'],
-            'total'   => $data['total'],
-            'pages'   => $data['pages'],
-            'page'    => $page,
-            'type'    => $type,
-            'sort'    => $sort,
-            'search'  => $search,
-            'reasons' => $reasons,
-        ]);
-    }
 
     #[Route('/delete/{type}/{id}', name: 'delete_content', methods: ['POST'])]
     public function deleteContent(
@@ -474,5 +450,37 @@ class AdminDashboardController extends AbstractController
         $badge = $badgeRepo->find($id);
         if ($badge) { $em->remove($badge); $em->flush(); }
         return $this->redirectToRoute('admin_badges');
+    }
+
+    #[Route('/liste-posts', name: 'liste_posts')]
+    public function listePosts(\App\Repository\PostRepository $postRepo): Response
+    {
+        return $this->render('forum dashboard/liste_posts.html.twig', [
+            'posts' => $postRepo->findBy([], ['createdAt' => 'DESC']),
+        ]);
+    }
+
+    #[Route('/liste-posts/{id}/delete', name: 'post_delete', methods: ['POST'])]
+    public function deletePost(int $id, \App\Repository\PostRepository $postRepo, EntityManagerInterface $em): Response
+    {
+        $post = $postRepo->find($id);
+        if ($post) { $em->remove($post); $em->flush(); }
+        return $this->redirectToRoute('admin_liste_posts');
+    }
+
+    #[Route('/liste-comments', name: 'liste_comments')]
+    public function listeComments(\App\Repository\CommentRepository $commentRepo): Response
+    {
+        return $this->render('forum dashboard/liste_comments.html.twig', [
+            'comments' => $commentRepo->findBy([], ['createdAt' => 'DESC']),
+        ]);
+    }
+
+    #[Route('/liste-comments/{id}/delete', name: 'comment_delete', methods: ['POST'])]
+    public function deleteComment(int $id, \App\Repository\CommentRepository $commentRepo, EntityManagerInterface $em): Response
+    {
+        $comment = $commentRepo->find($id);
+        if ($comment) { $em->remove($comment); $em->flush(); }
+        return $this->redirectToRoute('admin_liste_comments');
     }
 }

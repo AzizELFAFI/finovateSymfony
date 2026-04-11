@@ -29,20 +29,20 @@ class Forum
     #[ORM\Column(name: 'image_url', length: 500, nullable: true)]
     private ?string $imageUrl = null;
 
-    #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
-    private \DateTimeImmutable $createdAt;
+    #[ORM\Column(name: 'created_at', type: 'datetime')]
+    private \DateTime $createdAt;
 
-    #[ORM\OneToMany(mappedBy: 'forum', targetEntity: Post::class)]
+    #[ORM\OneToMany(mappedBy: 'forum', targetEntity: Post::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $posts;
 
-    #[ORM\OneToMany(mappedBy: 'forum', targetEntity: UserForum::class)]
+    #[ORM\OneToMany(mappedBy: 'forum', targetEntity: UserForum::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $members;
 
     public function __construct()
     {
         $this->posts = new ArrayCollection();
         $this->members = new ArrayCollection();
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -54,8 +54,8 @@ class Forum
     public function setCreator(?User $creator): static { $this->creator = $creator; return $this; }
     public function getImageUrl(): ?string { return $this->imageUrl; }
     public function setImageUrl(?string $imageUrl): static { $this->imageUrl = $imageUrl; return $this; }
-    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static { $this->createdAt = $createdAt; return $this; }
+    public function getCreatedAt(): \DateTime { return $this->createdAt; }
+    public function setCreatedAt(\DateTime $createdAt): static { $this->createdAt = $createdAt; return $this; }
     public function getPosts(): Collection { return $this->posts; }
     public function getMembers(): Collection { return $this->members; }
 }

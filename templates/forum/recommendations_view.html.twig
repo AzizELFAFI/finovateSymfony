@@ -1,7 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}Recommandations - FINOVATE{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: 'reco'} %}
+{% block content %}
 <div class="forums-content">
     <div class="page-container">
         <div class="page-header-banner">
@@ -69,3 +68,4 @@ body { font-family: sans-serif; background-color: #f7f9fc; }
 .empty-state span { color: #7c7c7c; font-size: 14px; }
 </style>
 {% endblock %}
+

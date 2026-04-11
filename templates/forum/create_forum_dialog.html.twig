@@ -1,7 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}Creer un Forum{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: 'my'} %}
+{% block content %}
 <div class="dialog-wrapper">
     <div class="dialog-overlay" onclick="window.location.href='{{ path('app_forum_my') }}'"></div>
     <div class="dialog-container">
@@ -89,3 +88,4 @@ function validateForum() {
 }
 </script>
 {% endblock %}
+

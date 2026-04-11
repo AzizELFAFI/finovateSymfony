@@ -1,7 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}Forums - FINOVATE{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: 'home'} %}
+{% block content %}
 <div class="forums-content">
     <div class="fh-container">
 
@@ -354,3 +353,4 @@ document.getElementById('forumSearchInput').addEventListener('keydown', function
 });
 </script>
 {% endblock %}
+

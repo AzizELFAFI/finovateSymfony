@@ -1,14 +1,13 @@
-﻿{% extends "base.html.twig" %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}Postes Partages - FINOVATE{% endblock %}
-{% block body %}
-{% include "forum/_navbar.html.twig" with {activeTab: "shared"} %}
+{% block content %}
 <div class="forums-content">
     <div class="page-container">
         <h2 class="section-title">Postes Partages</h2>
         <div class="posts-list">
             {% if sharedPosts is empty %}
             <div class="empty-state">
-                <div style="font-size:48px;margin-bottom:15px">📤</div>
+                <div style="font-size:48px;margin-bottom:15px">??</div>
                 <p>Aucun poste partage</p>
                 <span>Partagez des posts interessants depuis les forums !</span>
             </div>
@@ -36,7 +35,7 @@
                     {% endif %}
                 </div>
                 <form method="post" action="{{ path("app_shared_delete", {id: sp.id}) }}" onsubmit="return confirm('Retirer ce post partage ?')" style="flex-shrink:0">
-                    <button type="submit" class="btn-del" title="Retirer">🗑️</button>
+                    <button type="submit" class="btn-del" title="Retirer">???</button>
                 </form>
             </div>
             {% endfor %}
@@ -68,3 +67,4 @@ body { font-family: sans-serif; background-color: #f7f9fc; }
 .empty-state span { color: #7c7c7c; font-size: 14px; }
 </style>
 {% endblock %}
+

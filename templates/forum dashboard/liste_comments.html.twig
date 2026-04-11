@@ -1,0 +1,56 @@
+{% extends 'forum dashboard/_layout.html.twig' %}
+{% block title %}Liste des Commentaires — FINOVATE Admin{% endblock %}
+
+{% block admin_content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+    <h4 class="mb-0">Liste des commentaires</h4>
+    <span class="badge bg-light text-dark">{{ comments|length }}</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-centered mb-0 text-nowrap">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Contenu</th>
+            <th>Auteur</th>
+            <th>Post</th>
+            <th>Créé le</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for comment in comments %}
+          <tr>
+            <td>{{ comment.id }}</td>
+            <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {{ comment.content|slice(0,80) }}{% if comment.content|length > 80 %}…{% endif %}
+            </td>
+            <td>
+              {% if comment.author %}
+                {{ comment.author.firstname }} {{ comment.author.lastname }}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td>{{ comment.post ? comment.post.title|slice(0,40) : '—' }}</td>
+            <td>{{ comment.createdAt|date('d/m/Y') }}</td>
+            <td>
+              <form method="post" action="{{ path('admin_comment_delete', {id: comment.id}) }}"
+                    onsubmit="return confirm('Supprimer ce commentaire ?')">
+                <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-4">Aucun commentaire trouvé.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -76,36 +76,30 @@
     }
 
     .sidebar {
-      border-radius: 14px;
+      border-radius: 18px;
       background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(15, 118, 110, 0.14);
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
-      padding: 10px 16px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 24px;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
     }
 
     .sidebar .title {
       font-weight: 900;
-      margin: 0 10px 0 0;
+      margin: 0 0 10px 0;
       letter-spacing: 0.2px;
-      white-space: nowrap;
-      color: #0f766e;
     }
 
     .sidebar a {
-      display: inline-block;
-      padding: 8px 16px;
-      border-radius: 10px;
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
       color: #111827;
       font-weight: 700;
       text-decoration: none;
       border: 1px solid transparent;
-      white-space: nowrap;
     }
 
     .sidebar a:hover {
@@ -124,6 +118,29 @@
       border-radius: 18px;
       background: rgba(255, 255, 255, 0.0);
     }
+
+    .forum-folder {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .f-arrow { font-size: 10px; transition: transform 0.2s; }
+    .f-arrow.open { transform: rotate(90deg); }
+    .forum-sub { display: none; padding-left: 10px; }
+    .forum-sub.show { display: block; }
+    .forum-sub a {
+      display: block;
+      padding: 7px 12px;
+      font-size: 13px;
+      border-left: 2px solid rgba(15,118,110,0.15);
+      border-radius: 8px;
+      margin-bottom: 1px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .forum-sub a:hover { border-left-color: #0f766e; background: rgba(16,185,129,0.08); color: #0f766e; }
 
     .bank-card {
       position: relative;
@@ -301,20 +318,43 @@
       <div class="row justify-content-center">
         <div class="col-lg-12">
           <div class="row">
-            <div class="col-lg-12 mb-2">
+            <div class="col-lg-3 mb-4">
               <div class="sidebar" id="sidebar">
                 <div class="title">Mon espace</div>
                 <a href="#" id="nav-dashboard-side" class="active">Dashboard</a>
                 <a href="{{ path('user_transactions') }}" id="nav-transactions">Transactions</a>
                 <a href="{{ path('user_goals') }}" id="nav-goals">Goals</a>
                 <a href="{{ path('user_bills') }}" id="nav-bills">Factures</a>
-                <a href="{{ path('app_forum_home') }}" id="nav-forum">Forum</a>
+                <a href="{{ path('investissement_index') }}" id="nav-investissement">Investissement</a>
+                <a href="{{ path('front_products') }}">Produits</a>
+                <a href="{{ path('front_ads') }}">Annonces</a>
                 <a href="#" id="nav-edit-profile">Modifier le profil</a>
+
+                {# Forums folder #}
+                <a href="#" class="forum-folder" onclick="toggleForums(event)">
+                  Forums <span class="f-arrow">▶</span>
+                </a>
+                <div class="forum-sub">
+                  <a href="{{ path('app_forum_home') }}">🏠 Tous les forums</a>
+                  <a href="{{ path('app_forum_my') }}">📁 Mes Forums</a>
+                  <a href="{{ path('app_forum_joined') }}">👥 Rejoints</a>
+                  <a href="{{ path('app_forum_shared') }}">📤 Partagés</a>
+                  <a href="{{ path('app_forum_alerts') }}">🔔 Alertes</a>
+                  <a href="{{ path('app_forum_badges') }}">🏆 Badges</a>
+                  <a href="{{ path('app_forum_recommendations') }}">⭐ Recommandations</a>
+                  <a href="{{ path('app_forum_personality') }}">🧠 Personnalité</a>
+                  <a href="{{ path('app_forum_ai_assistant') }}">💬 ChitChat</a>
+                  <a href="{{ path('forum_policy') }}">📜 Règles</a>
+                  <a href="{{ path('app_forum_blocked_users') }}">🚫 Bloqués</a>
+                </div>
+
                 <a href="{{ path('front_logout') }}">Déconnexion</a>
               </div>
             </div>
+            
+            
 
-            <div class="col-lg-12">
+            <div class="col-lg-9">
               <div class="content-panel">
                 <div class="dashboard-card" id="panel-dashboard">
                   <h3 class="dashboard-title">Dashboard</h3>
@@ -381,7 +421,7 @@
                   <div id="edit-success" class="alert alert-success" style="display:none"></div>
                   <div id="edit-error" class="alert alert-danger" style="display:none"></div>
 
-                  <form id="edit-profile-form">
+                  <form id="edit-profile-form" novalidate="novalidate">
                     <div class="form-row">
                       <div class="form-group col-md-6">
                         <label for="edit-prenom">Prénom</label>
@@ -395,7 +435,7 @@
                     <div class="form-row">
                       <div class="form-group col-md-6">
                         <label for="edit-telephone">Téléphone</label>
-                        <input type="text" class="form-control" id="edit-telephone" placeholder="Votre numéro">
+                        <input type="text" class="form-control" id="edit-telephone" placeholder="Votre numéro" inputmode="numeric" pattern="^\d{8}$" minlength="8" maxlength="8" title="Le numéro de téléphone doit contenir exactement 8 chiffres.">
                       </div>
                       <div class="form-group col-md-6">
                         <label for="edit-email">Email</label>
@@ -410,7 +450,7 @@
                       </div>
                       <div class="form-group col-md-6">
                         <label for="edit-cin">CIN</label>
-                        <input type="text" class="form-control" id="edit-cin" placeholder="Votre CIN">
+                        <input type="text" class="form-control" id="edit-cin" placeholder="Votre CIN" inputmode="numeric" pattern="^\d{8}$" minlength="8" maxlength="8" title="Le CIN doit contenir exactement 8 chiffres.">
                       </div>
                     </div>
 
@@ -443,6 +483,18 @@
   <script src="{{ asset('front/assets/js/owl.js') }}"></script>
   <script src="{{ asset('front/assets/js/slick.js') }}"></script>
   <script src="{{ asset('front/assets/js/accordions.js') }}"></script>
+
+  <script>
+  function toggleForums(e) {
+    e.preventDefault();
+    var btn = e.currentTarget;
+    var sub = btn.nextElementSibling;
+    var arrow = btn.querySelector('.f-arrow');
+    sub.classList.toggle('show');
+    arrow.classList.toggle('open');
+    btn.classList.toggle('active');
+  }
+  </script>
 
   <script>
     (function () {
@@ -591,6 +643,32 @@
           var password = document.getElementById('edit-password') ? document.getElementById('edit-password').value : '';
           var passwordConfirm = document.getElementById('edit-password-confirm') ? document.getElementById('edit-password-confirm').value : '';
 
+          nom = (nom || '').trim();
+          prenom = (prenom || '').trim();
+          telephone = (telephone || '').trim();
+          email = (email || '').trim();
+          dateNaissance = (dateNaissance || '').trim();
+          cin = (cin || '').trim();
+          password = (password || '').trim();
+          passwordConfirm = (passwordConfirm || '').trim();
+
+          var onlyDigitsTelephone = (telephone || '').replace(/\D+/g, '');
+          if (telephone && !/^\d{8}$/.test(onlyDigitsTelephone)) {
+            if (errorEl) {
+              errorEl.textContent = 'Le numéro de téléphone doit contenir exactement 8 chiffres.';
+              errorEl.style.display = '';
+            }
+            return;
+          }
+
+          if (cin && !/^\d{8}$/.test(cin)) {
+            if (errorEl) {
+              errorEl.textContent = 'Le CIN doit contenir exactement 8 chiffres.';
+              errorEl.style.display = '';
+            }
+            return;
+          }
+
           if (password && !passwordConfirm) {
             if (errorEl) {
               errorEl.textContent = 'Confirmation du mot de passe obligatoire.';
@@ -613,7 +691,7 @@
               'Content-Type': 'application/json',
               'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ nom: nom, prenom: prenom, email: email, date_naissance: dateNaissance, cin: cin, telephone: telephone, password: password, password_confirm: passwordConfirm })
+            body: JSON.stringify({ nom: nom, prenom: prenom, email: email, date_naissance: dateNaissance, cin: cin, telephone: onlyDigitsTelephone || telephone, password: password, password_confirm: passwordConfirm })
           })
             .then(function (res) {
               return res.json().then(function (data) {
@@ -625,6 +703,20 @@
             .then(function (result) {
               if (!result.ok) {
                 if (errorEl) {
+                  if (result.data && result.data.errors) {
+                    var msgs = [];
+                    Object.keys(result.data.errors).forEach(function (field) {
+                      (result.data.errors[field] || []).forEach(function (msg) {
+                        msgs.push(msg);
+                      });
+                    });
+                    if (msgs.length > 0) {
+                      errorEl.innerHTML = msgs.join('<br>');
+                      errorEl.style.display = '';
+                      return;
+                    }
+                  }
+
                   errorEl.textContent = (result.data && result.data.message) ? result.data.message : 'Mise à jour impossible.';
                   errorEl.style.display = '';
                 }

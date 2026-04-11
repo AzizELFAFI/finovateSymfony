@@ -1,8 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}ChitChat — FINOVATE{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: 'ai'} %}
-
+{% block content %}
 <div class="audi-page">
     <div class="audi-header">
         <h1 class="audi-title">ChitChat</h1>
@@ -14,11 +12,9 @@
         <canvas id="visualizer" width="320" height="320"></canvas>
         <div class="audi-circle" id="audiCircle">
             <div class="audi-state" id="audiState">🎤</div>
-            <div class="audi-label" id="audiLabel">Appuyez pour parler</div>
+            <div class="audi-label" id="audiLabel">Cliquez pour parler</div>
         </div>
-        <button class="audi-mic-btn" id="micBtn"
-            onmousedown="startListening()" onmouseup="stopListening()"
-            ontouchstart="startListening(event)" ontouchend="stopListening(event)">
+        <button class="audi-mic-btn" id="micBtn" onclick="toggleListening()">
         </button>
     </div>
 
@@ -160,23 +156,24 @@ function stopVisualizer() {
 drawIdle();
 
 // ── Speech Recognition ────────────────────────────────────────────────────
+function toggleListening() {
+    if (isListening) { stopListening(); } else { startListening(); }
+}
+
 function initRecognition() {
     if (!SpeechRecognition) return null;
     var r = new SpeechRecognition();
     r.lang = 'fr-FR';
     r.interimResults = true;
-    r.continuous = true;
+    r.continuous = false;
     r.maxAlternatives = 1;
 
     r.onresult = function(e) {
         var interim = '';
-        transcriptResult = ''; // reset each time to get full result
-        for (var i = 0; i < e.results.length; i++) {
-            if (e.results[i].isFinal) {
-                transcriptResult += e.results[i][0].transcript;
-            } else {
-                interim += e.results[i][0].transcript;
-            }
+        transcriptResult = '';
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+            if (e.results[i].isFinal) transcriptResult += e.results[i][0].transcript;
+            else interim += e.results[i][0].transcript;
         }
         var display = transcriptResult || interim;
         if (display) {
@@ -186,79 +183,64 @@ function initRecognition() {
     };
 
     r.onend = function() {
-        // Edge fires onend before onresult — wait longer
-        setTimeout(function() {
-            if (isListening) stopListening();
-        }, 800);
+        isListening = false;
+        if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+        stopVisualizer();
+        var text = transcriptResult.trim();
+        if (text) {
+            setCircle('idle', '⏳', 'Traitement...');
+            addHistory('user', text);
+            chatHistory.push({ role: 'user', content: text });
+            sendToAI(text);
+        } else {
+            setCircle('idle', '🎤', 'Cliquez pour parler');
+            setStatus('Aucune parole détectée, réessayez');
+            document.getElementById('audiTranscript').style.display = 'none';
+        }
     };
 
     r.onerror = function(e) {
-        console.warn('STT:', e.error);
-        if (e.error === 'no-speech') {
-            setStatus('Aucune parole détectée, réessayez');
-            isListening = false;
-            stopVisualizer();
-            if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-            setCircle('idle', '🎤', 'Appuyez pour parler');
-        } else {
-            setStatus('Erreur micro: ' + e.error);
-            if (isListening) stopListening();
-        }
+        isListening = false;
+        if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+        stopVisualizer();
+        setCircle('idle', '🎤', 'Cliquez pour parler');
+        setStatus('Erreur: ' + e.error + ' — réessayez');
     };
     return r;
 }
 
-async function startListening(e) {
-    if (e) e.preventDefault();
+async function startListening() {
     if (isListening) return;
     isListening = true;
     transcriptResult = '';
-
-    // Stop any ongoing speech
     window.speechSynthesis && window.speechSynthesis.cancel();
-
-    setCircle('listening', '🎤', 'En écoute...');
-    setStatus('🔴 Parlez maintenant...');
+    setCircle('listening', '🎤', 'Parlez... (cliquez pour arrêter)');
+    setStatus('🔴 En écoute...');
     document.getElementById('audiTranscript').style.display = 'none';
     document.getElementById('audiTranscript').textContent = '';
 
     recognition = initRecognition();
-    if (recognition) {
-        try { recognition.start(); } catch(ex) {}
+    if (!recognition) {
+        setStatus('❌ SpeechRecognition non supporté — utilisez Chrome ou Edge');
+        isListening = false;
+        setCircle('idle', '🎤', 'Cliquez pour parler');
+        return;
     }
 
     try {
         micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         startVisualizer(micStream);
+        recognition.start();
     } catch(err) {
-        setStatus('Accès micro refusé');
+        isListening = false;
+        setStatus('❌ Accès micro refusé');
+        setCircle('idle', '🎤', 'Cliquez pour parler');
     }
 }
 
-function stopListening(e) {
-    if (e) e.preventDefault();
+function stopListening() {
     if (!isListening) return;
-    isListening = false;
-
-    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-    if (recognition) { try { recognition.stop(); } catch(ex) {} recognition = null; }
-    stopVisualizer();
-
-    setCircle('idle', '⏳', 'Traitement...');
-    setStatus('');
-
-    setTimeout(function() {
-        var text = transcriptResult.trim();
-        if (text) {
-            addHistory('user', text);
-            chatHistory.push({ role: 'user', content: text });
-            sendToAI(text);
-        } else {
-            setCircle('idle', '🎤', 'Appuyez pour parler');
-            setStatus('Aucune parole détectée');
-            document.getElementById('audiTranscript').style.display = 'none';
-        }
-    }, 1000);
+    if (recognition) { try { recognition.stop(); } catch(ex) {} }
 }
 
 // ── AI ────────────────────────────────────────────────────────────────────
@@ -278,7 +260,7 @@ async function sendToAI(msg) {
         addHistory('ai', reply);
         speakReply(reply);
     } catch(err) {
-        setCircle('idle', '🎤', 'Appuyez pour parler');
+        setCircle('idle', '🎤', 'Cliquez pour parler');
         setStatus('Erreur de connexion');
     }
 }
@@ -296,7 +278,6 @@ function speakReply(text) {
     u.lang = 'fr-FR';
     u.rate = 1.0;
 
-    // Animate circle while speaking
     var speakAnim = null;
     var t = 0;
     function animSpeak() {
@@ -323,7 +304,7 @@ function speakReply(text) {
     u.onend = function() {
         cancelAnimationFrame(speakAnim);
         drawIdle();
-        setCircle('idle', '🎤', 'Appuyez pour parler');
+        setCircle('idle', '🎤', 'Cliquez pour parler');
         document.getElementById('audiTranscript').style.display = 'none';
     };
 
@@ -363,8 +344,8 @@ function addHistory(role, text) {
     div.className = 'hist-item hist-' + role;
     div.textContent = text;
     hist.insertBefore(div, hist.firstChild);
-    // Keep last 10
     while (hist.children.length > 10) hist.removeChild(hist.lastChild);
 }
 </script>
 {% endblock %}
+

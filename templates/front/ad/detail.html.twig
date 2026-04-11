@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ ad.title }} - Finovate</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body { padding-top: 80px; }
+    .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .ad-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 0; }
+    .reward-section { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 15px; }
+  </style>
+</head>
+<body>
+  <!-- NAVIGATION -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="{{ path('front_home') }}">Finovate</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="{{ path('front_products') }}">Produits</a></li>
+          <li class="nav-item"><a class="nav-link active" href="{{ path('front_ads') }}">Annonces</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Dashboard</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <div class="ad-header">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-light">
+          <li class="breadcrumb-item"><a href="{{ path('front_home') }}" class="text-white">Accueil</a></li>
+          <li class="breadcrumb-item"><a href="{{ path('front_ads') }}" class="text-white">Annonces</a></li>
+          <li class="breadcrumb-item active text-white">{{ ad.title }}</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="py-5">
+    <div class="container">
+      <div class="row">
+        <!-- AD IMAGE -->
+        <div class="col-md-6 mb-4">
+          {% if ad.imagePath %}
+            <img src="{{ ad.imagePath }}" alt="{{ ad.title }}" class="img-fluid rounded-3 shadow-sm">
+          {% else %}
+            <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 500px;">
+              <i class="fas fa-image fa-5x text-muted"></i>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- AD INFO -->
+        <div class="col-md-6">
+          <h1 class="display-5 mb-3">{{ ad.title }}</h1>
+          
+          <div class="reward-section text-white mb-4">
+            <div class="row align-items-center">
+              <div class="col-md-8">
+                <h4 class="mb-1">Cliquez et gagnez des points!</h4>
+                <p class="mb-0">Valable pendant {{ ad.duration }} secondes</p>
+              </div>
+              <div class="col-md-4 text-center">
+                <div class="display-2 fw-bold">{{ ad.rewardPoints }}</div>
+                <p class="mb-0">points</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h4 class="text-muted mb-3">À propos de cette annonce</h4>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <i class="fas fa-hourglass-end text-primary"></i>
+                <strong>Durée:</strong> {{ ad.duration }} secondes
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-gift text-success"></i>
+                <strong>Récompense:</strong> {{ ad.rewardPoints }} points
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-mouse text-info"></i>
+                <strong>Action:</strong> 1 clic = {{ ad.rewardPoints }} points
+              </li>
+            </ul>
+          </div>
+
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Important:</strong> Vous pouvez cliquer une seule fois par jour sur cette annonce pour gagner les points.
+          </div>
+
+          <div class="d-flex gap-2">
+            <form action="{{ path('front_ad_click', {'id': ad.id}) }}" method="POST" style="display: contents;">
+              <input type="hidden" name="_token" value="{{ csrf_token('ad_click_' ~ ad.id) }}">
+              <button type="submit" class="btn btn-success btn-lg flex-grow-1">
+                <i class="fas fa-mouse"></i> Cliquer et gagner {{ ad.rewardPoints }} points
+              </button>
+            </form>
+            <a href="{{ path('front_ads') }}" class="btn btn-outline-secondary btn-lg">
+              <i class="fas fa-arrow-left"></i> Retour
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

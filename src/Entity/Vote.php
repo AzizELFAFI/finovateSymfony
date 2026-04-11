@@ -26,12 +26,12 @@ class Vote
     #[ORM\Column(name: 'vote_type', type: 'string', length: 10)]
     private string $voteType; // UPVOTE or DOWNVOTE
 
-    #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
-    private \DateTimeImmutable $createdAt;
+    #[ORM\Column(name: 'created_at', type: 'datetime')]
+    private \DateTime $createdAt;
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -41,6 +41,6 @@ class Vote
     public function setUser(?User $user): static { $this->user = $user; return $this; }
     public function getVoteType(): string { return $this->voteType; }
     public function setVoteType(string $voteType): static { $this->voteType = $voteType; return $this; }
-    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static { $this->createdAt = $createdAt; return $this; }
+    public function getCreatedAt(): \DateTime { return $this->createdAt; }
+    public function setCreatedAt(\DateTime $createdAt): static { $this->createdAt = $createdAt; return $this; }
 }

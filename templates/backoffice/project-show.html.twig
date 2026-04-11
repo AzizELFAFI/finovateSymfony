@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Finovate - Détails Projet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('backoffice/assets/images/favicon_io/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('backoffice/assets/images/favicon_io/favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('backoffice/assets/images/favicon_io/favicon-16x16.png') }}">
+
+  <base href="{{ asset('backoffice/') }}">
+  <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+</head>
+
+<body>
+  <nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
+    <div class="d-flex align-items-center">
+      <a href="{{ path('backoffice_projects') }}" class="btn btn-light btn-icon btn-sm me-3" title="Retour">
+        <i class="ti ti-arrow-left"></i>
+      </a>
+      <h1 class="fs-4 mb-0">Projet #{{ project.id }} - {{ project.title }}</h1>
+    </div>
+  </nav>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="logo-area">
+      <a href="{{ path('backoffice_dashboard') }}" class="d-inline-flex align-items-center text-decoration-none">
+        <span class="logo-text ms-2 fw-bold" style="font-size: 1.25rem; letter-spacing: 0.2px;">Finovate</span>
+      </a>
+    </div>
+    <ul class="nav flex-column">
+      <li class="px-4 py-2"><small class="nav-text">Banque Virtuelle</small></li>
+      <li><a class="nav-link" href="{{ path('backoffice_dashboard') }}"><i class="ti ti-home"></i><span class="nav-text">Vue d'ensemble</span></a></li>
+      <li><a class="nav-link" href="{{ path('backoffice_users') }}"><i class="ti ti-users"></i><span class="nav-text">Gestion Utilisateurs</span></a></li>
+      <li><a class="nav-link active" href="{{ path('backoffice_projects') }}"><i class="ti ti-briefcase"></i><span class="nav-text">Gestion Projets</span></a></li>
+      <li><a class="nav-link" href="{{ path('backoffice_products') }}"><i class="ti ti-shopping-cart"></i><span class="nav-text">Produits</span></a></li>
+      <li><a class="nav-link" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
+      <li class="nav-folder">
+        <button class="nav-link nav-folder-btn w-100 text-start border-0 bg-transparent d-flex align-items-center" onclick="toggleForumFolder(this)">
+          <i class="ti ti-messages"></i><span class="nav-text flex-grow-1">Gestion Forums</span><i class="ti ti-chevron-down folder-chevron ms-auto"></i>
+        </button>
+        <ul class="nav flex-column nav-folder-children ps-3">
+          <li><a class="nav-link" href="{{ path('backoffice_forums') }}"><i class="ti ti-list"></i><span class="nav-text">Liste des forums</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_liste_posts') }}"><i class="ti ti-file-text"></i><span class="nav-text">Liste des posts</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_liste_comments') }}"><i class="ti ti-message"></i><span class="nav-text">Liste des commentaires</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_overview') }}"><i class="ti ti-chart-bar"></i><span class="nav-text">Vue d'ensemble</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_users') }}"><i class="ti ti-users"></i><span class="nav-text">Utilisateurs</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_ai_flags') }}"><i class="ti ti-robot"></i><span class="nav-text">IA Flags</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_reports') }}"><i class="ti ti-flag"></i><span class="nav-text">Signalements</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_badges') }}"><i class="ti ti-award"></i><span class="nav-text">Badges</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_admin_policy') }}"><i class="ti ti-file-text"></i><span class="nav-text">Politique</span></a></li>
+        </ul>
+      </li>
+      <li class="px-4 pt-4 pb-2"><small class="nav-text">Session</small></li>
+      <li><a class="nav-link" href="{{ path('front_logout') }}"><i class="ti ti-logout"></i><span class="nav-text">Déconnexion</span></a></li>
+    </ul>
+  </aside>
+
+  <main id="content" class="content py-10">
+    <div class="container-fluid">
+      {% for label, messages in app.flashes %}
+        {% for message in messages %}
+          <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endfor %}
+
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+              <h4 class="mb-0">Informations projet</h4>
+            </div>
+            <div class="card-body">
+              <div class="row g-2">
+                <div class="col-md-4"><strong>Titre:</strong> {{ project.title }}</div>
+                <div class="col-md-4"><strong>Catégorie:</strong> {{ project.category }}</div>
+                <div class="col-md-4"><strong>Statut:</strong> {{ project.status }}</div>
+                <div class="col-md-4"><strong>Objectif:</strong> {{ project.goalAmount }}</div>
+                <div class="col-md-4"><strong>Actuel:</strong> {{ project.currentAmount }}</div>
+                <div class="col-md-4"><strong>Deadline:</strong> {% if project.deadline %}{{ project.deadline|date('d/m/Y') }}{% endif %}</div>
+                <div class="col-md-6"><strong>Propriétaire:</strong> {% if project.owner %}{{ project.owner.firstname }} {{ project.owner.lastname }}{% else %}-{% endif %}</div>
+                <div class="col-md-6"><strong>Créé le:</strong> {% if project.createdAt %}{{ project.createdAt|date('d/m/Y H:i') }}{% endif %}</div>
+                <div class="col-12"><strong>Description:</strong><br>{{ project.description }}</div>
+              </div>
+              {% if project.imagePath %}
+                <div style="height:12px"></div>
+                <img src="/{{ project.imagePath }}" alt="Image" style="max-width: 420px; width: 100%; border-radius: 8px;">
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+              <h4 class="mb-0">Demandes en attente (PENDING)</h4>
+              <span class="badge bg-light text-dark">{{ pending|length }}</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover table-centered mb-0 text-nowrap">
+                  <thead class="table-light">
+                    <tr>
+                      <th>ID</th>
+                      <th>Date</th>
+                      <th>Investisseur</th>
+                      <th>Montant</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for inv in pending %}
+                      <tr>
+                        <td>{{ inv.id }}</td>
+                        <td>{% if inv.investmentDate %}{{ inv.investmentDate|date('d/m/Y H:i') }}{% endif %}</td>
+                        <td>
+                          {% if inv.user %}
+                            {{ inv.user.firstname }} {{ inv.user.lastname }} ({{ inv.user.email }})
+                          {% else %}
+                            -
+                          {% endif %}
+                        </td>
+                        <td class="fw-bold">{{ inv.amount }}</td>
+                        <td>{{ inv.status }}</td>
+                        <td class="d-flex gap-2">
+                          <form method="post" action="{{ path('backoffice_project_investment_accept', {'projectId': project.id, 'id': inv.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('backoffice_project_investment_accept_' ~ inv.id) }}">
+                            <button class="btn btn-sm btn-success" type="submit">Accepter</button>
+                          </form>
+                          <form method="post" action="{{ path('backoffice_project_investment_reject', {'projectId': project.id, 'id': inv.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('backoffice_project_investment_reject_' ~ inv.id) }}">
+                            <button class="btn btn-sm btn-danger" type="submit">Refuser</button>
+                          </form>
+                        </td>
+                      </tr>
+                    {% else %}
+                      <tr>
+                        <td colspan="6" class="text-center py-4">Aucune demande en attente.</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+              <h4 class="mb-0">Tous les investissements du projet</h4>
+              <span class="badge bg-light text-dark">{{ investissements|length }}</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover table-centered mb-0 text-nowrap">
+                  <thead class="table-light">
+                    <tr>
+                      <th>ID</th>
+                      <th>Date</th>
+                      <th>Investisseur</th>
+                      <th>Montant</th>
+                      <th>Statut</th>
+                      <th>% Revenu</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for inv in investissements %}
+                      <tr>
+                        <td>{{ inv.id }}</td>
+                        <td>{% if inv.investmentDate %}{{ inv.investmentDate|date('d/m/Y H:i') }}{% endif %}</td>
+                        <td>
+                          {% if inv.user %}
+                            {{ inv.user.firstname }} {{ inv.user.lastname }}
+                          {% else %}
+                            -
+                          {% endif %}
+                        </td>
+                        <td class="fw-bold">{{ inv.amount }}</td>
+                        <td>{{ inv.status }}</td>
+                        <td>{% if inv.revenuePercentage is not null %}{{ inv.revenuePercentage }}{% endif %}</td>
+                      </tr>
+                    {% else %}
+                      <tr>
+                        <td colspan="6" class="text-center py-4">Aucun investissement trouvé.</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center py-2 mt-6 text-secondary ">
+    <p class="mb-0">Copyright © 2026 Finovate. Tous droits réservés.</p>
+  </footer>
+
+  <script src="{{ asset('backoffice/assets/js/main.js') }}" type="module"></script>
+  <script>
+    function toggleForumFolder(btn) {
+      var children = document.getElementById('forumChildren');
+      var arrow = btn.querySelector('.folder-arrow');
+      if (children.style.display === 'none') {
+        children.style.display = 'block';
+        if (arrow) { arrow.classList.remove('ti-chevron-right'); arrow.classList.add('ti-chevron-down'); }
+      } else {
+        children.style.display = 'none';
+        if (arrow) { arrow.classList.remove('ti-chevron-down'); arrow.classList.add('ti-chevron-right'); }
+      }
+    }
+  </script>
+</body>
+
+</html>

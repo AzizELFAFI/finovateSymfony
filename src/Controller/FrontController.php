@@ -14,6 +14,9 @@ use App\Model\CreateGoalRequest;
 use App\Model\GoalAmountRequest;
 use App\Model\PayBillRequest;
 use App\Model\TransferRequest;
+use App\Entity\Product;
+use App\Entity\Ad;
+use App\Entity\UserAdClick;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -159,17 +162,6 @@ final class FrontController extends AbstractController
                     $beneficiary->setSolde((string) ($receiverBalance + $amount));
 
                     $tx = new Transaction();
-                    $generatedId = (int) (microtime(true) * 1000);
-                    $existing = $em->getRepository(Transaction::class)->find($generatedId);
-                    if ($existing instanceof Transaction) {
-                        $maxId = (int) $em->createQueryBuilder()
-                            ->select('MAX(t.id)')
-                            ->from(Transaction::class, 't')
-                            ->getQuery()
-                            ->getSingleScalarResult();
-                        $generatedId = $maxId + 1;
-                    }
-                    $tx->setId($generatedId);
                     $tx->setSender_id((int) $user->getId());
                     $tx->setReceiver_id((int) $beneficiary->getId());
                     $tx->setAmount((string) $amount);
@@ -430,5 +422,150 @@ final class FrontController extends AbstractController
             'form' => $form,
             'bills' => $bills,
         ]);
+    }
+
+
+    // ==================== PRODUCTS ====================
+
+    #[Route('/user/products', name: 'front_products', methods: ['GET'])]
+    public function productsList(Request $request, EntityManagerInterface $em): Response
+    {
+        $search = $request->query->get('search');
+        $sort = (string) $request->query->get('sort', 'name');
+        $dir = strtoupper((string) $request->query->get('dir', 'ASC'));
+
+        $allowedSorts = ['name', 'pricePoints', 'stock'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'name';
+        }
+        if (!in_array($dir, ['ASC', 'DESC'], true)) {
+            $dir = 'ASC';
+        }
+
+        $queryBuilder = $em->getRepository(Product::class)->createQueryBuilder('p');
+
+        if ($search) {
+            $queryBuilder->where('p.name LIKE :search')
+                ->orWhere('p.description LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $queryBuilder->orderBy('p.' . $sort, $dir)
+            ->addOrderBy('p.id', 'DESC');
+
+        $products = $queryBuilder->getQuery()->getResult();
+
+        return $this->render('front/product/list.html.twig', [
+            'products' => $products,
+            'search' => $search,
+            'sort' => $sort,
+            'dir' => $dir
+        ]);
+    }
+
+    #[Route('/user/products/{id}', name: 'front_product_detail', methods: ['GET'])]
+    public function productDetail(int $id, EntityManagerInterface $em): Response
+    {
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product instanceof Product) {
+            throw $this->createNotFoundException('Produit non trouvé');
+        }
+
+        return $this->render('front/product/detail.html.twig', [
+            'product' => $product,
+        ]);
+    }
+
+    // ==================== ADS ====================
+
+    #[Route('/user/ads', name: 'front_ads', methods: ['GET'])]
+    public function adsList(Request $request, EntityManagerInterface $em): Response
+    {
+        $search = $request->query->get('search');
+
+        $queryBuilder = $em->getRepository(Ad::class)->createQueryBuilder('a');
+
+        if ($search) {
+            $queryBuilder->where('a.title LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $queryBuilder->orderBy('a.id', 'DESC');
+
+        $ads = $queryBuilder->getQuery()->getResult();
+
+        return $this->render('front/ad/list.html.twig', [
+            'ads' => $ads,
+            'search' => $search
+        ]);
+    }
+
+    #[Route('/user/ads/{id}', name: 'front_ad_detail', methods: ['GET'])]
+    public function adDetail(int $id, EntityManagerInterface $em): Response
+    {
+        $ad = $em->getRepository(Ad::class)->find($id);
+        if (!$ad instanceof Ad) {
+            throw $this->createNotFoundException('Annonce non trouvée');
+        }
+
+        return $this->render('front/ad/detail.html.twig', [
+            'ad' => $ad,
+        ]);
+    }
+
+    #[Route('/user/ads/{id}/click', name: 'front_ad_click', methods: ['POST'])]
+    public function adClick(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'Authentification requise'], 401);
+        }
+
+        if (!$this->isCsrfTokenValid('ad_click_' . $id, (string) $request->request->get('_token'))) {
+            return $this->json(['error' => 'Token CSRF invalide'], 400);
+        }
+
+        $ad = $em->getRepository(Ad::class)->find($id);
+        if (!$ad instanceof Ad) {
+            return $this->json(['error' => 'Annonce non trouvée'], 404);
+        }
+
+        // Vérifier si l'utilisateur a déjà cliqué sur cette annonce aujourd'hui
+        $today = new \DateTime();
+        $today->setTime(0, 0, 0);
+
+        $existingClick = $em->getRepository(UserAdClick::class)
+            ->createQueryBuilder('uac')
+            ->where('uac.user = :user')
+            ->andWhere('uac.ad = :ad')
+            ->andWhere('uac.clickedAt >= :today')
+            ->setParameter('user', $user)
+            ->setParameter('ad', $ad)
+            ->setParameter('today', $today)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if ($existingClick instanceof UserAdClick) {
+            return $this->json(['message' => 'Vous avez déjà cliqué sur cette annonce aujourd\'hui'], 400);
+        }
+
+        // Créer le clic
+        $click = new UserAdClick();
+        $click->setUser($user);
+        $click->setAd($ad);
+        $click->setClickedAt(new \DateTime());
+
+        // Ajouter les points à l'utilisateur
+        $userPoints = (int) $user->getPoints();
+        $rewardPoints = (int) $ad->getRewardPoints();
+        $user->setPoints($userPoints + $rewardPoints);
+
+        $em->persist($click);
+        $em->flush();
+
+        return $this->json([
+            'message' => 'Clic enregistré avec succès',
+            'rewardPoints' => $rewardPoints
+        ], 200);
     }
 }

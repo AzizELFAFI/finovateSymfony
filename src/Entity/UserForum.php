@@ -23,12 +23,12 @@ class UserForum
     #[ORM\JoinColumn(name: 'forum_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?Forum $forum = null;
 
-    #[ORM\Column(name: 'joined_at', type: 'datetime_immutable')]
-    private \DateTimeImmutable $joinedAt;
+    #[ORM\Column(name: 'joined_at', type: 'datetime')]
+    private \DateTime $joinedAt;
 
     public function __construct()
     {
-        $this->joinedAt = new \DateTimeImmutable();
+        $this->joinedAt = new \DateTime();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -36,6 +36,6 @@ class UserForum
     public function setUser(?User $user): static { $this->user = $user; return $this; }
     public function getForum(): ?Forum { return $this->forum; }
     public function setForum(?Forum $forum): static { $this->forum = $forum; return $this; }
-    public function getJoinedAt(): \DateTimeImmutable { return $this->joinedAt; }
-    public function setJoinedAt(\DateTimeImmutable $joinedAt): static { $this->joinedAt = $joinedAt; return $this; }
+    public function getJoinedAt(): \DateTime { return $this->joinedAt; }
+    public function setJoinedAt(\DateTime $joinedAt): static { $this->joinedAt = $joinedAt; return $this; }
 }

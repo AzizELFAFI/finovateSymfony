@@ -15,7 +15,7 @@ class UserInteraction
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'userInteractions')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true)]
     private ?User $user = null;
 

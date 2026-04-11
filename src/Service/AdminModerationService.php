@@ -73,8 +73,8 @@ class AdminModerationService
     public function getPaginatedContent(string $type, string $sort, string $search, int $page = 1, int $limit = 25): array
     {
         $qb = match($type) {
-            'forum'   => $this->forumRepo->createQueryBuilder('e')->leftJoin('e.creator', 'u')->addSelect('u')->leftJoin('e.posts', 'p')->addSelect('p'),
-            'post'    => $this->postRepo->createQueryBuilder('e')->leftJoin('e.author', 'u')->addSelect('u')->leftJoin('e.comments', 'c')->addSelect('c'),
+            'forum'   => $this->forumRepo->createQueryBuilder('e')->leftJoin('e.creator', 'u')->addSelect('u'),
+            'post'    => $this->postRepo->createQueryBuilder('e')->leftJoin('e.author', 'u')->addSelect('u'),
             'comment' => $this->commentRepo->createQueryBuilder('e')->leftJoin('e.author', 'u')->addSelect('u'),
             default   => throw new \InvalidArgumentException("Invalid type: $type"),
         };
@@ -94,7 +94,7 @@ class AdminModerationService
             default  => $qb->orderBy('e.createdAt', 'DESC'),
         };
 
-        $total   = count($qb->getQuery()->getResult());
+        $total   = (int) (clone $qb)->select('COUNT(DISTINCT e.id)')->getQuery()->getSingleScalarResult();
         $results = $qb->setFirstResult(($page - 1) * $limit)->setMaxResults($limit)->getQuery()->getResult();
 
         return ['items' => $results, 'total' => $total, 'pages' => (int) ceil($total / $limit), 'page' => $page];

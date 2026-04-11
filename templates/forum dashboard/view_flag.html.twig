@@ -237,7 +237,7 @@ async function deleteContent() {
     if (!confirm('Supprimer ce contenu ?')) return;
     var form = new FormData();
     form.append('reason', '{{ flag.flagType == "misinformation" ? "Misinformation / Fausses informations" : "Contenu toxique ou offensant" }}');
-    var res  = await fetch('/forum/admin/delete/{{ flag.contentType }}/{{ flag.contentId }}', { method: 'POST', body: form });
+    var res  = await fetch('/forum/admin/delete/{{ flag.contentType }}/{{ flag.contentId }}', { method: 'POST', body: form }.then ? await fetch('/forum/admin/delete/{{ flag.contentType }}/{{ flag.contentId }}', { method: 'POST', body: form } : fetch(await fetch('/forum/admin/delete/{{ flag.contentType }}/{{ flag.contentId }}', { method: 'POST', body: form }));
     var data = await res.json();
     if (data.success) window.location.href = '{{ path("admin_ai_flags") }}';
     else alert('Erreur : ' + data.message);

@@ -1,7 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}Analyse de Personnalité - FINOVATE{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: 'personality'} %}
+{% block content %}
 <div class="forums-content">
     <div class="page-container">
         <div class="personality-header">
@@ -192,3 +191,4 @@ body { font-family: sans-serif; background-color: #f7f9fc; }
 .tip-check { width: 22px; height: 22px; border-radius: 50%; background: #237f4e; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
 </style>
 {% endblock %}
+

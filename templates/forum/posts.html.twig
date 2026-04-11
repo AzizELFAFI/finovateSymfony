@@ -1,8 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}{{ forum.title }} - Posts{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: ''} %}
-
+{% block content %}
 <div class="fp-page">
 
     {# ── FORUM HEADER: half image / half info ── #}
@@ -25,7 +23,10 @@
                 <span>par {{ forum.creator.firstname }} {{ forum.creator.lastname }}</span>
                 {% endif %}
             </div>
-            <a href="{{ path('app_post_create', {id: forum.id}) }}" class="fp-btn-new">+ Nouveau Post</a>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+                <a href="{{ path('app_post_create', {id: forum.id}) }}" class="fp-btn-new" style="margin-top:0">+ Nouveau Post</a>
+                <button onclick="openAiDialog('{{ forum.id }}')" class="fp-btn-ai">✨ Générer avec IA</button>
+            </div>
         </div>
     </div>
 
@@ -99,6 +100,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .fp-forum-meta { display: flex; gap: 16px; font-size: 13px; color: #888; flex-wrap: wrap; }
 .fp-btn-new { display: inline-block; background: #1a1a1b; color: white; padding: 10px 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; letter-spacing: 0.5px; align-self: flex-start; }
 .fp-btn-new:hover { background: #333; }
+.fp-btn-ai { display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 10px 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; letter-spacing: 0.5px; align-self: flex-start; border-radius: 6px; }
+.fp-btn-ai:hover { opacity: 0.9; }
 
 /* ── SEARCH ── */
 .fp-search-wrap { margin-bottom: 20px; }
@@ -170,4 +173,6 @@ document.getElementById('postSearchInput').addEventListener('keydown', function(
     if (e.key === 'Enter') document.getElementById('postSuggestions').style.display = 'none';
 });
 </script>
+{% include 'forum/ai_post_generator_dialog.html.twig' %}
 {% endblock %}
+

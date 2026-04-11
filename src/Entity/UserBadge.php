@@ -26,12 +26,12 @@ class UserBadge
     #[ORM\JoinColumn(name: 'forum_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?Forum $forum = null;
 
-    #[ORM\Column(name: 'earned_at', type: 'datetime_immutable')]
-    private \DateTimeImmutable $earnedAt;
+    #[ORM\Column(name: 'earned_at', type: 'datetime')]
+    private \DateTime $earnedAt;
 
     public function __construct()
     {
-        $this->earnedAt = new \DateTimeImmutable();
+        $this->earnedAt = new \DateTime();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -41,6 +41,6 @@ class UserBadge
     public function setBadgeType(?BadgeType $badgeType): static { $this->badgeType = $badgeType; return $this; }
     public function getForum(): ?Forum { return $this->forum; }
     public function setForum(?Forum $forum): static { $this->forum = $forum; return $this; }
-    public function getEarnedAt(): \DateTimeImmutable { return $this->earnedAt; }
-    public function setEarnedAt(\DateTimeImmutable $earnedAt): static { $this->earnedAt = $earnedAt; return $this; }
+    public function getEarnedAt(): \DateTime { return $this->earnedAt; }
+    public function setEarnedAt(\DateTime $earnedAt): static { $this->earnedAt = $earnedAt; return $this; }
 }

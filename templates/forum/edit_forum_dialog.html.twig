@@ -1,7 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'forum/_layout.html.twig' %}
 {% block title %}Modifier le Forum{% endblock %}
-{% block body %}
-{% include 'forum/_navbar.html.twig' with {activeTab: 'my'} %}
+{% block content %}
 <div class="dialog-wrapper">
     <div class="dialog-overlay" onclick="window.location.href='{{ path('app_forum_my') }}'"></div>
     <div class="dialog-container">
@@ -50,3 +49,4 @@ input:focus, textarea:focus { border-color:#237f4e; outline:none; }
 .btn-cancel { background:#eee; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; text-decoration:none; color:#333; font-size:14px; }
 </style>
 {% endblock %}
+
