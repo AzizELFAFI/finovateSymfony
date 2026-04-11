@@ -1,0 +1,102 @@
+{% extends 'forum dashboard/_layout.html.twig' %}
+{% block title %}Politique — FINOVATE Admin{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">📜 Règles de la Communauté</h1>
+        <p class="page-sub">Document de référence pour les décisions de modération</p>
+    </div>
+</div>
+
+<div class="rules-list">
+    <div class="rule-item">
+        <div class="rule-num">01</div>
+        <div class="rule-content">
+            <h2>🤝 Respect et bienveillance</h2>
+            <p>Tout contenu offensant, discriminatoire, harcelant ou insultant est strictement interdit. Traitez chaque membre avec respect, même en cas de désaccord.</p>
+            <div class="rule-hint">→ Raison de suppression : <span class="reason-tag">Contenu toxique ou offensant</span></div>
+        </div>
+    </div>
+    <div class="rule-item">
+        <div class="rule-num">02</div>
+        <div class="rule-content">
+            <h2>📊 Informations financières vérifiées</h2>
+            <p>Ne partagez que des informations sourcées et vérifiables. La désinformation financière peut causer des préjudices réels.</p>
+            <div class="rule-hint">→ Raison de suppression : <span class="reason-tag">Misinformation / Fausses informations</span> ou <span class="reason-tag">Contenu financier trompeur</span></div>
+        </div>
+    </div>
+    <div class="rule-item">
+        <div class="rule-num">03</div>
+        <div class="rule-content">
+            <h2>🚫 Pas de spam</h2>
+            <p>Les publications répétitives, hors-sujet ou à but publicitaire non autorisé seront supprimées.</p>
+            <div class="rule-hint">→ Raison de suppression : <span class="reason-tag">Spam ou contenu répétitif</span></div>
+        </div>
+    </div>
+    <div class="rule-item">
+        <div class="rule-num">04</div>
+        <div class="rule-content">
+            <h2>🔒 Confidentialité</h2>
+            <p>Ne partagez jamais d'informations personnelles d'autres membres sans leur consentement.</p>
+            <div class="rule-hint">→ Raison de suppression : <span class="reason-tag">Violation des règles de la communauté</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="offense-card">
+    <h2>⚖️ Politique des infractions</h2>
+    <p class="offense-sub">Appliquer les actions correspondantes depuis les pages Modération et Utilisateurs.</p>
+    <div class="offense-steps">
+        <div class="offense-step warn">
+            <div class="os-num">1</div>
+            <div class="os-body">
+                <strong>📧 Avertissement</strong>
+                <p>Email automatique envoyé à l'utilisateur.<br>Action : <em>Utilisateurs → ⚙️ Gérer → Envoyer avertissement</em></p>
+            </div>
+        </div>
+        <div class="offense-step restrict">
+            <div class="os-num">2</div>
+            <div class="os-body">
+                <strong>⏱ Restriction temporaire</strong>
+                <p>Bloquer post / commentaire / forum pour X jours.<br>Action : <em>Utilisateurs → ⚙️ Gérer → Restreindre</em></p>
+            </div>
+        </div>
+        <div class="offense-step ban">
+            <div class="os-num">3</div>
+            <div class="os-body">
+                <strong>🚫 Bannissement définitif</strong>
+                <p>Compte banni définitivement sans retour possible.<br>Action : <em>Utilisateurs → ⚙️ Gérer → Bannir</em></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header { margin-bottom: 28px; }
+.page-title { font-size: 22px; font-weight: 700; color: #1a1a1b; }
+.page-sub { color: #64748b; font-size: 14px; margin-top: 4px; }
+.rules-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+.rule-item { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px 24px; display: flex; gap: 20px; }
+.rule-num { font-size: 28px; font-weight: 800; color: #e5e7eb; min-width: 40px; line-height: 1; }
+.rule-content h2 { font-size: 15px; font-weight: 700; color: #1a1a1b; margin-bottom: 6px; }
+.rule-content p { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 10px; }
+.rule-hint { font-size: 12px; color: #4a5568; }
+.reason-tag { background: #f0fdf4; color: #237f4e; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.offense-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+.offense-card h2 { font-size: 16px; font-weight: 700; color: #1a1a1b; margin-bottom: 6px; }
+.offense-sub { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+.offense-steps { display: flex; flex-direction: column; gap: 10px; }
+.offense-step { display: flex; gap: 16px; align-items: flex-start; padding: 14px; border-radius: 10px; }
+.offense-step.warn { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2); }
+.offense-step.restrict { background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.2); }
+.offense-step.ban { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); }
+.os-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: white; flex-shrink: 0; }
+.warn .os-num { background: #f59e0b; }
+.restrict .os-num { background: #3b82f6; }
+.ban .os-num { background: #ef4444; }
+.os-body strong { display: block; font-size: 13px; color: #1a1a1b; margin-bottom: 4px; }
+.os-body p { font-size: 12px; color: #64748b; line-height: 1.6; }
+.os-body em { color: #64748b; }
+</style>
+{% endblock %}

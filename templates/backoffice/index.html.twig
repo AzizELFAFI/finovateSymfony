@@ -54,6 +54,22 @@
             class="nav-text">Gestion Projets</span></a></li>
       <li><a class="nav-link" href="{{ path('backoffice_products') }}"><i class="ti ti-shopping-cart"></i><span class="nav-text">Produits</span></a></li>
       <li><a class="nav-link" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
+      <li class="nav-folder">
+        <button class="nav-link nav-folder-btn w-100 text-start border-0 bg-transparent d-flex align-items-center" onclick="toggleForumFolder(this)">
+          <i class="ti ti-messages"></i><span class="nav-text flex-grow-1">Gestion Forums</span><i class="ti ti-chevron-down folder-chevron ms-auto"></i>
+        </button>
+        <ul class="nav flex-column nav-folder-children ps-3">
+          <li><a class="nav-link" href="{{ path('backoffice_forums') }}"><i class="ti ti-list"></i><span class="nav-text">Liste des forums</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_liste_posts') }}"><i class="ti ti-file-text"></i><span class="nav-text">Liste des posts</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_liste_comments') }}"><i class="ti ti-message"></i><span class="nav-text">Liste des commentaires</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_overview') }}"><i class="ti ti-chart-bar"></i><span class="nav-text">Vue d'ensemble</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_users') }}"><i class="ti ti-users"></i><span class="nav-text">Utilisateurs</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_ai_flags') }}"><i class="ti ti-robot"></i><span class="nav-text">IA Flags</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_reports') }}"><i class="ti ti-flag"></i><span class="nav-text">Signalements</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_badges') }}"><i class="ti ti-award"></i><span class="nav-text">Badges</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_admin_policy') }}"><i class="ti ti-file-text"></i><span class="nav-text">Politique</span></a></li>
+        </ul>
+      </li>
 
       <li class="px-4 pt-4 pb-2"><small class="nav-text">Session</small></li>
       <li><a class="nav-link" href="{{ path('front_logout') }}"><i class="ti ti-logout"></i><span class="nav-text">Déconnexion</span></a></li>
@@ -153,7 +169,7 @@
                 <li class="list-group-item d-flex align-items-center gap-3">
                   <div class="flex-grow-1">
                     <p class="mb-0 fw-bold">{{ forum.title }}</p>
-                    <small class="text-muted">Créé le {{ forum.getCreated_at()|date('d/m/Y') }}</small>
+                    <small class="text-muted">Créé le {{ forum.createdAt|date('d/m/Y') }}</small>
                   </div>
                   <span class="badge bg-light text-dark">Forum</span>
                 </li>
@@ -278,6 +294,19 @@
       })
       .catch(err => console.error('Erreur chargement profil admin:', err));
     });
+  </script>
+  <script>
+    function toggleForumFolder(btn) {
+      var children = document.getElementById('forumChildren');
+      var arrow = btn.querySelector('.folder-arrow');
+      if (children.style.display === 'none') {
+        children.style.display = 'block';
+        if (arrow) { arrow.classList.remove('ti-chevron-right'); arrow.classList.add('ti-chevron-down'); }
+      } else {
+        children.style.display = 'none';
+        if (arrow) { arrow.classList.remove('ti-chevron-down'); arrow.classList.add('ti-chevron-right'); }
+      }
+    }
   </script>
 </body>
 

@@ -275,6 +275,7 @@
             }
 
             localStorage.setItem('finovate_token', data.token);
+            document.cookie = 'finovate_token=' + data.token + '; path=/; SameSite=Lax';
             var target = (data && data.redirect_url) ? data.redirect_url : '{{ path('user_dashboard') }}';
             window.location.href = target;
           } catch (err) {

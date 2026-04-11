@@ -25,5 +25,21 @@ services:
             $projectRoot: '%kernel.project_dir%'
 
 
+    App\Service\AiService:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+
+    App\Service\AdminEmailService:
+        arguments:
+            $brevoApiKey: '%env(BREVO_API_KEY)%'
+            $fromEmail: '%env(BREVO_FROM_EMAIL)%'
+            $fromName: '%env(BREVO_FROM_NAME)%'
+
+    App\Service\UserRelationService:
+        arguments:
+            $brevoApiKey: '%env(BREVO_API_KEY)%'
+            $fromEmail: '%env(BREVO_FROM_EMAIL)%'
+            $fromName: '%env(BREVO_FROM_NAME)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

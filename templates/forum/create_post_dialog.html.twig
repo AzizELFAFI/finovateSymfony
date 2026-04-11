@@ -1,0 +1,125 @@
+{% extends 'forum/_layout.html.twig' %}
+{% block title %}Creer un Post{% endblock %}
+{% block content %}
+<div class="dialog-wrapper">
+    <div class="dialog-overlay" onclick="window.location.href='{{ path('app_forum_posts', {id: forum.id}) }}'"></div>
+    <div class="dialog-container">
+        <div class="dialog-header">
+            <div style="display:flex;align-items:center;gap:12px">
+                <span style="font-size:28px">✏️</span>
+                <h2>Creer un nouveau post</h2>
+            </div>
+            <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="btn-close">x</a>
+        </div>
+        <form method="post" enctype="multipart/form-data" id="postForm" onsubmit="return validatePost()">
+            <div class="form-group">
+                <label>Titre *</label>
+                <input type="text" name="title" id="postTitle" placeholder="Entrez le titre du post" required minlength="3">
+                <span class="field-error" id="titleError"></span>
+            </div>
+            <div class="form-group">
+                <label>Contenu * <small>(minimum 2 lignes)</small></label>
+                <textarea name="content" id="postContent" placeholder="Écrivez votre post ici..." rows="7" required></textarea>
+                <span class="field-error" id="contentError"></span>
+                <button type="button" class="btn-reformulate" id="reformulateBtn" onclick="reformulateContent()">🤖 Reformuler avec l'IA</button>
+                <span class="reformulate-status" id="reformulateStatus"></span>
+            </div>
+            <div class="form-group">
+                <label>Image * <small>(obligatoire)</small></label>
+                <div class="upload-area" onclick="document.getElementById('postImg').click()">
+                    <span id="uploadLabel">📷 Cliquez pour choisir une image</span>
+                    <img id="postPreview" style="display:none;max-width:100%;max-height:180px;border-radius:8px;margin-top:8px;object-fit:cover">
+                    <input type="file" id="postImg" name="image" accept="image/*" style="display:none" onchange="previewImg(this,'postPreview','uploadLabel')" required>
+                </div>
+                <span class="field-error" id="imgError"></span>
+            </div>
+            <div class="dialog-actions">
+                <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="btn-cancel">Annuler</a>
+                <button type="submit" class="btn-submit">Publier</button>
+            </div>
+        </form>
+    </div>
+</div>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:sans-serif; background:#f7f9fc; overflow:hidden; }
+.dialog-wrapper { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:100; }
+.dialog-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px); }
+.dialog-container { position:relative; background:white; border-radius:16px; padding:30px; width:580px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); z-index:101; }
+.dialog-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; padding-bottom:15px; border-bottom:2px solid #f0f0f0; }
+.dialog-header h2 { font-size:20px; font-weight:bold; color:#1a1a1b; margin:0; }
+.btn-close { background:#f5f5f5; border:none; font-size:16px; color:#666; cursor:pointer; width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:50%; text-decoration:none; }
+.btn-close:hover { background:#fee2e2; color:#dc2626; }
+.form-group { margin-bottom:20px; }
+.form-group label { display:block; margin-bottom:8px; color:#374151; font-weight:600; font-size:14px; }
+input[type=text], textarea { width:100%; padding:12px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; font-family:inherit; outline:none; background:#fafafa; }
+input:focus, textarea:focus { border-color:#237f4e; background:white; }
+textarea { resize:vertical; min-height:140px; }
+.upload-area { border:2px dashed #d1d5db; border-radius:10px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; background:#fafafa; }
+.upload-area:hover { border-color:#237f4e; background:#f0fdf4; }
+.dialog-actions { display:flex; justify-content:flex-end; gap:12px; margin-top:25px; padding-top:20px; border-top:1px solid #f0f0f0; }
+.btn-cancel { padding:10px 24px; background:#f3f4f6; color:#374151; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; }
+.btn-submit { padding:10px 28px; background:#237f4e; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+.btn-submit:hover { background:#1a5f3a; }
+.field-error { color: #e53e3e; font-size: 12px; margin-top: 4px; display: block; }
+.btn-reformulate { margin-top: 8px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-reformulate:hover { opacity: 0.9; }
+.btn-reformulate:disabled { opacity: 0.6; cursor: not-allowed; }
+.reformulate-status { font-size: 12px; color: #237f4e; margin-top: 4px; display: block; }
+</style>
+<script>
+async function reformulateContent() {
+    var content = document.getElementById('postContent').value.trim();
+    var btn = document.getElementById('reformulateBtn');
+    var status = document.getElementById('reformulateStatus');
+    if (!content) { status.textContent = '⚠️ Écrivez du contenu d\'abord.'; return; }
+    btn.disabled = true;
+    status.textContent = '⏳ Reformulation en cours...';
+    try {
+        var res = await fetch('{{ path("api_ai_rewrite") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: content})
+        });
+        var data = await res.json();
+        document.getElementById('postContent').value = data.rewritten || content;
+        status.textContent = '✅ Contenu reformulé !';
+    } catch(e) {
+        status.textContent = '❌ Erreur lors de la reformulation.';
+    }
+    btn.disabled = false;
+}
+
+function previewImg(input, imgId, labelId) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById(imgId).src = e.target.result;
+            document.getElementById(imgId).style.display = 'block';
+            document.getElementById(labelId).style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function validatePost() {
+    var ok = true;
+    var title   = document.getElementById('postTitle').value.trim();
+    var img     = document.getElementById('postImg').files.length;
+
+    document.getElementById('titleError').textContent   = '';
+    document.getElementById('imgError').textContent     = '';
+
+    if (title.length < 3) {
+        document.getElementById('titleError').textContent = 'Le titre doit contenir au moins 3 caractères.';
+        ok = false;
+    }
+    if (img === 0) {
+        document.getElementById('imgError').textContent = 'Une image est obligatoire.';
+        ok = false;
+    }
+    return ok;
+}
+</script>
+{% endblock %}
+

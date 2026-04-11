@@ -8,9 +8,9 @@ use App\Entity\Goal;
 use App\Entity\Bill;
 use App\Entity\Project;
 use App\Entity\Investissement;
-use App\Entity\Forums;
-use App\Entity\Posts;
-use App\Entity\Comments;
+use App\Entity\Forum;
+use App\Entity\Post;
+use App\Entity\Comment;
 use App\Form\CreateProjectRequestType;
 use App\Model\CreateProjectRequest;
 use App\Entity\Product;
@@ -35,9 +35,9 @@ final class BackController extends AbstractController
     {
         $userRepo = $em->getRepository(User::class);
         $transactionRepo = $em->getRepository(Transaction::class);
-        $forumRepo = $em->getRepository(Forums::class);
-        $postRepo = $em->getRepository(Posts::class);
-        $commentRepo = $em->getRepository(Comments::class);
+        $forumRepo = $em->getRepository(Forum::class);
+        $postRepo = $em->getRepository(Post::class);
+        $commentRepo = $em->getRepository(Comment::class);
         
         $totalUsers = $userRepo->count(['role' => 'USER']);
         $totalAdmins = $userRepo->count(['role' => 'ADMIN']);
@@ -73,7 +73,7 @@ final class BackController extends AbstractController
             ->getResult();
 
         // Top 5 Forums par activité (simulation basée sur l'existence, idéalement jointure sur posts)
-        $topForums = $forumRepo->findBy([], ['created_at' => 'DESC'], 5);
+        $topForums = $forumRepo->findBy([], ['createdAt' => 'DESC'], 5);
 
         return $this->render('backoffice/index.html.twig', [
             'stats' => [
@@ -719,5 +719,26 @@ final class BackController extends AbstractController
             'ad' => $ad,
             'clicks' => $clicks,
         ]);
+    }
+
+    // ── Forum Management ──────────────────────────────────────────────────────
+
+    #[Route('/forums', name: 'backoffice_forums', methods: ['GET'])]
+    public function forums(EntityManagerInterface $em): Response
+    {
+        $forums = $em->getRepository(Forum::class)->findBy([], ['createdAt' => 'DESC']);
+        return $this->render('backoffice/forums.html.twig', ['forums' => $forums]);
+    }
+
+    #[Route('/forums/{id}/delete', name: 'backoffice_forum_delete', methods: ['POST'])]
+    public function forumDelete(int $id, EntityManagerInterface $em): Response
+    {
+        $forum = $em->getRepository(Forum::class)->find($id);
+        if ($forum) {
+            $em->remove($forum);
+            $em->flush();
+            $this->addFlash('success', 'Forum supprimé avec succès.');
+        }
+        return $this->redirectToRoute('backoffice_forums');
     }
 }

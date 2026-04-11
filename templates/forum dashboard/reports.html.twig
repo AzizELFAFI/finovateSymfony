@@ -1,0 +1,226 @@
+{% extends 'forum dashboard/_layout.html.twig' %}
+{% block title %}Signalements — FINOVATE Admin{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h1 class="page-title">🚩 Signalements utilisateurs</h1>
+    <span class="badge-count">{{ reports|length }} non traité{{ reports|length > 1 ? 's' : '' }}</span>
+</div>
+
+{% if reports is empty %}
+    <div class="empty-state">✅ Aucun signalement en attente.</div>
+{% else %}
+<div class="reports-list">
+    {% for report in reports %}
+    <div class="report-card" id="report-{{ report.id }}">
+        <div class="report-header">
+            <div class="report-reason">🚩 {{ report.reason }}</div>
+            <div class="report-date">{{ report.createdAt|date('d/m/Y H:i') }}</div>
+        </div>
+
+        <div class="report-post-info">
+            <a href="{{ path('admin_view_post', {id: report.post.id}) }}" class="report-post-link">
+                📝 {{ report.post.title }}
+            </a>
+            <span class="report-post-author">
+                par {{ report.post.author ? report.post.author.firstname ~ ' ' ~ report.post.author.lastname : 'Inconnu' }}
+            </span>
+        </div>
+
+        {% if report.details %}
+        <div class="report-details">{{ report.details }}</div>
+        {% endif %}
+
+        <div class="report-reporter">
+            Signalé par :
+            {% if report.reporter %}
+                <strong>{{ report.reporter.firstname }} {{ report.reporter.lastname }}</strong>
+                ({{ report.reporter.email }})
+            {% else %}
+                <em>Anonyme</em>
+            {% endif %}
+        </div>
+
+        <div class="report-actions">
+            <a href="{{ path('admin_view_post', {id: report.post.id}) }}" class="btn-view-post">👁 Voir le post</a>
+            {% if report.post.author %}
+            <button class="btn-gerer" onclick="openPanel({{ report.post.author.id }}, '{{ report.post.author.firstname|e('js') }} {{ report.post.author.lastname|e('js') }}', '{{ report.post.author.email|e('js') }}')">⚙️ Gérer l'auteur</button>
+            {% endif %}
+            <button class="btn-treat" onclick="treatReport({{ report.id }})">✓ Marquer traité</button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if treated is not empty %}
+<div class="treated-section">
+    <h2 class="section-title">✅ Derniers signalements traités</h2>
+    <div class="treated-list">
+        {% for report in treated %}
+        <div class="treated-item">
+            <span class="treated-reason">{{ report.reason }}</span>
+            <span class="treated-post">{{ report.post.title|slice(0,50) }}</span>
+            <span class="treated-date">{{ report.createdAt|date('d/m/Y') }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# Slide-in panel for author management #}
+<div class="panel-overlay" id="panelOverlay" style="display:none" onclick="closePanel()"></div>
+<div class="detail-panel" id="detailPanel" style="display:none">
+    <div class="panel-header">
+        <div class="panel-avatar" id="panelAvatar"></div>
+        <div>
+            <div class="panel-name" id="panelName"></div>
+            <div class="panel-email" id="panelEmail"></div>
+        </div>
+        <button onclick="closePanel()" class="panel-close">×</button>
+    </div>
+    <div class="panel-actions">
+        <div class="action-section">
+            <div class="action-label">📧 1ère infraction — Avertissement</div>
+            <div class="action-row">
+                <input type="text" id="warnReason" class="action-input" placeholder="Raison...">
+                <button class="btn-warn" onclick="warnUser()">Envoyer</button>
+            </div>
+        </div>
+        <div class="action-section">
+            <div class="action-label">⏱ 2ème infraction — Restriction</div>
+            <div class="restrict-grid">
+                <label class="toggle-label"><input type="checkbox" id="rCanPost"> Peut poster</label>
+                <label class="toggle-label"><input type="checkbox" id="rCanComment"> Peut commenter</label>
+                <label class="toggle-label"><input type="checkbox" id="rCanForum"> Peut créer forum</label>
+            </div>
+            <div class="action-row">
+                <input type="number" id="rDays" value="7" min="1" class="action-input-sm">
+                <input type="text" id="rReason" class="action-input" placeholder="Raison...">
+                <button class="btn-restrict" onclick="restrictUser()">Restreindre</button>
+            </div>
+        </div>
+        <div class="action-section action-danger">
+            <div class="action-label">🚫 3ème infraction — Bannissement définitif</div>
+            <div class="action-row">
+                <input type="text" id="banReason" class="action-input" placeholder="Raison...">
+                <button class="btn-ban" onclick="banUser()">Bannir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.page-title { font-size: 22px; font-weight: 700; color: #1a1a1b; }
+.badge-count { background: #fef2f2; color: #dc2626; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.empty-state { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 40px; text-align: center; color: #64748b; font-size: 14px; }
+.reports-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+.report-card { background: white; border: 1px solid #e5e7eb; border-left: 3px solid #f59e0b; border-radius: 12px; padding: 18px 20px; }
+.report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.report-reason { font-size: 13px; font-weight: 700; color: #fbbf24; }
+.report-date { font-size: 11px; color: #4a5568; }
+.report-post-info { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.report-post-link { color: #818cf8; text-decoration: none; font-size: 14px; font-weight: 600; }
+.report-post-link:hover { text-decoration: underline; }
+.report-post-author { font-size: 12px; color: #64748b; }
+.report-details { font-size: 13px; color: #64748b; background: #f0fdf4; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; font-style: italic; }
+.report-reporter { font-size: 12px; color: #4a5568; margin-bottom: 12px; }
+.report-reporter strong { color: #64748b; }
+.report-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-view-post { background: rgba(102,126,234,0.15); color: #818cf8; border: 1px solid rgba(102,126,234,0.3); padding: 6px 14px; border-radius: 6px; font-size: 12px; text-decoration: none; }
+.btn-gerer { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.btn-treat { background: #f0fdf4; color: #237f4e; border: 1px solid rgba(35,127,78,0.3); padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.treated-section { margin-top: 8px; }
+.section-title { font-size: 15px; font-weight: 600; color: #64748b; margin-bottom: 12px; }
+.treated-list { display: flex; flex-direction: column; gap: 6px; }
+.treated-item { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 16px; display: flex; gap: 16px; align-items: center; opacity: 0.6; }
+.treated-reason { font-size: 12px; color: #237f4e; min-width: 200px; }
+.treated-post { font-size: 12px; color: #64748b; flex: 1; }
+.treated-date { font-size: 11px; color: #4a5568; }
+/* Panel */
+.panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; }
+.detail-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 400px; background: white; border-left: 1px solid #e5e7eb; z-index: 201; overflow-y: auto; padding: 24px; }
+.panel-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.panel-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: white; flex-shrink: 0; }
+.panel-name { font-size: 16px; font-weight: 700; color: #1a1a1b; }
+.panel-email { font-size: 12px; color: #64748b; margin-top: 2px; }
+.panel-close { margin-left: auto; background: none; border: none; color: #64748b; font-size: 22px; cursor: pointer; }
+.panel-actions { display: flex; flex-direction: column; gap: 14px; }
+.action-section { background: #f0fdf4; border-radius: 10px; padding: 14px; border: 1px solid #e5e7eb; }
+.action-section.action-danger { border-color: rgba(239,68,68,0.3); }
+.action-label { font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 10px; }
+.action-row { display: flex; gap: 8px; align-items: center; }
+.action-input { flex: 1; background: white; border: 1px solid #e5e7eb; color: #1a1a1b; padding: 7px 12px; border-radius: 6px; font-size: 12px; outline: none; }
+.action-input-sm { width: 65px; background: white; border: 1px solid #e5e7eb; color: #1a1a1b; padding: 7px 10px; border-radius: 6px; font-size: 12px; outline: none; }
+.restrict-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.toggle-label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; cursor: pointer; }
+.toggle-label input { accent-color: #237f4e; }
+.btn-warn { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.btn-restrict { background: rgba(102,126,234,0.15); color: #818cf8; border: 1px solid rgba(102,126,234,0.3); padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.btn-ban { background: #fef2f2; color: #dc2626; border: 1px solid rgba(239,68,68,0.3); padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+</style>
+
+<script>
+var currentUserId = null;
+
+function openPanel(id, name, email) {
+    currentUserId = id;
+    var initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('panelAvatar').textContent = initials;
+    document.getElementById('panelName').textContent   = name;
+    document.getElementById('panelEmail').textContent  = email;
+    document.getElementById('panelOverlay').style.display = 'block';
+    document.getElementById('detailPanel').style.display  = 'block';
+}
+function closePanel() {
+    document.getElementById('panelOverlay').style.display = 'none';
+    document.getElementById('detailPanel').style.display  = 'none';
+    currentUserId = null;
+}
+
+async function treatReport(id) {
+    var res  = await fetch('/forum/admin/reports/' + id + '/treat', { method: 'POST' });
+    var data = await res.json();
+    if (data.success) {
+        var el = document.getElementById('report-' + id);
+        if (el) { el.style.opacity = '0.4'; el.style.pointerEvents = 'none'; }
+    }
+}
+
+async function warnUser() {
+    if (!currentUserId) return;
+    var reason = document.getElementById('warnReason').value || 'Post signalé par un utilisateur';
+    var form = new FormData(); form.append('reason', reason);
+    var res  = await fetch('/forum/admin/users/' + currentUserId + '/warn', { method: 'POST', body: form });
+    var data = await res.json();
+    alert(data.success ? '✅ Avertissement envoyé.' : '❌ ' + (data.error || 'Erreur'));
+}
+
+async function restrictUser() {
+    if (!currentUserId) return;
+    var form = new FormData();
+    form.append('days',           document.getElementById('rDays').value);
+    form.append('canPost',        document.getElementById('rCanPost').checked ? '1' : '0');
+    form.append('canComment',     document.getElementById('rCanComment').checked ? '1' : '0');
+    form.append('canCreateForum', document.getElementById('rCanForum').checked ? '1' : '0');
+    form.append('reason',         document.getElementById('rReason').value || 'Post signalé');
+    form.append('offense', '2');
+    var res  = await fetch('/forum/admin/users/' + currentUserId + '/restrict', { method: 'POST', body: form });
+    var data = await res.json();
+    alert(data.success ? '✅ Restriction appliquée.' : '❌ ' + (data.error || 'Erreur'));
+    if (data.success) { closePanel(); location.reload(); }
+}
+
+async function banUser() {
+    if (!currentUserId) return;
+    if (!confirm('Bannir définitivement cet utilisateur ?')) return;
+    var form = new FormData();
+    form.append('reason', document.getElementById('banReason').value || 'Infractions répétées');
+    var res  = await fetch('/forum/admin/users/' + currentUserId + '/ban', { method: 'POST', body: form });
+    var data = await res.json();
+    alert(data.success ? '✅ Utilisateur banni.' : '❌ ' + (data.error || 'Erreur'));
+    if (data.success) { closePanel(); location.reload(); }
+}
+</script>
+{% endblock %}

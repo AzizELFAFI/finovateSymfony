@@ -1,0 +1,100 @@
+{% extends 'forum/_layout.html.twig' %}
+{% block title %}Alertes - FINOVATE{% endblock %}
+{% block content %}
+<div class="forums-content">
+    <div class="page-container">
+
+        <div class="page-header-banner">
+            <div>
+                <h1>🔔 Alertes & Notifications</h1>
+                <p>{{ unreadCount }} non lue{{ unreadCount > 1 ? 's' : '' }}</p>
+            </div>
+            <div class="header-actions">
+                <form method="post" action="{{ path('app_alerts_mark_read') }}" style="display:inline">
+                    <button type="submit" class="btn-read">✓ Tout marquer comme lu</button>
+                </form>
+                <form method="post" action="{{ path('app_alerts_delete_all') }}" style="display:inline" onsubmit="return confirm('Supprimer toutes les alertes ?')">
+                    <button type="submit" class="btn-clear-all">🗑️ Tout supprimer</button>
+                </form>
+            </div>
+        </div>
+
+        {# Type filters #}
+        <div class="filter-tabs">
+            <a href="{{ path('app_forum_alerts') }}" class="filter-tab {% if not activeType %}active{% endif %}">Toutes</a>
+            <a href="{{ path('app_forum_alerts', {type: 'join'}) }}" class="filter-tab {% if activeType == 'join' %}active{% endif %}">👥 Rejoindre</a>
+            <a href="{{ path('app_forum_alerts', {type: 'leave'}) }}" class="filter-tab {% if activeType == 'leave' %}active{% endif %}">👋 Quitter</a>
+            <a href="{{ path('app_forum_alerts', {type: 'new_post'}) }}" class="filter-tab {% if activeType == 'new_post' %}active{% endif %}">📝 Nouveau post</a>
+            <a href="{{ path('app_forum_alerts', {type: 'vote'}) }}" class="filter-tab {% if activeType == 'vote' %}active{% endif %}">👍 Votes</a>
+            <a href="{{ path('app_forum_alerts', {type: 'comment'}) }}" class="filter-tab {% if activeType == 'comment' %}active{% endif %}">💬 Commentaires</a>
+            <a href="{{ path('app_forum_alerts', {type: 'share'}) }}" class="filter-tab {% if activeType == 'share' %}active{% endif %}">📤 Partages</a>
+            <a href="{{ path('app_forum_alerts', {type: 'badge'}) }}" class="filter-tab {% if activeType == 'badge' %}active{% endif %}">🏆 Badges</a>
+        </div>
+
+        <div class="card">
+            {% if alerts is empty %}
+            <div class="empty-state">
+                <div style="font-size:64px;margin-bottom:16px">🔔</div>
+                <p>Aucune alerte pour le moment</p>
+                <span>Vous serez notifie ici de toutes les activites importantes</span>
+            </div>
+            {% else %}
+            <div class="alerts-list">
+                {% for alert in alerts %}
+                <div class="alert-card {% if not alert.isRead %}unread{% endif %}">
+                    <div class="alert-icon">{{ alert.typeIcon }}</div>
+                    <div class="alert-content">
+                        <p class="alert-message">{{ alert.message }}</p>
+                        <span class="alert-time">{{ alert.createdAt|date('d/m/Y H:i') }}</span>
+                        {% if alert.relatedUrl %}
+                        <a href="{{ alert.relatedUrl }}" class="alert-link">Voir →</a>
+                        {% endif %}
+                    </div>
+                    <form method="post" action="{{ path('app_alert_delete', {id: alert.id}) }}" style="flex-shrink:0">
+                        <button type="submit" class="btn-dismiss" title="Supprimer">×</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: sans-serif; background-color: #f7f9fc; }
+.forums-content { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+.page-container { max-width: 900px; margin: 0 auto; }
+.page-header-banner { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 28px 30px; border-radius: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+.page-header-banner h1 { color: white; font-size: 24px; font-weight: bold; margin-bottom: 4px; }
+.page-header-banner p { color: rgba(255,255,255,0.85); font-size: 14px; }
+.header-actions { display: flex; gap: 10px; }
+.btn-read { background: #4CAF50; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-read:hover { background: #388e3c; }
+.btn-clear-all { background: #f44336; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-clear-all:hover { background: #c62828; }
+.filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.filter-tab { padding: 7px 16px; background: white; border: 1.5px solid #e0e0e0; border-radius: 20px; font-size: 13px; font-weight: 500; color: #5f6368; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+.filter-tab:hover { border-color: #667eea; color: #667eea; background: #f3f0ff; }
+.filter-tab.active { background: #667eea; color: white; border-color: #667eea; }
+.card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.alerts-list { display: flex; flex-direction: column; gap: 10px; }
+.alert-card { display: flex; align-items: flex-start; gap: 14px; padding: 16px; background: #f7f9fc; border: 1px solid #e0e0e0; border-radius: 10px; transition: all 0.2s; }
+.alert-card.unread { background: #f0fdf4; border-color: #4caf50; border-left: 4px solid #4caf50; }
+.alert-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
+.alert-icon { font-size: 26px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: white; border-radius: 50%; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.alert-content { flex: 1; }
+.alert-message { color: #1a1a1b; font-size: 14px; line-height: 1.5; margin-bottom: 5px; }
+.alert-time { color: #aaa; font-size: 12px; }
+.alert-link { margin-left: 10px; color: #667eea; font-size: 12px; text-decoration: none; font-weight: 600; }
+.alert-link:hover { text-decoration: underline; }
+.btn-dismiss { background: transparent; border: none; color: #bbb; font-size: 20px; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.btn-dismiss:hover { background: #fee2e2; color: #c62828; }
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state p { color: #1a1a1b; font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+.empty-state span { color: #7c7c7c; font-size: 14px; }
+</style>
+{% endblock %}
+

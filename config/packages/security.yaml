@@ -14,8 +14,11 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        forum_admin:
+            pattern: ^/forum/admin
+            security: false
         user:
-            pattern: ^/(user|investissement)
+            pattern: ^/(user|investissement|forum)
             stateless: true
             provider: app_user_provider
             entry_point: App\Security\JwtRedirectEntryPoint
@@ -50,6 +53,7 @@ security:
         # - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/user, roles: ROLE_USER }
         - { path: ^/investissement, roles: ROLE_USER }
+        - { path: ^/forum, roles: ROLE_USER }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

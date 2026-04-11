@@ -1,0 +1,356 @@
+{% extends 'forum/_layout.html.twig' %}
+{% block title %}Forums - FINOVATE{% endblock %}
+{% block content %}
+<div class="forums-content">
+    <div class="fh-container">
+
+        {# ── Welcome ── #}
+        <div class="welcome-section">
+            <h1>Bienvenue sur les Forums FINOVATE</h1>
+            <p>Découvrez et rejoignez des discussions sur la finance, la blockchain et bien plus</p>
+        </div>
+
+        {# ── Search + Sort ── #}
+        <form class="search-bar" method="get" action="{{ path('app_forum_home') }}" id="forumSearchForm" autocomplete="off">
+            <div class="search-input-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" name="q" id="forumSearchInput" placeholder="Rechercher un forum..." value="{{ search }}" oninput="autocompleteForums(this.value)">
+                <ul class="autocomplete-list" id="forumSuggestions"></ul>
+            </div>
+            <select name="sort" onchange="this.form.submit()">
+                <option value="recent"  {% if sort == 'recent'  %}selected{% endif %}>Plus récent</option>
+                <option value="oldest"  {% if sort == 'oldest'  %}selected{% endif %}>Plus ancien</option>
+                <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Plus populaire</option>
+                <option value="posts"   {% if sort == 'posts'   %}selected{% endif %}>Plus de posts</option>
+            </select>
+            <button type="submit" class="btn-search">Chercher</button>
+        </form>
+
+        {# ══════════════════════════════════════════════════════════════════════
+           SECTION 1 — NEW AND NOW (5 most recent this week)
+        ══════════════════════════════════════════════════════════════════════ #}
+        {% if recentWeek is not empty %}
+        <div class="section-header">
+            <span class="section-label">NOUVEAU</span>
+            <h2 class="section-title">Nouveau <em>et</em> Maintenant</h2>
+        </div>
+        <div class="new-now-grid">
+            {# Big featured card — first forum #}
+            {% set featured = recentWeek[0] %}
+            <a href="{{ path('app_forum_posts', {id: featured.id}) }}" class="nn-featured">
+                {% if featured.imageUrl %}
+                    <img src="/{{ featured.imageUrl }}" alt="{{ featured.title }}" class="nn-featured-img">
+                {% else %}
+                    <div class="nn-featured-placeholder">💼</div>
+                {% endif %}
+                <div class="nn-featured-body">
+                    <span class="nn-category">FORUM</span>
+                    <h3 class="nn-featured-title">{{ featured.title }}</h3>
+                    <div class="nn-meta">
+                        <span>👥 {{ featured.members|length }}</span>
+                        <span>📝 {{ featured.posts|length }}</span>
+                        {% if featured.creator %}<span>par {{ featured.creator.firstname }}</span>{% endif %}
+                    </div>
+                </div>
+            </a>
+
+            {# Right stack — 4 smaller cards, vertically scrollable #}
+            <div class="nn-stack">
+                {% for forum in recentWeek[1:] %}
+                <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="nn-small">
+                    <div class="nn-small-left">
+                        {% if forum.imageUrl %}
+                            <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}" class="nn-small-img">
+                        {% else %}
+                            <div class="nn-small-placeholder">💼</div>
+                        {% endif %}
+                    </div>
+                    <div class="nn-small-body">
+                        <span class="nn-category">FORUM</span>
+                        <h4 class="nn-small-title">{{ forum.title }}</h4>
+                        <div class="nn-meta-sm">👥 {{ forum.members|length }} · 📝 {{ forum.posts|length }}</div>
+                        {% if forum.creator %}<div class="nn-meta-sm">par {{ forum.creator.firstname }}</div>{% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# ══════════════════════════════════════════════════════════════════════
+           SECTION 2 — MAIN CADRAGE (ALL forums)
+        ══════════════════════════════════════════════════════════════════════ #}
+        {% if forums is not empty %}
+        <div class="section-header">
+            <span class="section-label">FORUMS</span>
+            <h2 class="section-title">Tous les Forums</h2>
+        </div>
+        <div class="main-grid">
+            {% for forum in forums %}
+            <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="mg-card">
+                {% if forum.imageUrl %}
+                    <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}" class="mg-img">
+                {% else %}
+                    <div class="mg-placeholder">💼</div>
+                {% endif %}
+                <div class="mg-body">
+                    <span class="mg-category">FORUM</span>
+                    <h3 class="mg-title">{{ forum.title }}</h3>
+                    <div class="mg-meta">👥 {{ forum.members|length }} · 📝 {{ forum.posts|length }}</div>
+                    <div class="mg-footer" onclick="event.stopPropagation()">
+                        {% if forum.id in joinedIds %}
+                        <form method="post" action="{{ path('app_forum_leave', {id: forum.id}) }}">
+                            <button type="submit" class="btn-joined">✓ Quitter</button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="{{ path('app_forum_join', {id: forum.id}) }}">
+                            <button type="submit" class="btn-join">+ Rejoindre</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {# ══════════════════════════════════════════════════════════════════════
+           SECTION 3 — 5 MOST POPULAR (masonry mixed layout)
+        ══════════════════════════════════════════════════════════════════════ #}
+        {% if popular is not empty %}
+        <div class="section-header">
+            <span class="section-label">TENDANCE</span>
+            <h2 class="section-title">Les Plus Populaires</h2>
+        </div>
+        <div class="popular-grid">
+            {% for forum in popular %}
+            <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="pop-card">
+                {% if forum.imageUrl %}
+                    <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}" class="pop-img">
+                {% else %}
+                    <div class="pop-placeholder">💼</div>
+                {% endif %}
+                <div class="pop-body">
+                    <span class="pop-category">POPULAIRE</span>
+                    <h3 class="pop-title">{{ forum.title }}</h3>
+                    <div class="pop-meta">👥 {{ forum.members|length }} · 📝 {{ forum.posts|length }}</div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {# ══════════════════════════════════════════════════════════════════════
+           SECTION 5b — HORIZONTAL STRIP: Recommandés
+        ══════════════════════════════════════════════════════════════════════ #}
+        {% if recommended is not empty %}
+        <div class="section-header">
+            <span class="section-label">RECOMMANDÉS</span>
+            <h2 class="section-title">Forums Recommandés</h2>
+        </div>
+        <div class="h-scroll-wrap">
+            <div class="h-scroll">
+                {% for forum in recommended %}
+                <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="hs-card">
+                    {% if forum.imageUrl %}
+                        <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}" class="hs-img">
+                    {% else %}
+                        <div class="hs-placeholder">💼</div>
+                    {% endif %}
+                    <span class="hs-category">ACTIF</span>
+                    <h4 class="hs-title">{{ forum.title }}</h4>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# ══════════════════════════════════════════════════════════════════════
+           SECTION 6 — CRÉATEUR DE LA SEMAINE
+        ══════════════════════════════════════════════════════════════════════ #}
+        {% if creatorOfWeek %}
+        <div class="creator-section">
+            <div class="creator-header">
+                <span class="section-label">CETTE SEMAINE</span>
+                <h2 class="section-title">Créateur de la Semaine</h2>
+            </div>
+            <div class="creator-grid">
+                {% for post in creatorPosts %}
+                <a href="{{ path('app_post_detail', {id: post.id}) }}" class="creator-card">
+                    {% if post.imageUrl %}
+                        <img src="/{{ post.imageUrl }}" alt="{{ post.title }}" class="creator-post-img">
+                    {% else %}
+                        <div class="creator-post-placeholder">📝</div>
+                    {% endif %}
+                    <div class="creator-card-body">
+                        <span class="creator-cat">POST</span>
+                        <h3 class="creator-post-title">{{ post.title }}</h3>
+                        <div class="creator-author-row">
+                            <div class="creator-avatar">{{ creatorOfWeek.firstname|first|upper }}</div>
+                            <div>
+                                <div class="creator-name">{{ creatorOfWeek.firstname }} {{ creatorOfWeek.lastname }}</div>
+                                <div class="creator-role">Créateur de la semaine 🏆</div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f9fc; }
+.forums-content { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+.fh-container { max-width: 1200px; margin: 0 auto; }
+
+/* Welcome */
+.welcome-section { text-align: center; padding: 36px 20px; background: linear-gradient(135deg, #237f4e 0%, #1a5f3a 100%); border-radius: 16px; margin-bottom: 20px; }
+.welcome-section h1 { color: white; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+.welcome-section p { color: rgba(255,255,255,0.9); font-size: 15px; }
+
+/* Search */
+.search-bar { background: white; padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 36px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; }
+.search-input-wrap { flex: 1; position: relative; display: flex; align-items: center; gap: 8px; }
+.search-icon { font-size: 18px; }
+.search-input-wrap input { flex: 1; padding: 9px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; }
+.search-input-wrap input:focus { border-color: #237f4e; }
+.autocomplete-list { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: white; border: 1px solid #e0e0e0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 200; list-style: none; overflow: hidden; display: none; }
+.autocomplete-list li { padding: 11px 16px; cursor: pointer; font-size: 14px; color: #1a1a1b; border-bottom: 1px solid #f5f5f5; }
+.autocomplete-list li:hover { background: #f0fdf4; color: #237f4e; }
+.search-bar select { padding: 9px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; }
+.btn-search { background: #237f4e; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.btn-search:hover { background: #1a5f3a; }
+
+/* Section headers */
+.section-header { margin: 40px 0 16px; border-bottom: 2px solid #1a1a1b; padding-bottom: 10px; }
+.section-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #237f4e; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.section-title { font-size: 26px; font-weight: 800; color: #1a1a1b; font-family: Georgia, 'Times New Roman', serif; }
+.section-title em { font-style: italic; font-weight: 400; }
+
+/* Section divider */
+.section-divider { border: none; border-top: 2px solid #1a1a1b; margin: 40px 0 0; }
+
+/* ── NEW AND NOW ── */
+.new-now-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 8px; align-items: start; }
+.nn-featured { display: block; text-decoration: none; color: inherit; border: 1px solid #1a1a1b; }
+.nn-featured-img { width: 100%; height: 320px; object-fit: cover; display: block; }
+.nn-featured-placeholder { height: 320px; background: #e8f5ee; display: flex; align-items: center; justify-content: center; font-size: 60px; }
+.nn-featured-body { padding: 14px; }
+.nn-category { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #237f4e; text-transform: uppercase; display: block; margin-bottom: 6px; }
+.nn-featured-title { font-size: 22px; font-weight: 800; color: #1a1a1b; line-height: 1.3; font-family: Georgia, serif; margin-bottom: 8px; }
+.nn-meta { font-size: 12px; color: #888; display: flex; gap: 12px; }
+.nn-stack { display: flex; flex-direction: column; gap: 12px; border-left: 1px solid #1a1a1b; padding-left: 24px; max-height: 420px; overflow-y: auto; }
+.nn-stack::-webkit-scrollbar { width: 3px; }
+.nn-stack::-webkit-scrollbar-thumb { background: #237f4e; }
+.nn-small { display: flex; align-items: stretch; border: 1px solid #1a1a1b; text-decoration: none; color: inherit; transition: opacity 0.2s; min-height: 120px; background: white; }
+.nn-small:hover { opacity: 0.8; }
+.nn-small-left { width: 45%; flex-shrink: 0; }
+.nn-small-img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 120px; }
+.nn-small-placeholder { width: 100%; height: 100%; min-height: 120px; background: #e8f5ee; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.nn-small-body { flex: 1; padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; }
+.nn-small-title { font-size: 17px; font-weight: 800; color: #1a1a1b; line-height: 1.35; font-family: Georgia, serif; margin-bottom: 8px; }
+.nn-meta-sm { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+/* ── MAIN GRID (4 columns) ── */
+.main-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 8px; }
+.mg-card { display: block; text-decoration: none; color: inherit; transition: opacity 0.2s; border: 1px solid #1a1a1b; background: white; }
+.mg-card:hover { opacity: 0.85; }
+.mg-img { width: 100%; height: 180px; object-fit: cover; display: block; }
+.mg-placeholder { height: 180px; background: #e8f5ee; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.mg-body { padding: 10px 12px 12px; }
+.mg-category { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #237f4e; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.mg-title { font-size: 15px; font-weight: 800; color: #1a1a1b; line-height: 1.4; font-family: Georgia, serif; margin-bottom: 6px; }
+.mg-meta { font-size: 11px; color: #aaa; margin-bottom: 8px; }
+.mg-footer { display: flex; }
+.btn-join { width: 100%; padding: 7px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: #237f4e; color: white; }
+.btn-join:hover { background: #1a5f3a; }
+.btn-joined { width: 100%; padding: 7px; border: 1px solid #f44336; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: #fff0f0; color: #f44336; }
+.btn-joined:hover { background: #f44336; color: white; }
+
+/* ── POPULAR GRID (2 big top + 3 smaller bottom) ── */
+.popular-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: 280px 200px; gap: 16px; margin-bottom: 8px; }
+.pop-card { display: block; text-decoration: none; color: inherit; position: relative; overflow: hidden; border: 1px solid #1a1a1b; background: white; }
+.pop-card:nth-child(3) { grid-column: 1; }
+.pop-card:nth-child(4) { grid-column: 2; }
+.pop-card:nth-child(5) { grid-column: 1 / -1; height: 200px; }
+.pop-card:hover .pop-img { transform: scale(1.03); }
+.pop-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.pop-placeholder { width: 100%; height: 100%; background: #e8f5ee; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+.pop-body { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.72)); padding: 24px 16px 14px; }
+.pop-category { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #4ade80; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.pop-title { font-size: 15px; font-weight: 800; color: white; line-height: 1.3; font-family: Georgia, serif; margin-bottom: 4px; }
+.pop-meta { font-size: 11px; color: rgba(255,255,255,0.7); }
+
+/* ── HORIZONTAL SCROLL ── */
+.h-scroll-wrap { overflow: hidden; margin-bottom: 8px; }
+.h-scroll { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.h-scroll::-webkit-scrollbar { height: 4px; }
+.h-scroll::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 2px; }
+.h-scroll::-webkit-scrollbar-thumb { background: #237f4e; border-radius: 2px; }
+.hs-card { flex-shrink: 0; width: 200px; scroll-snap-align: start; text-decoration: none; color: inherit; display: block; transition: opacity 0.2s; border: 1px solid #1a1a1b; background: white; }
+.hs-card:hover { opacity: 0.8; }
+.hs-img { width: 200px; height: 150px; object-fit: cover; display: block; }
+.hs-placeholder { width: 200px; height: 150px; background: #e8f5ee; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+.hs-category { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #237f4e; text-transform: uppercase; display: block; margin: 8px 8px 4px; }
+.hs-title { font-size: 13px; font-weight: 700; color: #1a1a1b; line-height: 1.4; font-family: Georgia, serif; padding: 0 8px 10px; }
+
+/* ── CREATOR OF THE WEEK ── */
+.creator-section { margin-top: 40px; }
+.creator-header { margin-bottom: 16px; border-bottom: 2px solid #237f4e; padding-bottom: 10px; }
+.creator-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.creator-card { display: block; text-decoration: none; color: inherit; border: 1px solid #1a1a1b; overflow: hidden; transition: opacity 0.2s; }
+.creator-card:hover { opacity: 0.85; }
+.creator-post-img { width: 100%; height: 200px; object-fit: cover; display: block; }
+.creator-post-placeholder { height: 200px; background: #e8f5ee; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+.creator-card-body { padding: 16px; background: #f0fdf4; }
+.creator-cat { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #237f4e; text-transform: uppercase; display: block; margin-bottom: 6px; }
+.creator-post-title { font-size: 16px; font-weight: 800; color: #1a1a1b; line-height: 1.4; font-family: Georgia, serif; margin-bottom: 14px; }
+.creator-author-row { display: flex; align-items: center; gap: 10px; }
+.creator-avatar { width: 36px; height: 36px; border-radius: 50%; background: #237f4e; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+.creator-name { font-size: 13px; font-weight: 700; color: #1a1a1b; }
+.creator-role { font-size: 11px; color: #237f4e; font-style: italic; }
+
+@media (max-width: 1024px) { .main-grid { grid-template-columns: repeat(2, 1fr); } .new-now-grid { grid-template-columns: 1fr; } .nn-stack { border-left: none; padding-left: 0; border-top: 1px solid #e0e0e0; padding-top: 16px; } }
+@media (max-width: 640px) { .main-grid { grid-template-columns: 1fr; } .popular-grid { grid-template-columns: 1fr 1fr; } .creator-grid { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+var searchTimeout;
+function autocompleteForums(val) {
+    clearTimeout(searchTimeout);
+    var list = document.getElementById('forumSuggestions');
+    if (val.length < 1) { list.style.display = 'none'; return; }
+    searchTimeout = setTimeout(function() {
+        fetch('{{ path('api_search_forums') }}?q=' + encodeURIComponent(val))
+            .then(r => r.json())
+            .then(data => {
+                list.innerHTML = '';
+                if (!data.length) { list.style.display = 'none'; return; }
+                data.forEach(function(item) {
+                    var li = document.createElement('li');
+                    li.textContent = item.title;
+                    li.onclick = function() {
+                        document.getElementById('forumSearchInput').value = item.title;
+                        list.style.display = 'none';
+                        document.getElementById('forumSearchForm').submit();
+                    };
+                    list.appendChild(li);
+                });
+                list.style.display = 'block';
+            });
+    }, 200);
+}
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-input-wrap')) document.getElementById('forumSuggestions').style.display = 'none';
+});
+document.getElementById('forumSearchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('forumSuggestions').style.display = 'none';
+});
+</script>
+{% endblock %}
+

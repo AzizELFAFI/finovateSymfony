@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <title>{% block title %}Admin — FINOVATE{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base href="{{ asset('backoffice/') }}">
+    <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+<body>
+<div id="overlay" class="overlay"></div>
+
+<!-- TOPBAR -->
+<nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
+    <button id="toggleBtn" class="d-none d-lg-inline-flex btn btn-light btn-icon btn-sm">
+        <i class="ti ti-layout-sidebar-left-expand"></i>
+    </button>
+    <button id="mobileBtn" class="btn btn-light btn-icon btn-sm d-lg-none me-2">
+        <i class="ti ti-layout-sidebar-left-expand"></i>
+    </button>
+    <div class="ms-auto">
+        <a href="{{ path('backoffice_dashboard') }}" class="btn btn-sm btn-outline-secondary">
+            ← Retour au Dashboard
+        </a>
+    </div>
+</nav>
+
+<!-- SIDEBAR (unified backoffice + forum) -->
+{% include 'forum dashboard/_sidebar.html.twig' %}
+
+<!-- MAIN CONTENT -->
+<main id="content" class="content py-10">
+    <div class="container-fluid">
+        {% for msg in app.flashes('success') %}
+            <div class="alert alert-success">✅ {{ msg }}</div>
+        {% endfor %}
+        {% for msg in app.flashes('error') %}
+            <div class="alert alert-danger">❌ {{ msg }}</div>
+        {% endfor %}
+        {% block admin_content %}{% endblock %}
+    </div>
+</main>
+
+<script src="{{ asset('backoffice/assets/js/main.js') }}" type="module"></script>
+</body>
+</html>

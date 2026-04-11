@@ -1,0 +1,70 @@
+{% extends 'forum/_layout.html.twig' %}
+{% block title %}Postes Partages - FINOVATE{% endblock %}
+{% block content %}
+<div class="forums-content">
+    <div class="page-container">
+        <h2 class="section-title">Postes Partages</h2>
+        <div class="posts-list">
+            {% if sharedPosts is empty %}
+            <div class="empty-state">
+                <div style="font-size:48px;margin-bottom:15px">??</div>
+                <p>Aucun poste partage</p>
+                <span>Partagez des posts interessants depuis les forums !</span>
+            </div>
+            {% else %}
+            {% for sp in sharedPosts %}
+            <div class="post-card">
+                {% if sp.post.imageUrl %}
+                <div class="post-img"><img src="/{{ sp.post.imageUrl }}" alt="post"></div>
+                {% endif %}
+                <div class="post-info">
+                    <h3 class="post-title">
+                        <a href="{{ path("app_post_detail", {id: sp.post.id}) }}">{{ sp.post.title }}</a>
+                    </h3>
+                    <p class="post-excerpt">{{ sp.post.content|slice(0, 150) }}...</p>
+                    <div class="post-meta">
+                        <span>Auteur: {{ sp.post.author ? sp.post.author.firstname ~ " " ~ sp.post.author.lastname : "Anonyme" }}</span>
+                        <span>Partage le {{ sp.sharedAt|date("d/m/Y") }}</span>
+                        <span>{{ sp.post.comments|length }} commentaires</span>
+                        <span>{{ sp.post.upvoteCount }} likes</span>
+                    </div>
+                    {% if sp.post.forum %}
+                    <div class="post-forum">
+                        <a href="{{ path("app_forum_posts", {id: sp.post.forum.id}) }}">Forum: {{ sp.post.forum.title }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+                <form method="post" action="{{ path("app_shared_delete", {id: sp.id}) }}" onsubmit="return confirm('Retirer ce post partage ?')" style="flex-shrink:0">
+                    <button type="submit" class="btn-del" title="Retirer">???</button>
+                </form>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: sans-serif; background-color: #f7f9fc; }
+.forums-content { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+.page-container { max-width: 1200px; margin: 0 auto; }
+.section-title { color: #237f4e; font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+.posts-list { display: flex; flex-direction: column; gap: 15px; }
+.post-card { display: flex; gap: 20px; padding: 20px; background: white; border: 1px solid #e0e0e0; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: all 0.3s; align-items: flex-start; }
+.post-card:hover { border-color: #237f4e; transform: translateY(-2px); }
+.post-img { width: 120px; height: 90px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: #e0e0e0; }
+.post-img img { width: 100%; height: 100%; object-fit: cover; }
+.post-info { flex: 1; }
+.post-title a { color: #1a1a1b; font-size: 17px; font-weight: bold; text-decoration: none; }
+.post-title a:hover { color: #237f4e; }
+.post-excerpt { color: #7c7c7c; font-size: 14px; line-height: 1.5; margin: 8px 0 12px; }
+.post-meta { display: flex; gap: 20px; font-size: 13px; color: #5f6368; flex-wrap: wrap; margin-bottom: 8px; }
+.post-forum a { color: #237f4e; font-size: 13px; text-decoration: none; font-weight: 500; }
+.btn-del { background: #fff0f0; border: 1px solid #f44336; padding: 8px 12px; border-radius: 8px; font-size: 16px; cursor: pointer; transition: all 0.2s; }
+.btn-del:hover { background: #f44336; }
+.empty-state { text-align: center; padding: 80px 20px; background: white; border-radius: 12px; }
+.empty-state p { color: #1a1a1b; font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.empty-state span { color: #7c7c7c; font-size: 14px; }
+</style>
+{% endblock %}
+
