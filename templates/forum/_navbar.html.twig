@@ -1,0 +1,132 @@
+<link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+<link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+
+<header>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarForum" aria-controls="navbarForum" aria-expanded="false">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarForum">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ path('front_services') }}">Nos services</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ path('front_contact') }}">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ path('front_one_page') }}">One-page</a></li>
+          <li class="nav-item" id="fh-nav-login"><a class="nav-link" href="{{ path('front_login') }}">Connexion</a></li>
+          <li class="nav-item active" id="fh-nav-dashboard" style="display:none"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+          <li class="nav-item" id="fh-nav-logout" style="display:none"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<div class="page-heading header-text">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h1>Mon espace</h1>
+        <span>Informations du compte connecté</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="request-form">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-8">
+        <h4 id="fh-welcome-title" class="welcome-title">Bienvenue</h4>
+        <p id="fh-welcome-sub" class="welcome-sub"></p>
+      </div>
+      <div class="col-md-4">
+        <a href="{{ path('front_logout') }}" class="border-button">Déconnexion</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding-top:16px; padding-bottom:0;">
+  <div class="sidebar" style="margin-bottom:0;">
+    <div class="title">Mon espace</div>
+    <a href="{{ path('user_dashboard') }}">Dashboard</a>
+    <a href="{{ path('user_transactions') }}">Transactions</a>
+    <a href="{{ path('user_goals') }}">Goals</a>
+    <a href="{{ path('user_bills') }}">Factures</a>
+    <a href="{{ path('app_forum_home') }}" class="active">Forum</a>
+    <a href="{{ path('user_dashboard') }}?section=edit">Modifier le profil</a>
+    <a href="{{ path('front_logout') }}">Déconnexion</a>
+  </div>
+</div>
+
+<nav class="main-navbar">
+    <div class="navbar-inner">
+        <div class="navbar-links">
+            <a href="{{ path('app_forum_home') }}"              class="nav-link {% if activeTab == 'home' %}active{% endif %}">🏠 Forums</a>
+            <a href="{{ path('app_forum_my') }}"                class="nav-link {% if activeTab == 'my' %}active{% endif %}">📁 Mes Forums</a>
+            <a href="{{ path('app_forum_joined') }}"            class="nav-link {% if activeTab == 'joined' %}active{% endif %}">👥 Rejoints</a>
+            <a href="{{ path('app_forum_alerts') }}"            class="nav-link {% if activeTab == 'alerts' %}active{% endif %}">🔔 Alertes</a>
+            <a href="{{ path('app_forum_badges') }}"            class="nav-link {% if activeTab == 'badges' %}active{% endif %}">🏆 Badges</a>
+            <a href="{{ path('app_forum_recommendations') }}"   class="nav-link {% if activeTab == 'reco' %}active{% endif %}">⭐ Recommandations</a>
+            <a href="{{ path('app_forum_personality') }}"       class="nav-link {% if activeTab == 'personality' %}active{% endif %}">🧠 Personnalité</a>
+            <a href="{{ path('app_forum_ai_assistant') }}"      class="nav-link {% if activeTab == 'ai' %}active{% endif %}">💬 ChitChat</a>
+            <a href="{{ path('app_forum_ai_generator') }}"      class="nav-link {% if activeTab == 'generator' %}active{% endif %}">✨ Générateur</a>
+            <a href="{{ path('forum_policy') }}"                class="nav-link {% if activeTab == 'policy' %}active{% endif %}">📜 Règles</a>
+        </div>
+    </div>
+</nav>
+
+{% for msg in app.flashes('error') %}
+<div class="flash-error-bar">🚫 {{ msg }}</div>
+{% endfor %}
+{% for msg in app.flashes('success') %}
+<div class="flash-success-bar">✅ {{ msg }}</div>
+{% endfor %}
+
+<style>
+.flash-error-bar { background: #fee2e2; border-bottom: 1px solid #fca5a5; color: #c62828; padding: 10px 20px; font-size: 14px; font-weight: 600; text-align: center; }
+.flash-success-bar { background: #f0fdf4; border-bottom: 1px solid #b7dfca; color: #237f4e; padding: 10px 20px; font-size: 14px; font-weight: 600; text-align: center; }
+.main-navbar { background: #8dc63f; border-bottom: 1px solid #7ab52e; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,0.10); }
+.navbar-inner { max-width: 1400px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; height: 48px; overflow-x: auto; }
+.navbar-links { display: flex; gap: 4px; align-items: center; flex: 1; overflow-x: auto; }
+.nav-link { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; color: white; text-decoration: none; white-space: nowrap; transition: all 0.15s; }
+.nav-link:hover { background: rgba(255,255,255,0.25); color: white; }
+.nav-link.active { background: rgba(255,255,255,0.35); color: white; font-weight: 700; }
+.welcome-title { font-weight: 900; font-size: 1.65rem; letter-spacing: 0.2px; margin: 0; color: #0f766e; }
+.welcome-sub { margin: 6px 0 0 0; color: rgba(0,0,0,0.55); font-weight: 600; }
+.sidebar { border-radius: 14px; background: rgba(255,255,255,0.92); border: 1px solid rgba(15,118,110,0.14); box-shadow: 0 6px 24px rgba(0,0,0,0.06); padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 0; }
+.sidebar .title { font-weight: 900; margin: 0 10px 0 0; white-space: nowrap; color: #0f766e; }
+.sidebar a { display: inline-block; padding: 8px 16px; border-radius: 10px; color: #111827; font-weight: 700; text-decoration: none; border: 1px solid transparent; white-space: nowrap; }
+.sidebar a:hover { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.18); color: #0f766e; }
+.sidebar a.active { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.26); color: #0f766e; }
+</style>
+
+<script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+<script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ asset('front/assets/js/custom.js') }}"></script>
+<script>
+(function(){
+  var token = null;
+  try { token = localStorage.getItem('finovate_token'); } catch(e){}
+  var login = document.getElementById('fh-nav-login');
+  var dash  = document.getElementById('fh-nav-dashboard');
+  var out   = document.getElementById('fh-nav-logout');
+  if (token) {
+    if(login) login.style.display='none';
+    if(dash)  dash.style.display='';
+    if(out)   out.style.display='';
+    fetch('/api/me', { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var t = document.getElementById('fh-welcome-title');
+        var s = document.getElementById('fh-welcome-sub');
+        if(t) t.textContent = 'Bienvenue, ' + (d.prenom||'') + ' ' + (d.nom||'');
+        if(s) s.textContent = 'Voici un résumé de votre compte.';
+      }).catch(function(){});
+  }
+})();
+</script>

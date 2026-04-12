@@ -1,0 +1,310 @@
+{% extends 'base.html.twig' %}
+{% block title %}Générateur IA - FINOVATE{% endblock %}
+{% block body %}
+{% include 'forum/_navbar.html.twig' with {activeTab: 'generator'} %}
+<div class="forums-content">
+    <div class="page-container">
+        <div class="generator-header">
+            <h1>✨ Générateur de Post IA</h1>
+            <p>Laissez l'IA créer des posts professionnels pour vous</p>
+        </div>
+
+        {# Mode tabs #}
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="switchMode('ai', this)">🤖 Générer avec l'IA</button>
+            <button class="mode-tab" onclick="switchMode('rewrite', this)">✍️ Écrire + Réécrire par IA</button>
+        </div>
+        <div class="card">
+            <h2 class="card-title">Paramètres du Post</h2>
+            <div class="form-group">
+                <label>Thème du post</label>
+                <input type="text" id="themeField" class="form-input" placeholder="Ex: Blockchain et Finance, NFT, DeFi...">
+            </div>
+            <div class="form-group">
+                <label>Forum de destination</label>
+                <select id="forumSelect" class="form-select">
+                    <option value="">Sélectionnez un forum...</option>
+                    {% for forum in forums %}
+                    <option value="{{ forum.id }}">{{ forum.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Ton</label>
+                    <select id="toneSelect" class="form-select">
+                        <option value="professional">Professionnel</option>
+                        <option value="casual">Décontracté</option>
+                        <option value="educational">Éducatif</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Longueur</label>
+                    <select id="lengthSelect" class="form-select">
+                        <option value="short">Court</option>
+                        <option value="medium" selected>Moyen</option>
+                        <option value="long">Long</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-generate" id="genBtn" onclick="generatePost()">🎨 Générer Post</button>
+            <p class="status-text" id="statusText"></p>
+        </div>
+
+        {# ── Rewrite mode card ── #}
+        <div class="card" id="rewriteCard" style="display:none;">
+            <h2 class="card-title">✍️ Écrire votre contenu + Réécriture IA</h2>
+            <div class="form-group">
+                <label>Forum de destination</label>
+                <select id="rewriteForumSelect" class="form-select">
+                    <option value="">Sélectionnez un forum...</option>
+                    {% for forum in forums %}
+                    <option value="{{ forum.id }}">{{ forum.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Titre de votre post</label>
+                <input type="text" id="rewriteTitle" class="form-input" placeholder="Entrez votre titre...">
+            </div>
+            <div class="form-group">
+                <label>Votre contenu brut</label>
+                <textarea id="rewriteInput" class="form-textarea" rows="6" placeholder="Écrivez votre contenu ici, l'IA va le réécrire de façon professionnelle..."></textarea>
+            </div>
+            <button class="btn-generate" id="rewriteBtn" onclick="rewriteContent()" style="background:linear-gradient(to right,#237f4e,#1a5f3a)">✍️ Réécrire avec l'IA</button>
+            <p class="status-text" id="rewriteStatus"></p>
+        </div>
+
+        <div class="card" id="previewSection" style="display:none;">
+            <h2 class="card-title">📋 Aperçu du Post</h2>
+            <div class="form-group">
+                <label>Titre</label>
+                <input type="text" id="previewTitle" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Contenu</label>
+                <textarea id="contentArea" class="form-textarea" rows="8"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Image (optionnel)</label>
+                <div class="img-tabs">
+                    <button type="button" class="img-tab active" onclick="switchImgTab('upload', this)">📁 Uploader</button>
+                    <button type="button" class="img-tab" onclick="switchImgTab('ai', this)">🤖 Générer avec IA</button>
+                </div>
+
+                <div id="tabUpload">
+                    <input type="file" id="postImage" accept="image/*" class="form-input" style="padding:8px" onchange="previewUpload(this)">
+                    <img id="uploadPreview" style="display:none;max-width:100%;margin-top:10px;border-radius:8px;">
+                </div>
+
+                <div id="tabAi" style="display:none">
+                    <div style="display:flex;gap:8px;margin-bottom:10px">
+                        <input type="text" id="imgPrompt" class="form-input" placeholder="Ex: A futuristic financial city at night...">
+                        <button type="button" class="btn-gen-img" id="genImgBtn" onclick="generateImage()">✨ Générer</button>
+                    </div>
+                    <div id="imgStatus" style="font-size:13px;color:#667eea;min-height:18px"></div>
+                    <img id="aiImagePreview" style="display:none;max-width:100%;margin-top:10px;border-radius:8px;cursor:pointer" title="Cliquez pour désélectionner">
+                    <input type="hidden" id="aiImageUrl" value="">
+                </div>
+            </div>
+            <button class="btn-publish" onclick="publishPost()">✅ Publier le Post</button>
+        </div>
+    </div>
+</div>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: sans-serif; background-color: #f7f9fc; }
+.forums-content { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+.page-container { max-width: 900px; margin: 0 auto; }
+.generator-header { text-align: center; margin-bottom: 30px; }
+.generator-header h1 { color: #1a1a1b; font-size: 28px; font-weight: bold; margin-bottom: 8px; }
+.generator-header p { color: #7c7c7c; font-size: 14px; }
+.card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
+.card-title { color: #1a1a1b; font-size: 20px; font-weight: bold; margin-bottom: 20px; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; color: #2c3e50; font-size: 14px; font-weight: bold; margin-bottom: 8px; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: all 0.3s; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #237f4e; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.btn-generate { width: 100%; background: linear-gradient(to right, #667eea, #764ba2); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+.btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+.status-text { text-align: center; color: #237f4e; font-size: 13px; margin-top: 10px; min-height: 20px; }
+.btn-publish { width: 100%; background: #237f4e; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+.btn-publish:hover { background: #1a5f3a; }
+.img-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.img-tab { padding: 8px 16px; border: 1px solid #e0e0e0; border-radius: 20px; background: white; font-size: 13px; cursor: pointer; }
+.img-tab.active { background: #667eea; color: white; border-color: #667eea; }
+.btn-gen-img { background: linear-gradient(to right, #667eea, #764ba2); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+.btn-gen-img:disabled { opacity: 0.6; cursor: not-allowed; }
+.mode-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.mode-tab { padding: 10px 20px; border: 1px solid #e0e0e0; border-radius: 8px; background: white; font-size: 14px; font-weight: 600; cursor: pointer; color: #555; }
+.mode-tab.active { background: #237f4e; color: white; border-color: #237f4e; }
+</style>
+<script>
+function switchMode(mode, btn) {
+    document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    var aiCard = document.querySelector('.card:not(#rewriteCard):not(#previewSection)');
+    document.getElementById('rewriteCard').style.display = mode === 'rewrite' ? 'block' : 'none';
+    // hide/show the AI generate card
+    var cards = document.querySelectorAll('.card');
+    cards.forEach(function(c) {
+        if (c.id !== 'rewriteCard' && c.id !== 'previewSection') {
+            c.style.display = mode === 'ai' ? 'block' : 'none';
+        }
+    });
+    document.getElementById('previewSection').style.display = 'none';
+}
+
+async function rewriteContent() {
+    var text   = document.getElementById('rewriteInput').value.trim();
+    var title  = document.getElementById('rewriteTitle').value.trim();
+    var forum  = document.getElementById('rewriteForumSelect').value;
+    var btn    = document.getElementById('rewriteBtn');
+    var status = document.getElementById('rewriteStatus');
+
+    if (!text || !title || !forum) { alert('Remplissez le titre, le forum et le contenu.'); return; }
+
+    btn.disabled = true;
+    status.textContent = '⏳ Réécriture en cours...';
+
+    try {
+        var res  = await fetch('{{ path("api_ai_rewrite") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: text})
+        });
+        var data = await res.json();
+        document.getElementById('previewTitle').value = title;
+        document.getElementById('contentArea').value  = data.rewritten || text;
+        // set forum
+        document.getElementById('forumSelect').value = forum;
+        document.getElementById('previewSection').style.display = 'block';
+        document.getElementById('previewSection').scrollIntoView({behavior:'smooth'});
+        status.textContent = '✅ Contenu réécrit avec succès !';
+    } catch(e) {
+        status.textContent = '❌ Erreur lors de la réécriture.';
+    }
+    btn.disabled = false;
+}
+
+function switchImgTab(tab, btn) {
+    document.querySelectorAll('.img-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tabUpload').style.display = tab === 'upload' ? 'block' : 'none';
+    document.getElementById('tabAi').style.display     = tab === 'ai'     ? 'block' : 'none';
+}
+
+function previewUpload(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var img = document.getElementById('uploadPreview');
+        img.src = e.target.result;
+        img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function generateImage() {
+    var prompt = document.getElementById('imgPrompt').value.trim();
+    if (!prompt) { alert('Entrez un prompt pour générer une image.'); return; }
+
+    var btn    = document.getElementById('genImgBtn');
+    var status = document.getElementById('imgStatus');
+    btn.disabled = true;
+    status.textContent = '⏳ Génération de l\'image...';
+
+    try {
+        var res  = await fetch('{{ path("api_ai_generate_image") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: prompt })
+        });
+        var data = await res.json();
+        var url  = data.image_url || '';
+        if (!url) throw new Error('No image URL');
+
+        document.getElementById('aiImageUrl').value = url;
+        var preview = document.getElementById('aiImagePreview');
+        preview.src = url;
+        preview.style.display = 'block';
+        preview.onclick = function() {
+            preview.style.display = 'none';
+            document.getElementById('aiImageUrl').value = '';
+            document.getElementById('imgPrompt').value = '';
+        };
+        status.textContent = '✅ Image générée ! Cliquez dessus pour la retirer.';
+    } catch(e) {
+        status.textContent = '❌ Erreur lors de la génération de l\'image.';
+        console.error(e);
+    }
+    btn.disabled = false;
+}
+
+async function generatePost() {
+    var theme  = document.getElementById('themeField').value.trim();
+    var forum  = document.getElementById('forumSelect').value;
+    var tone   = document.getElementById('toneSelect').value;
+    var length = document.getElementById('lengthSelect').value;
+    var btn    = document.getElementById('genBtn');
+    var status = document.getElementById('statusText');
+
+    if (!theme || !forum) { alert('Veuillez remplir le thème et choisir un forum.'); return; }
+
+    btn.disabled = true;
+    status.textContent = '⏳ Génération en cours...';
+
+    try {
+        var res  = await fetch('{{ path("api_ai_generate_post") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({theme, tone, length})
+        });
+        var data = await res.json();
+
+        document.getElementById('previewTitle').value   = data.title   || theme;
+        document.getElementById('contentArea').value    = data.content || '';
+        document.getElementById('previewSection').style.display = 'block';
+        document.getElementById('previewSection').scrollIntoView({behavior:'smooth'});
+        status.textContent = '✅ Post généré avec succès !';
+    } catch(e) {
+        status.textContent = '❌ Erreur lors de la génération.';
+    }
+    btn.disabled = false;
+}
+
+async function publishPost() {
+    var forumId   = document.getElementById('forumSelect').value;
+    var title     = document.getElementById('previewTitle').value.trim();
+    var content   = document.getElementById('contentArea').value.trim();
+    var imageFile = document.getElementById('postImage').files[0];
+    var aiImgUrl  = document.getElementById('aiImageUrl').value;
+    if (!content || !title) { alert('Le titre et le contenu sont requis.'); return; }
+
+    var form = document.createElement('form');
+    form.method  = 'POST';
+    form.action  = '/forum/' + forumId + '/create-post';
+    form.enctype = 'multipart/form-data';
+
+    [['title', title], ['content', content], ['ai_image_url', aiImgUrl]].forEach(function([n, v]) {
+        var i = document.createElement('input');
+        i.type = 'hidden'; i.name = n; i.value = v;
+        form.appendChild(i);
+    });
+
+    if (imageFile) {
+        var dt = new DataTransfer();
+        dt.items.add(imageFile);
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file'; fileInput.name = 'image';
+        fileInput.files = dt.files;
+        form.appendChild(fileInput);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}

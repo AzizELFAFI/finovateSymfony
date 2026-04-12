@@ -49,6 +49,14 @@
       color: #0f766e;
     }
 
+    .forum-folder { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .f-arrow { font-size: 10px; transition: transform 0.2s; }
+    .f-arrow.open { transform: rotate(90deg); }
+    .forum-sub { display: none; padding-left: 10px; }
+    .forum-sub.show { display: block; }
+    .forum-sub a { display: block; padding: 7px 12px; font-size: 13px; border-left: 2px solid rgba(15,118,110,0.15); border-radius: 8px; margin-bottom: 1px; color: #111827; font-weight: 700; text-decoration: none; }
+    .forum-sub a:hover { border-left-color: #0f766e; background: rgba(16,185,129,0.08); color: #0f766e; }
+
     .card-shell {
       background: rgba(255, 255, 255, 0.92);
       border-radius: 18px;
@@ -142,6 +150,20 @@
                 <a href="{{ path('front_products') }}">Produits</a>
                 <a href="{{ path('front_ads') }}">Annonces</a>
                 <a href="#" id="nav-edit-profile">Modifier le profil</a>
+                <a href="#" class="forum-folder" onclick="toggleForums(event)">Forums <span class="f-arrow">▶</span></a>
+                <div class="forum-sub">
+                  <a href="{{ path('app_forum_home') }}">🏠 Tous les forums</a>
+                  <a href="{{ path('app_forum_my') }}">📁 Mes Forums</a>
+                  <a href="{{ path('app_forum_joined') }}">👥 Rejoints</a>
+                  <a href="{{ path('app_forum_shared') }}">📤 Partagés</a>
+                  <a href="{{ path('app_forum_alerts') }}">🔔 Alertes</a>
+                  <a href="{{ path('app_forum_badges') }}">🏆 Badges</a>
+                  <a href="{{ path('app_forum_recommendations') }}">⭐ Recommandations</a>
+                  <a href="{{ path('app_forum_personality') }}">🧠 Personnalité</a>
+                  <a href="{{ path('app_forum_ai_assistant') }}">💬 ChitChat</a>
+                  <a href="{{ path('forum_policy') }}">📜 Règles</a>
+                  <a href="{{ path('app_forum_blocked_users') }}">🚫 Bloqués</a>
+                </div>
                 <a href="{{ path('front_logout') }}">Déconnexion</a>
           </div>
         </div>
@@ -288,6 +310,7 @@
 
   <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
   <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script>function toggleForums(e){e.preventDefault();var b=e.currentTarget;var s=b.nextElementSibling;var a=b.querySelector('.f-arrow');s.classList.toggle('show');a.classList.toggle('open');b.classList.toggle('active');}</script>
 
   <script>
     $(document).ready(function() {

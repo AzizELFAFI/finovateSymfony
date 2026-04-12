@@ -1,0 +1,52 @@
+{% extends 'forum/_layout.html.twig' %}
+{% block title %}Modifier le Forum{% endblock %}
+{% block content %}
+<div class="dialog-wrapper">
+    <div class="dialog-overlay" onclick="window.location.href='{{ path('app_forum_my') }}'"></div>
+    <div class="dialog-container">
+        <div class="dialog-header">
+            <h2>Modifier le forum</h2>
+            <a href="{{ path('app_forum_my') }}" class="btn-close">x</a>
+        </div>
+        <form method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Nom du forum</label>
+                <input type="text" name="title" value="{{ forum.title }}" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="3">{{ forum.description }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Image (laisser vide pour garder l'actuelle)</label>
+                {% if forum.imageUrl %}
+                <img src="/{{ forum.imageUrl }}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px">
+                {% endif %}
+                <input type="file" name="image" accept="image/*">
+            </div>
+            <div class="dialog-actions">
+                <a href="{{ path('app_forum_my') }}" class="btn-cancel">Annuler</a>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:sans-serif; background:#f7f9fc; }
+.dialog-wrapper { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:100; }
+.dialog-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); }
+.dialog-container { position:relative; background:white; border-radius:16px; padding:30px; width:520px; max-width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.25); z-index:101; }
+.dialog-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.dialog-header h2 { font-size:20px; font-weight:bold; }
+.btn-close { background:#eee; border:none; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; text-decoration:none; color:#333; font-size:16px; }
+.form-group { margin-bottom:18px; }
+.form-group label { font-weight:600; font-size:14px; display:block; margin-bottom:6px; }
+input[type=text], textarea, input[type=file] { width:100%; padding:11px; border-radius:10px; border:1px solid #ddd; background:#fafafa; font-family:inherit; font-size:14px; }
+input:focus, textarea:focus { border-color:#237f4e; outline:none; }
+.dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+.btn-submit { background:#237f4e; color:white; border:none; padding:10px 25px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+.btn-cancel { background:#eee; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; text-decoration:none; color:#333; font-size:14px; }
+</style>
+{% endblock %}
+

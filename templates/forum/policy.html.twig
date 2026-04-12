@@ -1,0 +1,104 @@
+{% extends 'forum/_layout.html.twig' %}
+{% block title %}Règles de la Communauté — FINOVATE{% endblock %}
+
+{% block content %}
+<div class="forums-content">
+    <div class="policy-wrap">
+
+        <div class="policy-hero">
+            <div class="policy-icon">📜</div>
+            <h1>Règles de la Communauté</h1>
+            <p>En utilisant FINOVATE, vous vous engagez à respecter ces règles pour maintenir un espace d'échange sain et fiable.</p>
+        </div>
+
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-emoji">🤝</div>
+                <h2>Respect et bienveillance</h2>
+                <p>Tout contenu offensant, discriminatoire ou harcelant est interdit. Traitez chaque membre avec respect, même en cas de désaccord.</p>
+            </div>
+            <div class="rule-card">
+                <div class="rule-emoji">📊</div>
+                <h2>Informations vérifiées</h2>
+                <p>Ne partagez que des informations sourcées. La désinformation financière peut causer des préjudices réels à la communauté.</p>
+            </div>
+            <div class="rule-card">
+                <div class="rule-emoji">🚫</div>
+                <h2>Pas de spam</h2>
+                <p>Les publications répétitives, hors-sujet ou publicitaires seront supprimées. Chaque post doit apporter une valeur réelle.</p>
+            </div>
+            <div class="rule-card">
+                <div class="rule-emoji">🔒</div>
+                <h2>Confidentialité</h2>
+                <p>Ne partagez jamais d'informations personnelles d'autres membres sans leur consentement explicite.</p>
+            </div>
+        </div>
+
+        <div class="consequences-card">
+            <h2>⚖️ Conséquences des infractions</h2>
+            <p>FINOVATE applique une politique progressive et transparente :</p>
+            <div class="steps-row">
+                <div class="step step-1">
+                    <div class="step-num">1</div>
+                    <div class="step-icon">📧</div>
+                    <h3>Avertissement</h3>
+                    <p>Un email vous est envoyé avec la raison de l'infraction.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step step-2">
+                    <div class="step-num">2</div>
+                    <div class="step-icon">⏱</div>
+                    <h3>Restriction temporaire</h3>
+                    <p>Certaines actions sont bloquées pour une durée déterminée.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step step-3">
+                    <div class="step-num">3</div>
+                    <div class="step-icon">🚫</div>
+                    <h3>Bannissement définitif</h3>
+                    <p>Votre compte est définitivement banni sans possibilité de retour.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="policy-footer">
+            <p>Ces règles peuvent être mises à jour. Pour toute question : <a href="mailto:support@finovate.com">support@finovate.com</a></p>
+        </div>
+
+    </div>
+</div>
+
+<style>
+.forums-content { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+.policy-wrap { max-width: 860px; margin: 0 auto; }
+.policy-hero { text-align: center; margin-bottom: 40px; }
+.policy-icon { font-size: 52px; margin-bottom: 14px; }
+.policy-hero h1 { font-size: 28px; font-weight: 800; color: #1a1a1b; margin-bottom: 10px; }
+.policy-hero p { color: #666; font-size: 15px; max-width: 560px; margin: 0 auto; line-height: 1.7; }
+.rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+.rule-card { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid #f0f0f0; border-top: 3px solid #237f4e; }
+.rule-emoji { font-size: 28px; margin-bottom: 12px; }
+.rule-card h2 { font-size: 16px; font-weight: 700; color: #1a1a1b; margin-bottom: 8px; }
+.rule-card p { font-size: 13px; color: #666; line-height: 1.7; }
+.consequences-card { background: white; border-radius: 14px; padding: 32px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 24px; }
+.consequences-card h2 { font-size: 20px; font-weight: 700; color: #1a1a1b; margin-bottom: 8px; }
+.consequences-card > p { color: #666; font-size: 14px; margin-bottom: 28px; }
+.steps-row { display: flex; align-items: flex-start; gap: 12px; }
+.step { flex: 1; border-radius: 12px; padding: 20px; position: relative; }
+.step-1 { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.step-2 { background: #fefce8; border: 1px solid #fde68a; }
+.step-3 { background: #fff1f2; border: 1px solid #fecdd3; }
+.step-num { position: absolute; top: -10px; left: 16px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: white; }
+.step-1 .step-num { background: #237f4e; }
+.step-2 .step-num { background: #d97706; }
+.step-3 .step-num { background: #dc2626; }
+.step-icon { font-size: 24px; margin-bottom: 8px; margin-top: 4px; }
+.step h3 { font-size: 14px; font-weight: 700; color: #1a1a1b; margin-bottom: 6px; }
+.step p { font-size: 12px; color: #666; line-height: 1.6; }
+.step-arrow { font-size: 22px; color: #ccc; padding-top: 36px; flex-shrink: 0; }
+.policy-footer { text-align: center; color: #999; font-size: 13px; padding: 16px; }
+.policy-footer a { color: #237f4e; }
+@media (max-width: 700px) { .rules-grid { grid-template-columns: 1fr; } .steps-row { flex-direction: column; } .step-arrow { display: none; } }
+</style>
+{% endblock %}
+

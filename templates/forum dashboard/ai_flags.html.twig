@@ -1,0 +1,173 @@
+{% extends 'forum dashboard/_layout.html.twig' %}
+{% block title %}IA Flags — FINOVATE Admin{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h1 class="page-title">🤖 Contenus signalés par l'IA</h1>
+    <button class="btn-scan" id="scanBtn" onclick="runScan()">🔍 Lancer un scan</button>
+</div>
+
+<div class="filter-tabs">
+    <a href="?filter=all"            class="ftab {% if filter == 'all' %}active{% endif %}">Tous</a>
+    <a href="?filter=unreviewed"     class="ftab {% if filter == 'unreviewed' %}active{% endif %}">Non examinés</a>
+    <a href="?filter=misinformation" class="ftab {% if filter == 'misinformation' %}active{% endif %}">📰 Désinformation</a>
+    <a href="?filter=toxic"          class="ftab {% if filter == 'toxic' %}active{% endif %}">☠️ Toxique</a>
+</div>
+
+{% if items is empty %}
+    <div class="empty-state">✅ Aucun contenu signalé pour ce filtre.</div>
+{% else %}
+<div class="flags-table">
+    {% for flag in items %}
+    <div class="flag-card sev-{{ flag.severity }}" onclick="window.location.href='{{ path('admin_view_flag', {id: flag.id}) }}'" style="cursor:pointer">>
+        <div class="flag-main">
+            <div class="flag-sev">
+                {% if flag.severity == 'high' %}<span class="sev-badge high">🔴 ÉLEVÉ</span>
+                {% elseif flag.severity == 'medium' %}<span class="sev-badge medium">🟡 MOYEN</span>
+                {% else %}<span class="sev-badge low">🟢 FAIBLE</span>{% endif %}
+            </div>
+            <div class="flag-info">
+                <div class="flag-type-label">{{ flag.flagType == 'misinformation' ? '📰 Désinformation' : '☠️ Toxique' }} — {{ flag.contentType|capitalize }} #{{ flag.contentId }}</div>
+                <div class="flag-preview">{{ flag.verdict|slice(0, 100) }}{% if flag.verdict|length > 100 %}…{% endif %}</div>
+            </div>
+            <div class="flag-meta">
+                <div class="flag-date">{{ flag.detectedAt|date('d/m/Y H:i') }}</div>
+                <div class="flag-status">
+                    {% if flag.ignored %}<span class="status-ignored">Ignoré</span>
+                    {% elseif flag.reviewed %}<span class="status-reviewed">Examiné</span>
+                    {% else %}<span class="status-new">Nouveau</span>{% endif %}
+                </div>
+            </div>
+            <div class="flag-btns" onclick="event.stopPropagation()">
+                <form method="post" action="{{ path('admin_ignore_flag', {id: flag.id}) }}" style="display:inline">
+                    <button class="btn-sm btn-ghost">Ignorer</button>
+                </form>
+                <button class="btn-sm btn-danger" onclick="openDeleteFromFlag('{{ flag.contentType }}', {{ flag.contentId }}, '{{ flag.flagType|e('js') }}')">🗑️ Supprimer</button>
+            </div>
+        </div>
+        <div class="flag-expand" id="expand-{{ flag.id }}" style="display:none">
+            <div class="expand-verdict"><strong>Verdict IA :</strong> {{ flag.verdict }}</div>
+            {% if flag.issues %}
+            <div class="expand-issues">
+                <strong>Problèmes détectés :</strong>
+                <ul>{% for issue in flag.issues %}<li>{{ issue }}</li>{% endfor %}</ul>
+            </div>
+            {% endif %}
+            <div class="expand-meta">Détecté le {{ flag.detectedAt|date('d/m/Y à H:i') }} — Modèle : llama-3.3-70b</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div id="scanResult" style="display:none" class="scan-result"></div>
+
+{# Delete modal #}
+<div class="modal-overlay" id="deleteModal" style="display:none">
+    <div class="modal">
+        <div class="modal-header"><span>🗑️ Supprimer le contenu signalé</span><button onclick="closeModal()" class="modal-close">×</button></div>
+        <p class="modal-sub">Raison de suppression :</p>
+        <select id="deleteReason" class="reason-select">
+            <option value="Misinformation / Fausses informations">Misinformation / Fausses informations</option>
+            <option value="Contenu toxique ou offensant">Contenu toxique ou offensant</option>
+            <option value="Spam ou contenu répétitif">Spam ou contenu répétitif</option>
+            <option value="Violation des règles de la communauté">Violation des règles de la communauté</option>
+            <option value="Contenu financier trompeur">Contenu financier trompeur</option>
+        </select>
+        <div class="modal-footer">
+            <button onclick="closeModal()" class="btn-cancel">Annuler</button>
+            <button onclick="confirmDelete()" class="btn-confirm">Confirmer →</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.page-title { font-size: 22px; font-weight: 700; color: #1a1a1b; }
+.btn-scan { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.filter-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+.ftab { padding: 7px 16px; border-radius: 20px; font-size: 13px; color: #64748b; text-decoration: none; background: white; border: 1px solid #e5e7eb; }
+.ftab.active { background: rgba(35,127,78,0.2); color: #237f4e; border-color: rgba(35,127,78,0.4); }
+.empty-state { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 40px; text-align: center; color: #64748b; }
+.flags-table { display: flex; flex-direction: column; gap: 8px; }
+.flag-card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; cursor: pointer; transition: border-color 0.2s; }
+.flag-card:hover { border-color: #4a5568; }
+.flag-card.sev-high { border-left: 3px solid #ef4444; }
+.flag-card.sev-medium { border-left: 3px solid #f59e0b; }
+.flag-card.sev-low { border-left: 3px solid #22c55e; }
+.flag-main { display: flex; align-items: center; gap: 14px; padding: 14px 18px; }
+.sev-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+.sev-badge.high { background: #fef2f2; color: #dc2626; }
+.sev-badge.medium { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.sev-badge.low { background: rgba(34,197,94,0.15); color: #237f4e; }
+.flag-info { flex: 1; }
+.flag-type-label { font-size: 13px; font-weight: 600; color: #1a1a1b; }
+.flag-preview { font-size: 12px; color: #64748b; margin-top: 3px; }
+.flag-meta { text-align: right; }
+.flag-date { font-size: 11px; color: #4a5568; }
+.flag-status { margin-top: 4px; }
+.status-new { font-size: 11px; background: #fef2f2; color: #dc2626; padding: 2px 8px; border-radius: 10px; }
+.status-reviewed { font-size: 11px; background: #f0fdf4; color: #237f4e; padding: 2px 8px; border-radius: 10px; }
+.status-ignored { font-size: 11px; background: #f0fdf4; color: #64748b; padding: 2px 8px; border-radius: 10px; }
+.flag-btns { display: flex; gap: 6px; }
+.btn-sm { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; }
+.btn-ghost { background: #f0fdf4; color: #64748b; }
+.btn-danger { background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.3) !important; }
+.flag-expand { padding: 14px 18px; border-top: 1px solid #e5e7eb; background: #f0fdf4; }
+.expand-verdict { font-size: 13px; color: #1a1a1b; margin-bottom: 10px; }
+.expand-issues ul { margin: 6px 0 0 16px; }
+.expand-issues li { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+.expand-meta { font-size: 11px; color: #4a5568; margin-top: 10px; }
+.scan-result { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-size: 14px; background: #f0fdf4; border: 1px solid rgba(35,127,78,0.4); color: #237f4e; }
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: white; border: 1px solid #e5e7eb; border-radius: 14px; width: 420px; padding: 24px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: #1a1a1b; margin-bottom: 14px; }
+.modal-close { background: none; border: none; color: #64748b; font-size: 20px; cursor: pointer; }
+.modal-sub { font-size: 13px; color: #64748b; margin-bottom: 10px; }
+.reason-select { width: 100%; background: #f0fdf4; border: 1px solid #e5e7eb; color: #1a1a1b; padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+.btn-cancel { background: #f0fdf4; color: #64748b; border: 1px solid #e5e7eb; padding: 9px 18px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.btn-confirm { background: #ef4444; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+</style>
+
+<script>
+var delType = '', delId = 0;
+
+function toggleExpand(id) {
+    var el = document.getElementById('expand-' + id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function openDeleteFromFlag(type, id, flagType) {
+    delType = type; delId = id;
+    var sel = document.getElementById('deleteReason');
+    if (flagType === 'misinformation') sel.value = 'Misinformation / Fausses informations';
+    else sel.value = 'Contenu toxique ou offensant';
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('deleteModal').style.display = 'none'; }
+
+async function confirmDelete() {
+    var reason = document.getElementById('deleteReason').value;
+    var form = new FormData(); form.append('reason', reason);
+    var res  = await fetch('/forum/admin/delete/' + delType + '/' + delId, { method: 'POST', body: form });
+    var data = await res.json();
+    if (data.success) { closeModal(); location.reload(); }
+    else alert('Erreur : ' + data.message);
+}
+
+async function runScan() {
+    var btn = document.getElementById('scanBtn');
+    btn.disabled = true; btn.textContent = '⏳ Scan...';
+    var res  = await fetch('{{ path("admin_ai_scan") }}', { method: 'POST' });
+    var data = await res.json();
+    var el   = document.getElementById('scanResult');
+    el.style.display = 'block';
+    el.textContent = '✅ ' + data.scanned + ' analysés, ' + data.flagged + ' signalés.';
+    setTimeout(() => location.reload(), 1500);
+    btn.disabled = false; btn.textContent = '🔍 Lancer un scan';
+}
+</script>
+{% endblock %}

@@ -5,13 +5,13 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 use Doctrine\Common\Collections\Collection;
-use App\Entity\User_badges;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity]
+#[ORM\Table(name: 'user')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
 
@@ -224,113 +224,89 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->numero_carte = $value;
     }
 
-    #[ORM\OneToMany(mappedBy: "creator_id", targetEntity: Forums::class)]
-    private Collection $forumss;
+    #[ORM\OneToMany(mappedBy: "creator", targetEntity: Forum::class)]
+    private Collection $forums;
 
-        public function getForumss(): Collection
+        public function getForums(): Collection
         {
-            return $this->forumss;
+            return $this->forums;
         }
     
-        public function addForums(Forums $forums): self
+        public function addForum(Forum $forum): self
         {
-            if (!$this->forumss->contains($forums)) {
-                $this->forumss[] = $forums;
-                $forums->setCreator_id($this);
+            if (!$this->forums->contains($forum)) {
+                $this->forums[] = $forum;
+                $forum->setCreator($this);
             }
     
             return $this;
         }
     
-        public function removeForums(Forums $forums): self
+        public function removeForum(Forum $forum): self
         {
-            if ($this->forumss->removeElement($forums)) {
-                // set the owning side to null (unless already changed)
-                if ($forums->getCreator_id() === $this) {
-                    $forums->setCreator_id(null);
+            if ($this->forums->removeElement($forum)) {
+                if ($forum->getCreator() === $this) {
+                    $forum->setCreator(null);
                 }
             }
     
             return $this;
         }
 
-    #[ORM\OneToMany(mappedBy: "author_id", targetEntity: Posts::class)]
-    private Collection $postss;
+    #[ORM\OneToMany(mappedBy: "author", targetEntity: Post::class)]
+    private Collection $posts;
 
-        public function getPostss(): Collection
+        public function getPosts(): Collection
         {
-            return $this->postss;
+            return $this->posts;
         }
     
-        public function addPosts(Posts $posts): self
+        public function addPost(Post $post): self
         {
-            if (!$this->postss->contains($posts)) {
-                $this->postss[] = $posts;
-                $posts->setAuthor_id($this);
+            if (!$this->posts->contains($post)) {
+                $this->posts[] = $post;
+                $post->setAuthor($this);
             }
     
             return $this;
         }
     
-        public function removePosts(Posts $posts): self
+        public function removePost(Post $post): self
         {
-            if ($this->postss->removeElement($posts)) {
-                // set the owning side to null (unless already changed)
-                if ($posts->getAuthor_id() === $this) {
-                    $posts->setAuthor_id(null);
+            if ($this->posts->removeElement($post)) {
+                if ($post->getAuthor() === $this) {
+                    $post->setAuthor(null);
                 }
             }
     
             return $this;
         }
 
-    #[ORM\OneToMany(mappedBy: "author_id", targetEntity: Comments::class)]
-    private Collection $commentss;
+    #[ORM\OneToMany(mappedBy: "author", targetEntity: Comment::class)]
+    private Collection $comments;
 
-    #[ORM\OneToMany(mappedBy: "user_id", targetEntity: Forum_recommendations::class)]
-    private Collection $forum_recommendationss;
+    public function getComments(): Collection
+    {
+        return $this->comments;
+    }
 
-        public function getForum_recommendationss(): Collection
-        {
-            return $this->forum_recommendationss;
-        }
-    
-        public function addForum_recommendations(Forum_recommendations $forum_recommendations): self
-        {
-            if (!$this->forum_recommendationss->contains($forum_recommendations)) {
-                $this->forum_recommendationss[] = $forum_recommendations;
-                $forum_recommendations->setUser_id($this);
-            }
-    
-            return $this;
-        }
-    
-        public function removeForum_recommendations(Forum_recommendations $forum_recommendations): self
-        {
-            if ($this->forum_recommendationss->removeElement($forum_recommendations)) {
-                // set the owning side to null (unless already changed)
-                if ($forum_recommendations->getUser_id() === $this) {
-                    $forum_recommendations->setUser_id(null);
-                }
-            }
-    
-            return $this;
-        }
+    #[ORM\OneToMany(mappedBy: "user", targetEntity: ForumRecommendation::class)]
+    private Collection $forumRecommendations;
 
-    #[ORM\OneToMany(mappedBy: "user_id", targetEntity: Shared_posts::class)]
-    private Collection $shared_postss;
+    #[ORM\OneToMany(mappedBy: "user", targetEntity: SharedPost::class)]
+    private Collection $sharedPosts;
 
-    #[ORM\OneToMany(mappedBy: "user_id", targetEntity: User_forum::class)]
-    private Collection $user_forums;
+    #[ORM\OneToMany(mappedBy: "user", targetEntity: UserForum::class)]
+    private Collection $userForums;
 
-    #[ORM\OneToMany(mappedBy: "user_id", targetEntity: User_interactions::class)]
-    private Collection $user_interactionss;
+    #[ORM\OneToMany(mappedBy: "user", targetEntity: UserInteraction::class)]
+    private Collection $userInteractions;
 
-    #[ORM\OneToMany(mappedBy: "user_id", targetEntity: Votes::class)]
-    private Collection $votess;
+    #[ORM\OneToMany(mappedBy: "user", targetEntity: Vote::class)]
+    private Collection $votes;
 
-    #[ORM\OneToMany(mappedBy: "user_id", targetEntity: User_badges::class)]
-    private Collection $user_badgess;
+    #[ORM\OneToMany(mappedBy: "user", targetEntity: UserBadge::class)]
+    private Collection $userBadges;
 
     /**
      * @var Collection<int, UserAdClick>
@@ -340,6 +316,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct()
     {
+        $this->forums = new ArrayCollection();
+        $this->posts = new ArrayCollection();
+        $this->comments = new ArrayCollection();
+        $this->forumRecommendations = new ArrayCollection();
+        $this->sharedPosts = new ArrayCollection();
+        $this->userForums = new ArrayCollection();
+        $this->userInteractions = new ArrayCollection();
+        $this->votes = new ArrayCollection();
+        $this->userBadges = new ArrayCollection();
         $this->userAdClicks = new ArrayCollection();
     }
 

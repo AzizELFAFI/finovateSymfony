@@ -1,0 +1,231 @@
+{% extends 'forum dashboard/_layout.html.twig' %}
+{% block title %}Modération — FINOVATE Admin{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <h1 class="page-title">🛡️ Modération du contenu</h1>
+</div>
+
+{# Tabs #}
+<div class="tabs">
+    <a href="?type=forum&sort={{ sort }}&q={{ search }}" class="tab {% if type == 'forum' %}active{% endif %}">📁 Forums</a>
+    <a href="?type=post&sort={{ sort }}&q={{ search }}" class="tab {% if type == 'post' %}active{% endif %}">📝 Posts</a>
+    <a href="?type=comment&sort={{ sort }}&q={{ search }}" class="tab {% if type == 'comment' %}active{% endif %}">💬 Commentaires</a>
+</div>
+
+{# Filters #}
+<div class="filters-bar">
+    <form method="get" class="search-form">
+        <input type="hidden" name="type" value="{{ type }}">
+        <input type="text" name="q" value="{{ search }}" placeholder="Rechercher..." class="search-input">
+        <button type="submit" class="btn-filter">🔍</button>
+    </form>
+    <div class="sort-btns">
+        <a href="?type={{ type }}&sort=recent&q={{ search }}" class="sort-btn {% if sort == 'recent' %}active{% endif %}">Récent</a>
+        <a href="?type={{ type }}&sort=oldest&q={{ search }}" class="sort-btn {% if sort == 'oldest' %}active{% endif %}">Ancien</a>
+        <a href="?type={{ type }}&sort=author&q={{ search }}" class="sort-btn {% if sort == 'author' %}active{% endif %}">Auteur A-Z</a>
+        <a href="?type={{ type }}&sort=alpha&q={{ search }}" class="sort-btn {% if sort == 'alpha' %}active{% endif %}">Titre A-Z</a>
+    </div>
+</div>
+
+{# Table #}
+<div class="table-card">
+    {% if items is empty %}
+        <div class="empty-state">Aucun contenu trouvé.</div>
+    {% else %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>{{ type == 'comment' ? 'Contenu' : 'Titre' }}</th>
+                <th>Auteur</th>
+                <th>Date</th>
+                {% if type != 'comment' %}<th>Posts</th>{% endif %}
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="td-id">{{ item.id }}</td>
+                <td class="td-title">
+                    {% if type == 'comment' %}
+                        <a href="{{ path('admin_view_comment', {id: item.id}) }}" class="content-link">{{ item.content|slice(0, 80) }}{% if item.content|length > 80 %}…{% endif %}</a>
+                    {% else %}
+                        <a href="{{ path(type == 'forum' ? 'admin_view_forum' : 'admin_view_post', {id: item.id}) }}" class="content-link">{{ item.title }}</a>
+                    {% endif %}
+                </td>
+                <td class="td-author">
+                    {% if type == 'forum' and item.creator %}
+                        <span class="avatar-chip">{{ item.creator.firstname|first|upper }}</span>
+                        {{ item.creator.firstname }} {{ item.creator.lastname }}
+                    {% elseif item.author is defined and item.author %}
+                        <span class="avatar-chip">{{ item.author.firstname|first|upper }}</span>
+                        {{ item.author.firstname }} {{ item.author.lastname }}
+                    {% else %}—{% endif %}
+                </td>
+                <td class="td-date">{{ item.createdAt|date('d/m/Y') }}</td>
+                {% if type != 'comment' %}
+                <td class="td-count">
+                    {% if type == 'forum' %}{{ item.posts|length }}{% else %}{{ item.comments|length }}{% endif %}
+                </td>
+                {% endif %}
+                <td>
+                    <button class="btn-delete" onclick="openDeleteModal('{{ type }}', {{ item.id }}, '{{ type == 'comment' ? item.content|slice(0,40)|e('js') : item.title|e('js') }}')">🗑️ Supprimer</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+
+{# Pagination #}
+{% if pages > 1 %}
+<div class="pagination">
+    {% for p in 1..pages %}
+        <a href="?type={{ type }}&sort={{ sort }}&q={{ search }}&page={{ p }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{# Delete Modal #}
+<div class="modal-overlay" id="deleteModal" style="display:none">
+    <div class="modal">
+        <div class="modal-header">
+            <span>🗑️ Supprimer le contenu</span>
+            <button onclick="closeModal()" class="modal-close">×</button>
+        </div>
+        <p class="modal-sub">Sélectionnez une raison pour notifier l'auteur :</p>
+        <p class="modal-content-title" id="modalContentTitle"></p>
+        <div class="reasons-list">
+            {% for reason in reasons %}
+            <label class="reason-option" onclick="updateReasonPreview('{{ reason.value|e('js') }}')">
+                <input type="radio" name="reason" value="{{ reason.value }}" {% if loop.first %}checked{% endif %}>
+                <span>{{ reason.value }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <div id="reasonPreview" class="reason-preview"></div>
+        <div class="modal-info">
+            ✉ Un email personnalisé sera envoyé à l'auteur<br>
+            🔔 Une alerte in-app sera créée
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal()" class="btn-cancel">Annuler</button>
+            <button onclick="confirmDelete()" class="btn-confirm">Confirmer la suppression →</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header { margin-bottom: 24px; }
+.page-title { font-size: 22px; font-weight: 700; color: #1a1a1b; }
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 0; }
+.tab { padding: 10px 20px; color: #64748b; text-decoration: none; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab.active { color: #237f4e; border-bottom-color: #237f4e; }
+.filters-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; }
+.search-form { display: flex; gap: 8px; }
+.search-input { background: white; border: 1px solid #e5e7eb; color: #1a1a1b; padding: 8px 14px; border-radius: 8px; font-size: 13px; width: 240px; outline: none; }
+.btn-filter { background: #237f4e; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+.sort-btns { display: flex; gap: 6px; }
+.sort-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; color: #64748b; text-decoration: none; background: white; border: 1px solid #e5e7eb; }
+.sort-btn.active { background: rgba(35,127,78,0.2); color: #237f4e; border-color: rgba(35,127,78,0.4); }
+.table-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb; }
+.data-table td { padding: 12px 16px; font-size: 13px; color: #1a1a1b; border-bottom: 1px solid #1e2130; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #f0fdf4; }
+.td-id { color: #4a5568; font-size: 12px; width: 40px; }
+.td-title { max-width: 300px; }
+.td-author { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.td-date { color: #64748b; white-space: nowrap; }
+.td-count { color: #64748b; text-align: center; }
+.avatar-chip { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+.btn-delete { background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.btn-delete:hover { background: rgba(239,68,68,0.2); }
+.content-link { color: #818cf8; text-decoration: none; font-weight: 500; }
+.content-link:hover { color: #a5b4fc; text-decoration: underline; }
+.empty-state { padding: 40px; text-align: center; color: #64748b; font-size: 14px; }
+.pagination { display: flex; gap: 6px; margin-top: 16px; justify-content: center; }
+.page-btn { padding: 6px 12px; border-radius: 6px; font-size: 13px; color: #64748b; text-decoration: none; background: white; border: 1px solid #e5e7eb; }
+.page-btn.active { background: rgba(35,127,78,0.2); color: #237f4e; border-color: rgba(35,127,78,0.4); }
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: white; border: 1px solid #e5e7eb; border-radius: 14px; width: 480px; max-width: 95vw; padding: 24px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: #1a1a1b; margin-bottom: 12px; }
+.modal-close { background: none; border: none; color: #64748b; font-size: 20px; cursor: pointer; }
+.modal-sub { font-size: 13px; color: #64748b; margin-bottom: 8px; }
+.modal-content-title { font-size: 13px; color: #667eea; margin-bottom: 14px; font-style: italic; }
+.reasons-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.reason-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e5e7eb; cursor: pointer; font-size: 13px; color: #1a1a1b; }
+.reason-option:has(input:checked) { border-color: rgba(35,127,78,0.5); background: rgba(35,127,78,0.1); }
+.reason-option input { accent-color: #237f4e; }
+.reason-preview { background: #f0fdf4; border: 1px solid #b7dfca; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: #555; line-height: 1.6; min-height: 40px; display: none; }
+.reason-preview.visible { display: block; }
+.modal-footer { display: flex; justify-content: space-between; gap: 10px; }
+.btn-cancel { background: #f0fdf4; color: #64748b; border: 1px solid #e5e7eb; padding: 10px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.btn-confirm { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.reason-preview { background: rgba(35,127,78,0.08); border: 1px solid rgba(35,127,78,0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: #64748b; line-height: 1.6; display: none; }
+.reason-preview.visible { display: block; }
+</style>
+
+<script>
+var deleteType = '', deleteId = 0;
+
+var reasonPreviews = {
+    'Misinformation / Fausses informations': '📧 Email envoyé : "Votre contenu contenait des informations financières non vérifiées. Sur FINOVATE, toute information doit être sourcée et vérifiable."',
+    'Contenu toxique ou offensant': '📧 Email envoyé : "Votre contenu a été jugé offensant ou toxique envers d\'autres membres. FINOVATE exige le respect mutuel."',
+    'Spam ou contenu répétitif': '📧 Email envoyé : "Votre contenu a été identifié comme spam. Chaque publication doit apporter une valeur réelle à la communauté."',
+    'Violation des règles de la communauté': '📧 Email envoyé : "Votre contenu a violé les règles de notre communauté. Veuillez relire notre politique."',
+    'Contenu financier trompeur': '📧 Email envoyé : "Votre contenu contenait des informations financières trompeuses pouvant induire les membres en erreur."',
+    'Autre': '📧 Email envoyé : "Votre contenu ne respectait pas les standards de notre communauté."',
+};
+
+function updateReasonPreview(reason) {
+    var el = document.getElementById('reasonPreview');
+    var msg = reasonPreviews[reason] || '';
+    if (msg) {
+        el.textContent = msg;
+        el.classList.add('visible');
+    } else {
+        el.classList.remove('visible');
+    }
+}
+
+// Init preview on modal open
+function openDeleteModal(type, id, title) {
+    deleteType = type;
+    deleteId   = id;
+    document.getElementById('modalContentTitle').textContent = '"' + title + '"';
+    document.getElementById('deleteModal').style.display = 'flex';
+    // Show preview for first reason
+    var firstRadio = document.querySelector('input[name="reason"]');
+    if (firstRadio) updateReasonPreview(firstRadio.value);
+}
+
+function closeModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+async function confirmDelete() {
+    var reason = document.querySelector('input[name="reason"]:checked')?.value || '';
+    var form   = new FormData();
+    form.append('reason', reason);
+
+    try {
+        var res  = await fetch('/forum/admin/delete/' + deleteType + '/' + deleteId, { method: 'POST', body: form });
+        var data = await res.json();
+        if (data.success) {
+            closeModal();
+            location.reload();
+        } else {
+            alert('Erreur : ' + data.message);
+        }
+    } catch(e) {
+        alert('Erreur de connexion.');
+    }
+}
+</script>
+{% endblock %}

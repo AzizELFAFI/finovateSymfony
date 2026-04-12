@@ -1,0 +1,58 @@
+{% set cr = app.request.attributes.get('_route') %}
+{% set forumOpen = cr in ['admin_overview','admin_view_forum','admin_view_post','admin_view_comment','admin_users','admin_user_detail','admin_ai_flags','admin_view_flag','admin_admin_policy','admin_reports','admin_badges','admin_badge_create','admin_badge_delete','admin_treat_report','admin_delete_content','admin_ban_user','admin_unban_user','admin_restrict_user','admin_unrestrict_user','admin_warn_user','admin_user_activity','admin_ai_scan','admin_ignore_flag','admin_liste_posts','admin_liste_comments','admin_post_delete','admin_comment_delete','backoffice_forums'] %}
+
+<aside id="sidebar" class="sidebar">
+    <div class="logo-area">
+        <a href="{{ path('backoffice_dashboard') }}" class="d-inline-flex align-items-center text-decoration-none">
+            <span class="logo-text ms-2 fw-bold" style="font-size: 1.25rem; letter-spacing: 0.2px;">Finovate</span>
+        </a>
+    </div>
+    <ul class="nav flex-column">
+        <li class="px-4 py-2"><small class="nav-text">Banque Virtuelle</small></li>
+        <li><a class="nav-link {% if cr == 'backoffice_dashboard' %}active{% endif %}" href="{{ path('backoffice_dashboard') }}"><i class="ti ti-home"></i><span class="nav-text">Vue d'ensemble</span></a></li>
+        <li><a class="nav-link {% if cr starts with 'backoffice_user' %}active{% endif %}" href="{{ path('backoffice_users') }}"><i class="ti ti-users"></i><span class="nav-text">Gestion Utilisateurs</span></a></li>
+        <li><a class="nav-link {% if cr starts with 'backoffice_project' %}active{% endif %}" href="{{ path('backoffice_projects') }}"><i class="ti ti-briefcase"></i><span class="nav-text">Gestion Projets</span></a></li>
+        <li><a class="nav-link {% if cr starts with 'backoffice_product' %}active{% endif %}" href="{{ path('backoffice_products') }}"><i class="ti ti-shopping-cart"></i><span class="nav-text">Produits</span></a></li>
+        <li><a class="nav-link {% if cr starts with 'backoffice_ad' %}active{% endif %}" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
+
+        <li class="px-4 pt-4 pb-2"><small class="nav-text">Forum</small></li>
+
+        <li>
+            <button class="nav-link folder-toggle w-100 text-start border-0 bg-transparent {% if forumOpen %}active{% endif %}"
+                    onclick="toggleForumFolder(this)" type="button"
+                    style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <i class="ti ti-messages"></i>
+                <span class="nav-text">Gestion Forums</span>
+                <i class="ti ti-chevron-{% if forumOpen %}down{% else %}right{% endif %} ms-auto folder-arrow" id="forumArrow"></i>
+            </button>
+        </li>
+        <div id="forumChildren" style="{% if not forumOpen %}display:none{% endif %};padding-left:16px;">
+            <li><a class="nav-link {% if cr == 'backoffice_forums' %}active{% endif %}" href="{{ path('backoffice_forums') }}"><i class="ti ti-list"></i><span class="nav-text">Liste des forums</span></a></li>
+            <li><a class="nav-link {% if cr == 'admin_liste_posts' %}active{% endif %}" href="{{ path('admin_liste_posts') }}"><i class="ti ti-file-text"></i><span class="nav-text">Liste des posts</span></a></li>
+            <li><a class="nav-link {% if cr == 'admin_liste_comments' %}active{% endif %}" href="{{ path('admin_liste_comments') }}"><i class="ti ti-message"></i><span class="nav-text">Liste des commentaires</span></a></li>
+            <li><a class="nav-link {% if cr == 'admin_overview' %}active{% endif %}" href="{{ path('admin_overview') }}"><i class="ti ti-layout-dashboard"></i><span class="nav-text">Vue d'ensemble</span></a></li>
+            <li><a class="nav-link {% if cr == 'admin_users' or cr == 'admin_user_detail' or cr == 'admin_user_activity' %}active{% endif %}" href="{{ path('admin_users') }}"><i class="ti ti-users-group"></i><span class="nav-text">Utilisateurs</span></a></li>
+            <li><a class="nav-link {% if cr == 'admin_ai_flags' or cr == 'admin_view_flag' %}active{% endif %}" href="{{ path('admin_ai_flags') }}"><i class="ti ti-robot"></i><span class="nav-text">IA Flags</span></a></li>
+            <li><a class="nav-link {% if cr == 'admin_reports' %}active{% endif %}" href="{{ path('admin_reports') }}"><i class="ti ti-flag"></i><span class="nav-text">Signalements</span></a></li>
+            <li><a class="nav-link {% if cr == 'admin_badges' %}active{% endif %}" href="{{ path('admin_badges') }}"><i class="ti ti-trophy"></i><span class="nav-text">Badges</span></a></li>
+            <li><a class="nav-link {% if cr == 'admin_admin_policy' %}active{% endif %}" href="{{ path('admin_admin_policy') }}"><i class="ti ti-file-text"></i><span class="nav-text">Politique</span></a></li>
+        </div>
+
+        <li class="px-4 pt-4 pb-2"><small class="nav-text">Session</small></li>
+        <li><a class="nav-link" href="{{ path('front_logout') }}"><i class="ti ti-logout"></i><span class="nav-text">Déconnexion</span></a></li>
+    </ul>
+</aside>
+
+<script>
+function toggleForumFolder(btn) {
+    var children = document.getElementById('forumChildren');
+    var arrow = document.getElementById('forumArrow');
+    if (children.style.display === 'none') {
+        children.style.display = 'block';
+        arrow.className = arrow.className.replace('ti-chevron-right', 'ti-chevron-down');
+    } else {
+        children.style.display = 'none';
+        arrow.className = arrow.className.replace('ti-chevron-down', 'ti-chevron-right');
+    }
+}
+</script>
