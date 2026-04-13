@@ -16,7 +16,9 @@
       localStorage.setItem('finovate_token', token);
     } catch (e) {}
 
-    document.cookie = 'finovate_token=' + token + '; path=/; SameSite=Lax';
+    var expires = new Date();
+    expires.setTime(expires.getTime() + 30 * 24 * 60 * 60 * 1000);
+    document.cookie = 'finovate_token=' + token + '; path=/; expires=' + expires.toUTCString() + '; SameSite=Lax';
   }
 
   window.location.href = redirectUrl || '/user/dashboard';

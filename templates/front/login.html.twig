@@ -207,6 +207,14 @@
                       <input name="password" type="password" class="form-control fin-input" id="password" placeholder="Mot de passe" required="">
                     </fieldset>
                   </div>
+                  <div class="col-lg-12 col-md-12 col-sm-12 mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
+                      <label class="form-check-label" for="remember_me" style="font-weight: 500; color: #374151;">
+                        Se souvenir de moi
+                      </label>
+                    </div>
+                  </div>
                   <div class="col-lg-12" style="margin-top: 14px;">
                     <div class="fin-actions">
                       <button type="submit" class="filled-button" style="width: 100%; border-radius: 12px; height: 46px;">Connexion</button>
@@ -386,8 +394,16 @@
               return;
             }
 
-            localStorage.setItem('finovate_token', data.token);
-            document.cookie = 'finovate_token=' + data.token + '; path=/; SameSite=Lax';
+            var rememberMe = !!document.getElementById('remember_me') && document.getElementById('remember_me').checked;
+            if (rememberMe) {
+              localStorage.setItem('finovate_token', data.token);
+              var expires = new Date();
+              expires.setTime(expires.getTime() + 30 * 24 * 60 * 60 * 1000);
+              document.cookie = 'finovate_token=' + data.token + '; path=/; expires=' + expires.toUTCString() + '; SameSite=Lax';
+            } else {
+              sessionStorage.setItem('finovate_token', data.token);
+              document.cookie = 'finovate_token=' + data.token + '; path=/; SameSite=Lax';
+            }
             var target = (data && data.redirect_url) ? data.redirect_url : '{{ path('user_dashboard') }}';
             window.location.href = target;
           } catch (err) {

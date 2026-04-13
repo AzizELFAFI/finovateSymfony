@@ -444,7 +444,7 @@ https://templatemo.com/tm-545-finance-business
 
         var token = null;
         try {
-          token = localStorage.getItem('finovate_token');
+          token = localStorage.getItem('finovate_token') || sessionStorage.getItem('finovate_token');
         } catch (e) {}
 
         var isAuthed = !!token;

@@ -99,6 +99,10 @@
         try {
           localStorage.removeItem('finovate_token');
         } catch (e) {}
+        try {
+          sessionStorage.removeItem('finovate_token');
+        } catch (e) {}
+        document.cookie = 'finovate_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
 
         setTimeout(function () {
           window.location.href = "{{ path('front_home') }}";
