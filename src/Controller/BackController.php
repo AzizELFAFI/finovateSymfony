@@ -21,6 +21,7 @@ use App\Form\AdType;
 use App\Form\UserAdClickType;
 use App\Service\FileUploadService;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -235,7 +236,7 @@ final class BackController extends AbstractController
     }
 
     #[Route('/users', name: 'backoffice_users', methods: ['GET'])]
-    public function users(EntityManagerInterface $em, Request $request): Response
+    public function users(EntityManagerInterface $em, Request $request, PaginatorInterface $paginator): Response
     {
         $search = $request->query->get('search');
         $role = $request->query->get('role');
@@ -263,23 +264,21 @@ final class BackController extends AbstractController
         }
 
         if ($search) {
-            $queryBuilder->where('u.email LIKE :search')
-                ->orWhere('u.firstname LIKE :search')
-                ->orWhere('u.lastname LIKE :search')
-                ->orWhere('u.role LIKE :search')
-                ->orWhere('u.cin LIKE :search')
-                ->orWhere('u.phone_number LIKE :search')
-                ->orWhere('u.numero_carte LIKE :search')
+            $queryBuilder->andWhere('u.email LIKE :search OR u.firstname LIKE :search OR u.lastname LIKE :search OR u.role LIKE :search OR u.cin LIKE :search OR u.phone_number LIKE :search OR u.numero_carte LIKE :search')
                 ->setParameter('search', '%' . $search . '%');
         }
 
         $queryBuilder->orderBy('u.' . $sort, $dir)
             ->addOrderBy('u.id', 'DESC');
 
-        $users = $queryBuilder->getQuery()->getResult();
+        $pagination = $paginator->paginate(
+            $queryBuilder, /* query NOT result */
+            $request->query->getInt('page', 1), /*page number*/
+            10 /*limit per page*/
+        );
 
         return $this->render('backoffice/users.html.twig', [
-            'users' => $users,
+            'users' => $pagination,
             'search' => $search,
             'role' => $role,
             'sort' => $sort,
