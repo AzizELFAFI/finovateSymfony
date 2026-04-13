@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Controller;
+
+use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+
+final class GithubController extends AbstractController
+{
+    #[Route('/connect/github', name: 'connect_github_start', methods: ['GET'])]
+    public function start(ClientRegistry $clientRegistry): RedirectResponse
+    {
+        return $clientRegistry
+            ->getClient('github')
+            ->redirect(['user:email']);
+    }
+
+    #[Route('/connect/github/check', name: 'connect_github_check', methods: ['GET'])]
+    public function check(Request $request): Response
+    {
+        return new Response('', Response::HTTP_NO_CONTENT);
+    }
+}

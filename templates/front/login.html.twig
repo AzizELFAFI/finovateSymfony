@@ -73,6 +73,24 @@
         border-color: #b91c1c;
         color: #ffffff;
       }
+      .fin-github-btn {
+        width: 100%;
+        border-radius: 12px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border: 2px solid #24292e;
+        background: #24292e;
+        color: #ffffff;
+        font-weight: 600;
+      }
+      .fin-github-btn:hover {
+        background: #1a1e22;
+        border-color: #1a1e22;
+        color: #ffffff;
+      }
       .fin-divider {
         display: flex;
         align-items: center;
@@ -196,6 +214,10 @@
                       <a href="{{ path('connect_google_start') }}" class="fin-google-btn">
                         <i class="fa fa-google"></i>
                         Se connecter avec Google
+                      </a>
+                      <a href="{{ path('connect_github_start') }}" class="fin-github-btn">
+                        <i class="fa fa-github"></i>
+                        Se connecter avec GitHub
                       </a>
                     </div>
 

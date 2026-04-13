@@ -13,23 +13,23 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
-final class GoogleProfileController extends AbstractController
+final class GithubProfileController extends AbstractController
 {
     private function toSha256Hex(string $input): string
     {
         return hash('sha256', $input);
     }
 
-    #[Route('/connect/google/complete-profile', name: 'google_complete_profile', methods: ['GET', 'POST'])]
+    #[Route('/connect/github/complete-profile', name: 'github_complete_profile', methods: ['GET', 'POST'])]
     public function completeProfile(
         Request $request,
         SessionInterface $session,
         EntityManagerInterface $em,
         JWTTokenManagerInterface $jwtManager,
     ): Response {
-        $email = $session->get('google_oauth_email');
+        $email = $session->get('github_oauth_email');
         if (!is_string($email) || trim($email) === '') {
-            $this->addFlash('danger', 'Session Google expirée. Veuillez réessayer.');
+            $this->addFlash('danger', 'Session GitHub expirée. Veuillez réessayer.');
             return $this->redirectToRoute('front_login');
         }
 
@@ -38,8 +38,9 @@ final class GoogleProfileController extends AbstractController
         if ($existing instanceof User) {
             // Si finalement le compte existe, on le connecte
             $jwt = $jwtManager->create($existing);
-            $session->remove('google_oauth_email');
-            $session->remove('google_oauth_picture');
+            $session->remove('github_oauth_email');
+            $session->remove('github_oauth_nickname');
+            $session->remove('github_oauth_picture');
 
             return new RedirectResponse($this->generateUrl('oauth_success', [
                 'token' => $jwt,
@@ -94,8 +95,9 @@ final class GoogleProfileController extends AbstractController
                 $em->persist($user);
                 $em->flush();
 
-                $session->remove('google_oauth_email');
-                $session->remove('google_oauth_picture');
+                $session->remove('github_oauth_email');
+                $session->remove('github_oauth_nickname');
+                $session->remove('github_oauth_picture');
 
                 $jwt = $jwtManager->create($user);
 
@@ -109,19 +111,7 @@ final class GoogleProfileController extends AbstractController
         return $this->render('front/google_complete_profile.html.twig', [
             'form' => $form,
             'email' => $email,
-            'provider' => 'Google',
-        ]);
-    }
-
-    #[Route('/oauth/success', name: 'oauth_success', methods: ['GET'])]
-    public function oauthSuccess(Request $request): Response
-    {
-        $token = (string) $request->query->get('token', '');
-        $redirect = (string) $request->query->get('redirect', '/user/dashboard');
-
-        return $this->render('front/oauth_success.html.twig', [
-            'token' => $token,
-            'redirect' => $redirect,
+            'provider' => 'GitHub',
         ]);
     }
 }

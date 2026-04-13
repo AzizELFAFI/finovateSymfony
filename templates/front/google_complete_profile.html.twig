@@ -58,7 +58,7 @@
         <div class="row">
           <div class="col-md-12">
             <h1>Compléter votre profil</h1>
-            <span>{{ email }}</span>
+            <span>Compte {{ provider|default('Google') }} : {{ email }}</span>
           </div>
         </div>
       </div>
@@ -76,24 +76,45 @@
                 {% endfor %}
               {% endfor %}
 
-              {% if form.vars.errors|length or form.firstname.vars.errors|length or form.lastname.vars.errors|length or form.birthdate.vars.errors|length or form.cin.vars.errors|length or form.phone_number.vars.errors|length %}
-                <div id="form-errors-top" class="alert alert-danger" role="alert" style="border-radius: 10px;">
+                            {% if form.vars.errors|length or form.firstname.vars.errors|length or form.lastname.vars.errors|length or form.birthdate.vars.errors|length or form.cin.vars.errors|length or form.phone_number.vars.errors|length %}
+                <div id="form-errors-top" class="alert alert-danger text-center" role="alert" style="border-radius: 10px;">
                   <strong>Veuillez corriger les erreurs ci-dessous :</strong>
                   <div class="fin-error" style="margin-top: 8px;">
-                    {{ form_errors(form) }}
-                    {% if form.firstname.vars.errors|length %}{{ form_errors(form.firstname) }}{% endif %}
-                    {% if form.lastname.vars.errors|length %}{{ form_errors(form.lastname) }}{% endif %}
-                    {% if form.birthdate.vars.errors|length %}{{ form_errors(form.birthdate) }}{% endif %}
-                    {% if form.cin.vars.errors|length %}{{ form_errors(form.cin) }}{% endif %}
-                    {% if form.phone_number.vars.errors|length %}{{ form_errors(form.phone_number) }}{% endif %}
+                    <ul class="list-unstyled">
+                      {% if form.firstname.vars.errors|length %}
+                        {% for error in form.firstname.vars.errors %}
+                          <li><strong>Prénom :</strong> {{ error.message }}</li>
+                        {% endfor %}
+                      {% endif %}
+                      {% if form.lastname.vars.errors|length %}
+                        {% for error in form.lastname.vars.errors %}
+                          <li><strong>Nom :</strong> {{ error.message }}</li>
+                        {% endfor %}
+                      {% endif %}
+                      {% if form.birthdate.vars.errors|length %}
+                        {% for error in form.birthdate.vars.errors %}
+                          <li><strong>Date de naissance :</strong> {{ error.message }}</li>
+                        {% endfor %}
+                      {% endif %}
+                      {% if form.cin.vars.errors|length %}
+                        {% for error in form.cin.vars.errors %}
+                          <li><strong>CIN :</strong> {{ error.message }}</li>
+                        {% endfor %}
+                      {% endif %}
+                      {% if form.phone_number.vars.errors|length %}
+                        {% for error in form.phone_number.vars.errors %}
+                          <li><strong>Numéro de téléphone :</strong> {{ error.message }}</li>
+                        {% endfor %}
+                      {% endif %}
+                    </ul>
                   </div>
                 </div>
               {% endif %}
 
-              <div id="form-errors-top-client" class="alert alert-danger" role="alert" style="border-radius: 10px; display: none;">
+              <div id="form-errors-top-client" class="alert alert-danger text-center" role="alert" style="border-radius: 10px; display: none;">
                 <strong>Veuillez corriger les erreurs ci-dessous :</strong>
                 <div class="fin-error" style="margin-top: 8px;">
-                  <ul id="form-errors-top-client-list"></ul>
+                  <ul id="form-errors-top-client-list" class="list-unstyled"></ul>
                 </div>
               </div>
 
@@ -161,10 +182,28 @@
           } catch (e) {}
         }
 
+        function getFieldName(input) {
+          var nameMap = {
+            'firstname': 'Prénom',
+            'lastname': 'Nom',
+            'birthdate': 'Date de naissance',
+            'cin': 'CIN',
+            'phone_number': 'Numéro de téléphone'
+          };
+          
+          var name = input.name || '';
+          // Si le nom est au format google_complete_profile[firstname]
+          var matches = name.match(/\[(.*?)\]/);
+          var key = matches ? matches[1] : name;
+          
+          return nameMap[key] || key;
+        }
+
         function markInvalid(input, message) {
           if (!input) return;
           input.classList.add('is-invalid');
-          if (message) addTopError(message);
+          var fieldName = getFieldName(input);
+          if (message) addTopError(fieldName, message);
         }
 
         function clearInvalid(input) {
@@ -172,12 +211,12 @@
           input.classList.remove('is-invalid');
         }
 
-        function addTopError(message) {
+        function addTopError(fieldName, message) {
           var box = document.getElementById('form-errors-top-client');
           var list = document.getElementById('form-errors-top-client-list');
           if (!box || !list) return;
           var li = document.createElement('li');
-          li.textContent = message;
+          li.innerHTML = '<strong>' + fieldName + ' :</strong> ' + message;
           list.appendChild(li);
           box.style.display = '';
         }
