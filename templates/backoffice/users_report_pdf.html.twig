@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport utilisateurs</title>
+    <style>
+        @page { margin: 18px 16px; }
+        body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; color: #0f172a; }
+        .muted { color: #64748b; }
+        .nowrap { white-space: nowrap; }
+        .wrap { word-break: break-word; overflow-wrap: anywhere; }
+
+        .header {
+            background: #237f4e;
+            color: #ffffff;
+            padding: 16px 16px 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+        .brand { font-size: 22px; font-weight: 900; letter-spacing: -0.4px; margin: 0; }
+        .title { font-size: 14px; font-weight: 700; margin-top: 3px; }
+        .meta { font-size: 11px; opacity: 0.95; margin-top: 6px; }
+        .pill {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 800;
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+
+        .stats { width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 12px; }
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b; font-weight: 800; }
+        .stat-value { font-size: 18px; font-weight: 900; color: #0f172a; margin-top: 4px; }
+        .stat-accent { color: #237f4e; }
+
+        .grid { width: 100%; border-collapse: separate; border-spacing: 10px 10px; }
+        .card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            background: #ffffff;
+        }
+        .card-top { margin-bottom: 8px; }
+        .name { font-size: 13px; font-weight: 900; color: #0f172a; }
+        .role-badge {
+            float: right;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(35, 127, 78, 0.35);
+            background: rgba(35, 127, 78, 0.10);
+            color: #237f4e;
+        }
+        .line { font-size: 11px; color: #334155; margin-top: 2px; }
+        .line span { color: #64748b; }
+        .divider { height: 1px; background: #e2e8f0; margin: 8px 0; }
+        .kpi-row { width: 100%; border-collapse: collapse; }
+        .kpi-row td { padding: 0; font-size: 11px; }
+        .kpi { font-weight: 900; color: #0f172a; }
+        .kpi-label { color: #64748b; font-weight: 700; }
+    </style>
+</head>
+<body>
+    {% set total = users|length %}
+    {% set admins = users|filter(u => u.role == 'ADMIN')|length %}
+    {% set clients = users|filter(u => u.role == 'USER')|length %}
+
+    <div class="header">
+        <div class="brand">Finovate</div>
+        <div class="title">Rapport — Gestion des utilisateurs</div>
+        <div class="meta">
+            Généré le {{ generatedAt|date('d/m/Y H:i') }}
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <span class="pill">Total: {{ total }}</span>
+            {% if role %}
+                &nbsp;<span class="pill">Rôle: {{ role }}</span>
+            {% endif %}
+            {% if search %}
+                &nbsp;<span class="pill">Recherche: {{ search }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <table class="stats">
+        <tr>
+            <td class="stat-card">
+                <div class="stat-label">Total utilisateurs</div>
+                <div class="stat-value"><span class="stat-accent">{{ total }}</span></div>
+            </td>
+            <td class="stat-card">
+                <div class="stat-label">Admins</div>
+                <div class="stat-value">{{ admins }}</div>
+            </td>
+            <td class="stat-card">
+                <div class="stat-label">Clients</div>
+                <div class="stat-value">{{ clients }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="grid">
+        {% for user in users %}
+            {% if loop.index0 is divisible by(2) %}
+                <tr>
+            {% endif %}
+
+            <td style="width: 50%;">
+                <div class="card">
+                    <div class="card-top">
+                        <span class="role-badge">{{ user.role }}</span>
+                        <div class="name">{{ user.firstname }} {{ user.lastname }}</div>
+                        <div class="line wrap"><span>Email:</span> {{ user.email }}</div>
+                        <div class="line"><span>ID:</span> {{ user.id }}</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="line"><span>Date naissance:</span> {{ user.birthdate ? user.birthdate|date('d/m/Y') : '' }}</div>
+                    <div class="line"><span>CIN:</span> {{ user.cin }} &nbsp;&nbsp; <span>Tél:</span> {{ user.phone_number }}</div>
+                    <div class="line"><span>N° Carte:</span> {{ user.numero_carte }}</div>
+                    <div class="divider"></div>
+                    <table class="kpi-row">
+                        <tr>
+                            <td style="width: 50%;">
+                                <div class="kpi">{{ user.solde }}</div>
+                                <div class="kpi-label">Solde</div>
+                            </td>
+                            <td style="width: 50%;">
+                                <div class="kpi">{{ user.points }}</div>
+                                <div class="kpi-label">Points</div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="line muted" style="margin-top: 8px;">
+                        Créé le {{ user.created_at ? user.created_at|date('d/m/Y H:i') : '' }}
+                    </div>
+                </div>
+            </td>
+
+            {% if loop.index0 is divisible by(2) == false %}
+                </tr>
+            {% endif %}
+        {% endfor %}
+
+        {% if users|length is odd %}
+            <td style="width: 50%;"></td>
+            </tr>
+        {% endif %}
+    </table>
+</body>
+</html>

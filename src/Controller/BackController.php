@@ -22,6 +22,7 @@ use App\Form\UserAdClickType;
 use App\Service\FileUploadService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -184,6 +185,181 @@ final class BackController extends AbstractController
             'role' => $role,
             'sort' => $sort,
             'dir' => $dir
+        ]);
+    }
+
+    #[Route('/users/report.csv', name: 'backoffice_users_report_csv', methods: ['GET'])]
+    public function usersReportCsv(EntityManagerInterface $em, Request $request): Response
+    {
+        $search = (string) $request->query->get('search', '');
+        $role = (string) $request->query->get('role', '');
+        $sort = (string) $request->query->get('sort', 'lastname');
+        $dir = strtoupper((string) $request->query->get('dir', 'ASC'));
+
+        $allowedSorts = ['lastname', 'firstname', 'email'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'lastname';
+        }
+        if (!in_array($dir, ['ASC', 'DESC'], true)) {
+            $dir = 'ASC';
+        }
+
+        $allowedRoles = ['ADMIN', 'USER'];
+        if ($role !== '' && !in_array($role, $allowedRoles, true)) {
+            $role = '';
+        }
+
+        $queryBuilder = $em->getRepository(User::class)->createQueryBuilder('u');
+
+        if ($role !== '') {
+            $queryBuilder->andWhere('u.role = :role')
+                ->setParameter('role', $role);
+        }
+
+        if ($search !== '') {
+            $queryBuilder->where('u.email LIKE :search')
+                ->orWhere('u.firstname LIKE :search')
+                ->orWhere('u.lastname LIKE :search')
+                ->orWhere('u.role LIKE :search')
+                ->orWhere('u.cin LIKE :search')
+                ->orWhere('u.phone_number LIKE :search')
+                ->orWhere('u.numero_carte LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $queryBuilder->orderBy('u.' . $sort, $dir)
+            ->addOrderBy('u.id', 'DESC');
+
+        $users = $queryBuilder->getQuery()->getResult();
+
+        $handle = fopen('php://temp', 'r+');
+        if ($handle === false) {
+            return new Response('Impossible de générer le fichier CSV.', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $asExcelText = static function (string $value): string {
+            $v = trim($value);
+            return $v === '' ? '' : "\t" . $v;
+        };
+
+        fputcsv($handle, ['ID', 'Email', 'Nom', 'Prénom', 'Rôle', 'Solde', 'Points', 'Date naissance', 'CIN', 'Téléphone', 'N° Carte', 'Créé le'], ';');
+        foreach ($users as $user) {
+            if (!$user instanceof User) {
+                continue;
+            }
+
+            $createdAt = $user->getCreated_at();
+            $createdAtStr = $createdAt instanceof \DateTimeInterface ? $createdAt->format('d/m/Y H:i') : '';
+
+            $birthdate = $user->getBirthdate();
+            $birthdateStr = $birthdate instanceof \DateTimeInterface ? $birthdate->format('d/m/Y') : '';
+
+            fputcsv($handle, [
+                $asExcelText((string) $user->getId()),
+                (string) $user->getEmail(),
+                (string) $user->getLastname(),
+                (string) $user->getFirstname(),
+                (string) $user->getRole(),
+                (string) $user->getSolde(),
+                (string) $user->getPoints(),
+                $asExcelText($birthdateStr),
+                $asExcelText((string) $user->getCin()),
+                $asExcelText((string) $user->getPhone_number()),
+                $asExcelText((string) $user->getNumero_carte()),
+                $asExcelText($createdAtStr),
+            ], ';');
+        }
+
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        $csvUtf8 = "sep=;\n" . ($csv ?: '');
+        $csvUtf16le = iconv('UTF-8', 'UTF-16LE//IGNORE', $csvUtf8);
+        if ($csvUtf16le === false) {
+            $csvUtf16le = $csvUtf8;
+        } else {
+            $csvUtf16le = "\xFF\xFE" . $csvUtf16le;
+        }
+
+        $filename = 'users_report_' . (new \DateTime())->format('Y-m-d_H-i') . '.csv';
+        $disposition = HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $filename);
+
+        return new Response($csvUtf16le, Response::HTTP_OK, [
+            'Content-Type' => ($csvUtf16le === $csvUtf8 ? 'text/csv; charset=UTF-8' : 'text/csv; charset=UTF-16LE'),
+            'Content-Disposition' => $disposition,
+        ]);
+    }
+
+    #[Route('/users/report.pdf', name: 'backoffice_users_report_pdf', methods: ['GET'])]
+    public function usersReportPdf(EntityManagerInterface $em, Request $request): Response
+    {
+        if (!class_exists('Dompdf\\Dompdf')) {
+            $this->addFlash('error', 'Export PDF indisponible: installez dompdf/dompdf.');
+            return $this->redirectToRoute('backoffice_users', $request->query->all());
+        }
+
+        $search = (string) $request->query->get('search', '');
+        $role = (string) $request->query->get('role', '');
+        $sort = (string) $request->query->get('sort', 'lastname');
+        $dir = strtoupper((string) $request->query->get('dir', 'ASC'));
+
+        $allowedSorts = ['lastname', 'firstname', 'email'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'lastname';
+        }
+        if (!in_array($dir, ['ASC', 'DESC'], true)) {
+            $dir = 'ASC';
+        }
+
+        $allowedRoles = ['ADMIN', 'USER'];
+        if ($role !== '' && !in_array($role, $allowedRoles, true)) {
+            $role = '';
+        }
+
+        $queryBuilder = $em->getRepository(User::class)->createQueryBuilder('u');
+
+        if ($role !== '') {
+            $queryBuilder->andWhere('u.role = :role')
+                ->setParameter('role', $role);
+        }
+
+        if ($search !== '') {
+            $queryBuilder->where('u.email LIKE :search')
+                ->orWhere('u.firstname LIKE :search')
+                ->orWhere('u.lastname LIKE :search')
+                ->orWhere('u.role LIKE :search')
+                ->orWhere('u.cin LIKE :search')
+                ->orWhere('u.phone_number LIKE :search')
+                ->orWhere('u.numero_carte LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $queryBuilder->orderBy('u.' . $sort, $dir)
+            ->addOrderBy('u.id', 'DESC');
+
+        $users = $queryBuilder->getQuery()->getResult();
+
+        $html = $this->renderView('backoffice/users_report_pdf.html.twig', [
+            'users' => $users,
+            'generatedAt' => new \DateTime(),
+            'search' => $search,
+            'role' => $role,
+            'sort' => $sort,
+            'dir' => $dir,
+        ]);
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = 'users_report_' . (new \DateTime())->format('Y-m-d_H-i') . '.pdf';
+        $disposition = HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $filename);
+
+        return new Response($dompdf->output(), Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => $disposition,
         ]);
     }
 
