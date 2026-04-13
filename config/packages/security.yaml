@@ -47,6 +47,8 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+        - { path: ^/mot-de-passe-oublie, roles: PUBLIC_ACCESS }
+        - { path: ^/reinitialiser-mot-de-passe, roles: PUBLIC_ACCESS }
         - { path: ^/access-denied, roles: PUBLIC_ACCESS }
         - { path: ^/admin/users, roles: ROLE_ADMIN }
         - { path: ^/admin, roles: ROLE_ADMIN }
