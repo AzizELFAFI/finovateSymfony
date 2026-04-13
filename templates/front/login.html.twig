@@ -19,6 +19,87 @@
     <link rel="stylesheet" href="assets/css/templatemo-finance-business.css">
     <link rel="stylesheet" href="assets/css/owl.css">
 
+    <style>
+      .fin-login-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 18px 55px rgba(0, 0, 0, 0.12);
+        padding: 28px;
+        border: 1px solid rgba(26, 95, 58, 0.08);
+      }
+      .fin-login-title {
+        margin-bottom: 14px;
+        font-weight: 800;
+        color: #1a5f3a;
+        letter-spacing: -0.5px;
+      }
+      .fin-login-subtitle {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-bottom: 18px;
+      }
+      .fin-input {
+        height: 48px;
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        padding: 10px 14px;
+        transition: border-color .15s ease, box-shadow .15s ease;
+        background: #ffffff;
+      }
+      .fin-input:focus {
+        border-color: #237f4e;
+        box-shadow: 0 0 0 .2rem rgba(35, 127, 78, .15);
+      }
+      .fin-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .fin-google-btn {
+        width: 100%;
+        border-radius: 12px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border: 2px solid #dc2626;
+        background: #dc2626;
+        color: #ffffff;
+        font-weight: 600;
+      }
+      .fin-google-btn:hover {
+        background: #b91c1c;
+        border-color: #b91c1c;
+        color: #ffffff;
+      }
+      .fin-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 6px 0;
+        color: #94a3b8;
+        font-size: 0.9rem;
+      }
+      .fin-divider:before,
+      .fin-divider:after {
+        content: "";
+        height: 1px;
+        flex: 1;
+        background: #e5e7eb;
+      }
+      .fin-links {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .fin-links a {
+        font-weight: 600;
+      }
+    </style>
+
   </head>
 
   <body>
@@ -93,27 +174,33 @@
             </div>
           </div>
           <div class="col-lg-6 col-md-10 mx-auto">
-            <div class="contact-form p-4" style="border-radius: 0; background-color: #e8f5e9;">
+            <div class="fin-login-card">
+              <h4 class="fin-login-title">Bienvenue</h4>
+              <div class="fin-login-subtitle">Connectez-vous pour accéder à votre espace.</div>
               <form id="login" action="" method="post" novalidate="novalidate">
                 <div class="row">
-                  <div class="col-lg-12 col-md-12 col-sm-12">
+                  <div class="col-lg-12 col-md-12 col-sm-12 mb-3">
                     <fieldset>
-                      <input name="email" type="email" class="form-control" id="email" placeholder="Adresse e-mail" required="">
+                      <input name="email" type="email" class="form-control fin-input" id="email" placeholder="Adresse e-mail" required="">
                     </fieldset>
                   </div>
-                  <div class="col-lg-12 col-md-12 col-sm-12">
+                  <div class="col-lg-12 col-md-12 col-sm-12 mb-2">
                     <fieldset>
-                      <input name="password" type="password" class="form-control" id="password" placeholder="Mot de passe" required="">
+                      <input name="password" type="password" class="form-control fin-input" id="password" placeholder="Mot de passe" required="">
                     </fieldset>
                   </div>
-                  <div class="col-lg-12" style="margin-top: 8px;">
-                    <a href="{{ path('front_forgot_password') }}">Mot de passe oublié ?</a>
-                  </div>
-                  <div class="col-lg-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-                    <fieldset class="mb-3 mb-md-0">
-                      <button type="submit" class="filled-button">Connexion</button>
-                    </fieldset>
-                    <div>
+                  <div class="col-lg-12" style="margin-top: 14px;">
+                    <div class="fin-actions">
+                      <button type="submit" class="filled-button" style="width: 100%; border-radius: 12px; height: 46px;">Connexion</button>
+                      <div class="fin-divider">ou</div>
+                      <a href="{{ path('connect_google_start') }}" class="fin-google-btn">
+                        <i class="fa fa-google"></i>
+                        Se connecter avec Google
+                      </a>
+                    </div>
+
+                    <div class="fin-links">
+                      <a href="{{ path('front_forgot_password') }}">Mot de passe oublié ?</a>
                       <a href="{{ path('front_signup') }}">Créer un compte</a>
                     </div>
                   </div>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Authentification</title>
+</head>
+<body>
+<script>
+(function() {
+  var token = {{ token|json_encode|raw }};
+  var redirectUrl = {{ redirect|json_encode|raw }};
+
+  if (token) {
+    try {
+      localStorage.setItem('finovate_token', token);
+    } catch (e) {}
+
+    document.cookie = 'finovate_token=' + token + '; path=/; SameSite=Lax';
+  }
+
+  window.location.href = redirectUrl || '/user/dashboard';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="TemplateMo">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+
+    <title>Finovate - Compléter profil</title>
+
+    <base href="{{ asset('front/') }}">
+
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="assets/css/fontawesome.css">
+    <link rel="stylesheet" href="assets/css/templatemo-finance-business.css">
+    <link rel="stylesheet" href="assets/css/owl.css">
+
+    <style>
+      .fin-input.is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 .2rem rgba(220,53,69,.15);
+      }
+      .fin-error {
+        color: #dc3545;
+        font-size: 0.9rem;
+        margin-top: 6px;
+        animation: finShake .25s ease-in-out;
+      }
+      .fin-error ul { margin: 0; padding-left: 18px; }
+      .fin-error li { margin: 0; }
+      @keyframes finShake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-2px); }
+        50% { transform: translateX(2px); }
+        75% { transform: translateX(-2px); }
+        100% { transform: translateX(0); }
+      }
+    </style>
+
+  </head>
+
+  <body>
+
+    <header class="">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
+        </div>
+      </nav>
+    </header>
+
+    <div class="page-heading header-text">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h1>Compléter votre profil</h1>
+            <span>{{ email }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callback-form contact-us">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="contact-form p-4" style="border-radius: 0; background-color: #e8f5e9;">
+
+              {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                  <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+                {% endfor %}
+              {% endfor %}
+
+              {% if form.vars.errors|length or form.firstname.vars.errors|length or form.lastname.vars.errors|length or form.birthdate.vars.errors|length or form.cin.vars.errors|length or form.phone_number.vars.errors|length %}
+                <div id="form-errors-top" class="alert alert-danger" role="alert" style="border-radius: 10px;">
+                  <strong>Veuillez corriger les erreurs ci-dessous :</strong>
+                  <div class="fin-error" style="margin-top: 8px;">
+                    {{ form_errors(form) }}
+                    {% if form.firstname.vars.errors|length %}{{ form_errors(form.firstname) }}{% endif %}
+                    {% if form.lastname.vars.errors|length %}{{ form_errors(form.lastname) }}{% endif %}
+                    {% if form.birthdate.vars.errors|length %}{{ form_errors(form.birthdate) }}{% endif %}
+                    {% if form.cin.vars.errors|length %}{{ form_errors(form.cin) }}{% endif %}
+                    {% if form.phone_number.vars.errors|length %}{{ form_errors(form.phone_number) }}{% endif %}
+                  </div>
+                </div>
+              {% endif %}
+
+              <div id="form-errors-top-client" class="alert alert-danger" role="alert" style="border-radius: 10px; display: none;">
+                <strong>Veuillez corriger les erreurs ci-dessous :</strong>
+                <div class="fin-error" style="margin-top: 8px;">
+                  <ul id="form-errors-top-client-list"></ul>
+                </div>
+              </div>
+
+              {{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}
+                <div class="row">
+                  <div class="col-lg-6 col-md-6 col-sm-12">
+                    <fieldset>
+                      {{ form_widget(form.firstname, { attr: { class: 'form-control fin-input' ~ (form.firstname.vars.errors|length ? ' is-invalid' : '') } }) }}
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-6 col-sm-12">
+                    <fieldset>
+                      {{ form_widget(form.lastname, { attr: { class: 'form-control fin-input' ~ (form.lastname.vars.errors|length ? ' is-invalid' : '') } }) }}
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-6 col-sm-12">
+                    <fieldset>
+                      {{ form_widget(form.birthdate, { attr: { class: 'form-control fin-input' ~ (form.birthdate.vars.errors|length ? ' is-invalid' : '') } }) }}
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-6 col-md-6 col-sm-12">
+                    <fieldset>
+                      {{ form_widget(form.cin, { attr: { class: 'form-control fin-input' ~ (form.cin.vars.errors|length ? ' is-invalid' : '') } }) }}
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12 col-md-12 col-sm-12">
+                    <fieldset>
+                      {{ form_widget(form.phone_number, { attr: { class: 'form-control fin-input' ~ (form.phone_number.vars.errors|length ? ' is-invalid' : '') } }) }}
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12 d-flex justify-content-between align-items-center">
+                    <fieldset>
+                      <button type="submit" class="filled-button">Enregistrer</button>
+                    </fieldset>
+                    <div>
+                      <a href="{{ path('front_login') }}">Annuler</a>
+                    </div>
+                  </div>
+                </div>
+              {{ form_end(form) }}
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <script src="assets/js/custom.js"></script>
+    <script src="assets/js/owl.js"></script>
+    <script src="assets/js/slick.js"></script>
+    <script src="assets/js/accordions.js"></script>
+
+    <script>
+      (function () {
+        var form = document.querySelector('form');
+        if (!form) return;
+
+        var topErrors = document.getElementById('form-errors-top');
+        if (topErrors) {
+          try {
+            topErrors.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch (e) {}
+        }
+
+        function markInvalid(input, message) {
+          if (!input) return;
+          input.classList.add('is-invalid');
+          if (message) addTopError(message);
+        }
+
+        function clearInvalid(input) {
+          if (!input) return;
+          input.classList.remove('is-invalid');
+        }
+
+        function addTopError(message) {
+          var box = document.getElementById('form-errors-top-client');
+          var list = document.getElementById('form-errors-top-client-list');
+          if (!box || !list) return;
+          var li = document.createElement('li');
+          li.textContent = message;
+          list.appendChild(li);
+          box.style.display = '';
+        }
+
+        function resetTopErrors() {
+          var box = document.getElementById('form-errors-top-client');
+          var list = document.getElementById('form-errors-top-client-list');
+          if (!box || !list) return;
+          list.innerHTML = '';
+          box.style.display = 'none';
+        }
+
+        form.addEventListener('input', function (e) {
+          var t = e.target;
+          if (t && t.classList && t.classList.contains('fin-input')) {
+            clearInvalid(t);
+          }
+        });
+
+        form.addEventListener('submit', function (e) {
+          resetTopErrors();
+          var hasErrors = false;
+          var inputs = form.querySelectorAll('.fin-input');
+          inputs.forEach(function (input) {
+            var v = (input.value || '').trim();
+            if (!v) {
+              markInvalid(input, 'Champ obligatoire.');
+              hasErrors = true;
+              return;
+            }
+            if (input.name && input.name.toLowerCase().includes('cin')) {
+              if (!/^\d{8}$/.test(v)) {
+                markInvalid(input, 'Le CIN doit contenir exactement 8 chiffres.');
+                hasErrors = true;
+              }
+            }
+            if (input.name && input.name.toLowerCase().includes('phone')) {
+              if (!/^\d{8}$/.test(v)) {
+                markInvalid(input, 'Le numéro de téléphone doit contenir exactement 8 chiffres.');
+                hasErrors = true;
+              }
+            }
+          });
+
+          if (hasErrors) {
+            e.preventDefault();
+            var topClient = document.getElementById('form-errors-top-client');
+            if (topClient) {
+              try {
+                topClient.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              } catch (err) {}
+            }
+          }
+        });
+      })();
+    </script>
+
+  </body>
+</html>

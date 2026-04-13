@@ -19,6 +19,55 @@
     <link rel="stylesheet" href="assets/css/templatemo-finance-business.css">
     <link rel="stylesheet" href="assets/css/owl.css">
 
+    <style>
+      .fin-login-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 18px 55px rgba(0, 0, 0, 0.12);
+        padding: 28px;
+        border: 1px solid rgba(26, 95, 58, 0.08);
+      }
+      .fin-login-title {
+        margin-bottom: 14px;
+        font-weight: 800;
+        color: #1a5f3a;
+        letter-spacing: -0.5px;
+      }
+      .fin-login-subtitle {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-bottom: 18px;
+      }
+      .fin-input {
+        height: 48px;
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        padding: 10px 14px;
+        transition: border-color .15s ease, box-shadow .15s ease;
+        background: #ffffff;
+      }
+      .fin-input:focus {
+        border-color: #237f4e;
+        box-shadow: 0 0 0 .2rem rgba(35, 127, 78, .15);
+      }
+      .fin-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .fin-links {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .fin-links a {
+        font-weight: 600;
+      }
+    </style>
+
   </head>
 
   <body>
@@ -93,54 +142,56 @@
             </div>
           </div>
           <div class="col-lg-8 col-md-10 mx-auto">
-            <div class="contact-form p-4" style="border-radius: 0; background-color: #e8f5e9;">
+            <div class="fin-login-card">
+              <h4 class="fin-login-title">Créer un compte</h4>
+              <div class="fin-login-subtitle">Complétez les informations ci-dessous pour démarrer.</div>
               <form id="signup" action="" method="post" novalidate="novalidate">
                 <div class="row">
-                  <div class="col-lg-6 col-md-12 col-sm-12">
+                  <div class="col-lg-6 col-md-12 col-sm-12 mb-3">
                     <fieldset>
-                      <input name="nom" type="text" class="form-control" id="nom" placeholder="Nom" required="" minlength="3" pattern="^[\p{L} .'-]{3,}$" title="Le nom doit être une chaîne de caractères (min 3).">
+                      <input name="nom" type="text" class="form-control fin-input" id="nom" placeholder="Nom" required="" minlength="3" pattern="^[\p{L} .'-]{3,}$" title="Le nom doit être une chaîne de caractères (min 3).">
                     </fieldset>
                   </div>
-                  <div class="col-lg-6 col-md-12 col-sm-12">
+                  <div class="col-lg-6 col-md-12 col-sm-12 mb-3">
                     <fieldset>
-                      <input name="prenom" type="text" class="form-control" id="prenom" placeholder="Prénom" required="" minlength="3" pattern="^[\p{L} .'-]{3,}$" title="Le prénom doit être une chaîne de caractères (min 3).">
+                      <input name="prenom" type="text" class="form-control fin-input" id="prenom" placeholder="Prénom" required="" minlength="3" pattern="^[\p{L} .'-]{3,}$" title="Le prénom doit être une chaîne de caractères (min 3).">
                     </fieldset>
                   </div>
-                  <div class="col-lg-6 col-md-12 col-sm-12">
+                  <div class="col-lg-6 col-md-12 col-sm-12 mb-3">
                     <fieldset>
-                      <input name="email" type="email" class="form-control" id="email" placeholder="Adresse e-mail" required="">
+                      <input name="email" type="email" class="form-control fin-input" id="email" placeholder="Adresse e-mail" required="">
                     </fieldset>
                   </div>
-                  <div class="col-lg-6 col-md-12 col-sm-12">
+                  <div class="col-lg-6 col-md-12 col-sm-12 mb-3">
                     <fieldset>
-                      <input name="date_naissance" type="date" class="form-control" id="date_naissance" required="">
+                      <input name="date_naissance" type="date" class="form-control fin-input" id="date_naissance" required="">
                     </fieldset>
                   </div>
-                  <div class="col-lg-6 col-md-12 col-sm-12">
+                  <div class="col-lg-6 col-md-12 col-sm-12 mb-3">
                     <fieldset>
-                      <input name="cin" type="text" inputmode="numeric" class="form-control" id="cin" placeholder="CIN" required="" pattern="^\d{8}$" minlength="8" maxlength="8" title="Le CIN doit contenir exactement 8 chiffres.">
+                      <input name="cin" type="text" inputmode="numeric" class="form-control fin-input" id="cin" placeholder="CIN" required="" pattern="^\d{8}$" minlength="8" maxlength="8" title="Le CIN doit contenir exactement 8 chiffres.">
                     </fieldset>
                   </div>
-                  <div class="col-lg-6 col-md-12 col-sm-12">
+                  <div class="col-lg-6 col-md-12 col-sm-12 mb-3">
                     <fieldset>
-                      <input name="telephone" type="text" inputmode="numeric" class="form-control" id="telephone" placeholder="Numéro de téléphone" required="" pattern="^\d{8}$" minlength="8" maxlength="8" title="Le numéro de téléphone doit contenir exactement 8 chiffres.">
+                      <input name="telephone" type="text" inputmode="numeric" class="form-control fin-input" id="telephone" placeholder="Numéro de téléphone" required="" pattern="^\d{8}$" minlength="8" maxlength="8" title="Le numéro de téléphone doit contenir exactement 8 chiffres.">
                     </fieldset>
                   </div>
-                  <div class="col-lg-6 col-md-12 col-sm-12">
+                  <div class="col-lg-6 col-md-12 col-sm-12 mb-3">
                     <fieldset>
-                      <input name="password" type="password" class="form-control" id="password" placeholder="Mot de passe" required="" minlength="8" title="Le mot de passe doit contenir au moins 8 caractères.">
+                      <input name="password" type="password" class="form-control fin-input" id="password" placeholder="Mot de passe" required="" minlength="8" title="Le mot de passe doit contenir au moins 8 caractères.">
                     </fieldset>
                   </div>
-                  <div class="col-lg-6 col-md-12 col-sm-12">
+                  <div class="col-lg-6 col-md-12 col-sm-12 mb-3">
                     <fieldset>
-                      <input name="password_confirm" type="password" class="form-control" id="password_confirm" placeholder="Confirmation du mot de passe" required="" minlength="8" title="La confirmation du mot de passe doit contenir au moins 8 caractères.">
+                      <input name="password_confirm" type="password" class="form-control fin-input" id="password_confirm" placeholder="Confirmation du mot de passe" required="" minlength="8" title="La confirmation du mot de passe doit contenir au moins 8 caractères.">
                     </fieldset>
                   </div>
-                  <div class="col-lg-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-                    <fieldset class="mb-3 mb-md-0">
-                      <button type="submit" class="filled-button">Créer mon compte</button>
-                    </fieldset>
-                    <div>
+                  <div class="col-lg-12">
+                    <div class="fin-actions">
+                      <button type="submit" class="filled-button" style="width: 100%; border-radius: 12px; height: 46px;">Créer mon compte</button>
+                    </div>
+                    <div class="fin-links">
                       <a href="{{ path('front_login') }}">J’ai déjà un compte</a>
                     </div>
                   </div>

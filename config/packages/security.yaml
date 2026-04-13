@@ -37,6 +37,7 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            custom_authenticator: App\Security\GoogleAuthenticator
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -47,6 +48,9 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+        - { path: ^/connect/google, roles: PUBLIC_ACCESS }
+        - { path: ^/oauth/success, roles: PUBLIC_ACCESS }
+        - { path: ^/connect/google/complete-profile, roles: PUBLIC_ACCESS }
         - { path: ^/mot-de-passe-oublie, roles: PUBLIC_ACCESS }
         - { path: ^/reinitialiser-mot-de-passe, roles: PUBLIC_ACCESS }
         - { path: ^/access-denied, roles: PUBLIC_ACCESS }
