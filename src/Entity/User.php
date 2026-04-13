@@ -72,6 +72,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: "bigint")]
     private string $numero_carte;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $isVerified = false;
+
     public function getId(): string
     {
         return $this->id;
@@ -222,6 +225,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setNumero_carte(string $value): void
     {
         $this->numero_carte = $value;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): void
+    {
+        $this->isVerified = $isVerified;
     }
 
     #[ORM\OneToMany(mappedBy: "creator", targetEntity: Forum::class)]

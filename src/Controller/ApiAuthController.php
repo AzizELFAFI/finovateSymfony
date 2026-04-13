@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Service\EmailVerifier;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use ReCaptcha\ReCaptcha;
@@ -10,6 +11,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Security;
@@ -54,6 +57,10 @@ final class ApiAuthController extends AbstractController
             return $this->json(['message' => 'Invalid credentials.'], 401);
         }
 
+        if (!$user->isVerified()) {
+            return $this->json(['message' => 'Compte non confirmé. Veuillez vérifier votre e-mail.'], 403);
+        }
+
         $incomingHash = $this->normalizeIncomingPassword($password);
         $storedHash = strtolower($user->getPassword());
 
@@ -88,7 +95,8 @@ final class ApiAuthController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         ValidatorInterface $validator,
-        ReCaptcha $reCaptcha
+        ReCaptcha $reCaptcha,
+        EmailVerifier $emailVerifier
     ): JsonResponse {
         $payload = json_decode($request->getContent() ?: '', true);
 
@@ -191,6 +199,7 @@ final class ApiAuthController extends AbstractController
         $user->setCreated_at(new \DateTime());
         $user->setNumero_carte((string) random_int(1000000000000000, 9999999999999999));
         $user->setPassword($passwordHash);
+        $user->setIsVerified(false);
 
         $violations = $validator->validate($user);
         if (count($violations) > 0) {
@@ -217,7 +226,23 @@ final class ApiAuthController extends AbstractController
             return $this->json(['message' => $msg], 500);
         }
 
-        return $this->json(['message' => 'Compte créé avec succès.'], 201);
+        $fromEmail = (string) $this->getParameter('mailer_from_email');
+        $fromName = (string) $this->getParameter('mailer_from_name');
+
+        $emailMessage = (new TemplatedEmail())
+            ->from(new Address($fromEmail, $fromName))
+            ->to($user->getEmail())
+            ->subject('Confirmez votre compte Finovate')
+            ->htmlTemplate('emails/verify_email.html.twig')
+            ->context([]);
+
+        try {
+            $emailVerifier->sendEmailConfirmation('app_verify_email', $user, $emailMessage);
+        } catch (\Throwable) {
+            // If email fails, keep user unverified
+        }
+
+        return $this->json(['message' => 'Compte créé avec succès. Veuillez confirmer votre e-mail.'], 201);
     }
 
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
