@@ -12,6 +12,7 @@
     <title>Finovate - Inscription</title>
 
     <base href="{{ asset('front/') }}">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
@@ -186,6 +187,9 @@
                     <fieldset>
                       <input name="password_confirm" type="password" class="form-control fin-input" id="password_confirm" placeholder="Confirmation du mot de passe" required="" minlength="8" title="La confirmation du mot de passe doit contenir au moins 8 caractères.">
                     </fieldset>
+                  </div>
+                  <div class="col-lg-12 mb-3">
+                    <div class="g-recaptcha" data-sitekey="{{ google_recaptcha_site_key }}"></div>
                   </div>
                   <div class="col-lg-12">
                     <div class="fin-actions">
@@ -388,6 +392,16 @@
           }
 
           try {
+            var recaptchaToken = '';
+            try {
+              recaptchaToken = (typeof grecaptcha !== 'undefined' && grecaptcha.getResponse) ? grecaptcha.getResponse() : '';
+            } catch (e) {}
+
+            if (!recaptchaToken) {
+              showSignupError('Veuillez confirmer que vous n\'êtes pas un robot.');
+              return;
+            }
+
             var res = await fetch('/api/register', {
               method: 'POST',
               headers: {
@@ -401,7 +415,8 @@
                 cin: cin,
                 telephone: telephone,
                 password: password,
-                password_confirm: passwordConfirm
+                password_confirm: passwordConfirm,
+                recaptcha_token: recaptchaToken
               })
             });
 

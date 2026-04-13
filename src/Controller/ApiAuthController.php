@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use ReCaptcha\ReCaptcha;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -86,12 +87,24 @@ final class ApiAuthController extends AbstractController
     public function register(
         Request $request,
         EntityManagerInterface $entityManager,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
+        ReCaptcha $reCaptcha
     ): JsonResponse {
         $payload = json_decode($request->getContent() ?: '', true);
 
         if (!is_array($payload)) {
             return $this->json(['message' => 'Payload JSON invalide.'], 400);
+        }
+
+        // Validate reCAPTCHA token
+        $recaptchaToken = (string) ($payload['recaptcha_token'] ?? '');
+        if ($recaptchaToken === '') {
+            return $this->json(['message' => 'Veuillez confirmer que vous n\'êtes pas un robot.'], 422);
+        }
+
+        $recaptchaResult = $reCaptcha->verify($recaptchaToken, $request->getClientIp());
+        if (!$recaptchaResult->isSuccess()) {
+            return $this->json(['message' => 'Validation reCAPTCHA échouée. Veuillez réessayer.'], 422);
         }
 
         $email = trim((string) ($payload['email'] ?? ''));
