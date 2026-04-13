@@ -179,8 +179,47 @@
           </div>
         </div>
       </div>
-      <div class="row g-3">
 
+      <div class="row g-3 mb-3">
+        <div class="col-lg-6 col-12">
+          <div class="card">
+            <div class="card-header bg-transparent px-4 py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <h3 class="h5 mb-0">Inscriptions (30 jours)</h3>
+              <span class="badge" style="background: rgba(35,127,78,.10); color:#237f4e; border: 1px solid rgba(35,127,78,.22);">Tendance</span>
+            </div>
+            <div class="card-body p-4">
+              <div id="usersGrowthChart" style="min-height: 290px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 col-12">
+          <div class="card">
+            <div class="card-header bg-transparent px-4 py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <h3 class="h5 mb-0">Transactions (30 jours)</h3>
+              <span class="badge" style="background: rgba(35,127,78,.10); color:#237f4e; border: 1px solid rgba(35,127,78,.22);">Montant + Nombre</span>
+            </div>
+            <div class="card-body p-4">
+              <div id="transactionsChart" style="min-height: 290px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-transparent px-4 py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <h3 class="h5 mb-0">Activité forum (30 jours)</h3>
+              <span class="badge" style="background: rgba(35,127,78,.10); color:#237f4e; border: 1px solid rgba(35,127,78,.22);">Posts + Commentaires</span>
+            </div>
+            <div class="card-body p-4">
+              <div id="forumActivityChart" style="min-height: 290px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3">
         <!-- CARD 1 — Derniers Utilisateurs -->
         <div class="col-lg-12">
           <div class="card h-100">
@@ -228,7 +267,7 @@
       <div class="row">
         <div class="col-12">
 <footer class="text-center py-2 mt-6 text-secondary ">
-        <p class="mb-0">Copyright © 2026 Finovate. Tous droits réservés.</p>
+        <p class="mb-0">Copyright 2026 Finovate. Tous droits réservés.</p>
       </footer>
         </div>
 
@@ -242,6 +281,8 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      const chartData = {{ stats.chart_data|json_encode|raw }};
+
       // Données pour le graphique des rôles
       const rolesData = [
         {% for roleStat in stats.roles_distribution %}
@@ -277,6 +318,64 @@
         };
         const chart = new ApexCharts(document.getElementById('rolesChart'), options);
         chart.render();
+      }
+
+      if (document.getElementById('usersGrowthChart')) {
+        const options = {
+          series: [{ name: 'Inscriptions', data: chartData.users }],
+          chart: { type: 'area', height: 290, toolbar: { show: false } },
+          stroke: { curve: 'smooth', width: 3, colors: ['#237f4e'] },
+          fill: { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0.05 } },
+          dataLabels: { enabled: false },
+          grid: { borderColor: '#e5e7eb', strokeDashArray: 4 },
+          xaxis: { categories: chartData.labels, labels: { style: { colors: '#64748b' } } },
+          yaxis: { labels: { style: { colors: '#64748b' } } },
+          colors: ['#237f4e'],
+          tooltip: { theme: 'light' }
+        };
+        new ApexCharts(document.getElementById('usersGrowthChart'), options).render();
+      }
+
+      if (document.getElementById('transactionsChart')) {
+        const options = {
+          series: [
+            { name: 'Montant (TND)', type: 'area', data: chartData.transactions_amount },
+            { name: 'Nombre', type: 'line', data: chartData.transactions_count }
+          ],
+          chart: { height: 290, type: 'line', stacked: false, toolbar: { show: false } },
+          stroke: { curve: 'smooth', width: [2, 3], colors: ['#16a34a', '#0f766e'] },
+          fill: { type: ['gradient', 'solid'], gradient: { opacityFrom: 0.25, opacityTo: 0.05 } },
+          dataLabels: { enabled: false },
+          grid: { borderColor: '#e5e7eb', strokeDashArray: 4 },
+          xaxis: { categories: chartData.labels, labels: { style: { colors: '#64748b' } } },
+          yaxis: [
+            { labels: { style: { colors: '#64748b' } }, title: { text: 'TND', style: { color: '#64748b' } } },
+            { opposite: true, labels: { style: { colors: '#64748b' } }, title: { text: 'Transactions', style: { color: '#64748b' } } }
+          ],
+          colors: ['#16a34a', '#0f766e'],
+          tooltip: { theme: 'light' },
+          legend: { labels: { colors: '#64748b' } }
+        };
+        new ApexCharts(document.getElementById('transactionsChart'), options).render();
+      }
+
+      if (document.getElementById('forumActivityChart')) {
+        const options = {
+          series: [
+            { name: 'Posts', data: chartData.posts },
+            { name: 'Commentaires', data: chartData.comments }
+          ],
+          chart: { type: 'bar', height: 290, toolbar: { show: false } },
+          plotOptions: { bar: { columnWidth: '55%', borderRadius: 6 } },
+          dataLabels: { enabled: false },
+          grid: { borderColor: '#e5e7eb', strokeDashArray: 4 },
+          xaxis: { categories: chartData.labels, labels: { style: { colors: '#64748b' } } },
+          yaxis: { labels: { style: { colors: '#64748b' } } },
+          colors: ['#237f4e', '#60a5fa'],
+          tooltip: { theme: 'light' },
+          legend: { labels: { colors: '#64748b' } }
+        };
+        new ApexCharts(document.getElementById('forumActivityChart'), options).render();
       }
 
       const token = localStorage.getItem('finovate_token');

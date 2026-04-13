@@ -76,6 +76,104 @@ final class BackController extends AbstractController
         // Top 5 Forums par activité (simulation basée sur l'existence, idéalement jointure sur posts)
         $topForums = $forumRepo->findBy([], ['createdAt' => 'DESC'], 5);
 
+        $days = 30;
+        $today = new \DateTimeImmutable('today');
+        $start = $today->sub(new \DateInterval('P' . ($days - 1) . 'D'));
+
+        $labels = [];
+        $usersDaily = [];
+        $transactionsDailyCount = [];
+        $transactionsDailyAmount = [];
+        $postsDaily = [];
+        $commentsDaily = [];
+
+        $cursor = $start;
+        while ($cursor <= $today) {
+            $labels[] = $cursor->format('d/m');
+            $key = $cursor->format('Y-m-d');
+            $usersDaily[$key] = 0;
+            $transactionsDailyCount[$key] = 0;
+            $transactionsDailyAmount[$key] = 0.0;
+            $postsDaily[$key] = 0;
+            $commentsDaily[$key] = 0;
+            $cursor = $cursor->add(new \DateInterval('P1D'));
+        }
+
+        $conn = $em->getConnection();
+        $userTable = $em->getClassMetadata(User::class)->getTableName();
+        $transactionTable = $em->getClassMetadata(Transaction::class)->getTableName();
+        $postTable = $em->getClassMetadata(Post::class)->getTableName();
+        $commentTable = $em->getClassMetadata(Comment::class)->getTableName();
+
+        $startStr = $start->format('Y-m-d 00:00:00');
+        $endStr = $today->format('Y-m-d 23:59:59');
+
+        try {
+            $rows = $conn->fetchAllAssociative(
+                'SELECT DATE(created_at) AS day, COUNT(*) AS c FROM ' . $userTable . ' WHERE created_at BETWEEN :start AND :end GROUP BY day',
+                ['start' => $startStr, 'end' => $endStr]
+            );
+            foreach ($rows as $row) {
+                $day = (string) ($row['day'] ?? '');
+                if ($day !== '' && array_key_exists($day, $usersDaily)) {
+                    $usersDaily[$day] = (int) ($row['c'] ?? 0);
+                }
+            }
+        } catch (\Throwable) {
+        }
+
+        try {
+            $rows = $conn->fetchAllAssociative(
+                'SELECT DATE(date) AS day, COUNT(*) AS c, SUM(CAST(amount AS DECIMAL(18,2))) AS s FROM ' . $transactionTable . ' WHERE date BETWEEN :start AND :end GROUP BY day',
+                ['start' => $startStr, 'end' => $endStr]
+            );
+            foreach ($rows as $row) {
+                $day = (string) ($row['day'] ?? '');
+                if ($day !== '' && array_key_exists($day, $transactionsDailyCount)) {
+                    $transactionsDailyCount[$day] = (int) ($row['c'] ?? 0);
+                    $transactionsDailyAmount[$day] = (float) ($row['s'] ?? 0);
+                }
+            }
+        } catch (\Throwable) {
+        }
+
+        try {
+            $rows = $conn->fetchAllAssociative(
+                'SELECT DATE(created_at) AS day, COUNT(*) AS c FROM ' . $postTable . ' WHERE created_at BETWEEN :start AND :end GROUP BY day',
+                ['start' => $startStr, 'end' => $endStr]
+            );
+            foreach ($rows as $row) {
+                $day = (string) ($row['day'] ?? '');
+                if ($day !== '' && array_key_exists($day, $postsDaily)) {
+                    $postsDaily[$day] = (int) ($row['c'] ?? 0);
+                }
+            }
+        } catch (\Throwable) {
+        }
+
+        try {
+            $rows = $conn->fetchAllAssociative(
+                'SELECT DATE(created_at) AS day, COUNT(*) AS c FROM ' . $commentTable . ' WHERE created_at BETWEEN :start AND :end GROUP BY day',
+                ['start' => $startStr, 'end' => $endStr]
+            );
+            foreach ($rows as $row) {
+                $day = (string) ($row['day'] ?? '');
+                if ($day !== '' && array_key_exists($day, $commentsDaily)) {
+                    $commentsDaily[$day] = (int) ($row['c'] ?? 0);
+                }
+            }
+        } catch (\Throwable) {
+        }
+
+        $chartData = [
+            'labels' => $labels,
+            'users' => array_values($usersDaily),
+            'transactions_count' => array_values($transactionsDailyCount),
+            'transactions_amount' => array_values($transactionsDailyAmount),
+            'posts' => array_values($postsDaily),
+            'comments' => array_values($commentsDaily),
+        ];
+
         return $this->render('backoffice/index.html.twig', [
             'stats' => [
                 'total_users' => $totalUsers,
@@ -88,7 +186,8 @@ final class BackController extends AbstractController
                 'total_comments' => $totalComments,
                 'roles_distribution' => $rolesDistribution,
                 'last_users' => $lastUsers,
-                'top_forums' => $topForums
+                'top_forums' => $topForums,
+                'chart_data' => $chartData,
             ]
         ]);
     }
