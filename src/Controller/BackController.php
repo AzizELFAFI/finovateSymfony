@@ -21,6 +21,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/admin')]
 final class BackController extends AbstractController
@@ -304,13 +305,24 @@ final class BackController extends AbstractController
     }
 
     #[Route('/products/create', name: 'backoffice_product_create', methods: ['GET', 'POST'])]
-    public function createProduct(Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    public function createProduct(Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService, ValidatorInterface $validator): Response
     {
         $product = new Product();
         $form = $this->createForm(ProductType::class, $product);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Validation côté serveur avec assertions
+            $errors = $validator->validate($product);
+            if (count($errors) > 0) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+                return $this->render('backoffice/product/create.html.twig', [
+                    'form' => $form,
+                ]);
+            }
+
             $imageFile = $form->get('image')->getData();
             if ($imageFile) {
                 $imagePath = $fileUploadService->uploadImage($imageFile);
@@ -320,6 +332,7 @@ final class BackController extends AbstractController
             $em->persist($product);
             $em->flush();
 
+            $this->addFlash('success', 'Produit créé avec succès');
             return $this->redirectToRoute('backoffice_products');
         }
 
@@ -329,7 +342,7 @@ final class BackController extends AbstractController
     }
 
     #[Route('/products/{id}/edit', name: 'backoffice_product_edit', methods: ['GET', 'POST'])]
-    public function editProduct(int $id, Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    public function editProduct(int $id, Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService, ValidatorInterface $validator): Response
     {
         $product = $em->getRepository(Product::class)->find($id);
         if (!$product instanceof Product) {
@@ -340,6 +353,18 @@ final class BackController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Validation côté serveur avec assertions
+            $errors = $validator->validate($product);
+            if (count($errors) > 0) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+                return $this->render('backoffice/product/edit.html.twig', [
+                    'form' => $form,
+                    'product' => $product,
+                ]);
+            }
+
             $imageFile = $form->get('image')->getData();
             if ($imageFile) {
                 $oldImage = $product->getImage();
@@ -352,6 +377,7 @@ final class BackController extends AbstractController
 
             $em->flush();
 
+            $this->addFlash('success', 'Produit modifié avec succès');
             return $this->redirectToRoute('backoffice_products');
         }
 
@@ -421,13 +447,24 @@ final class BackController extends AbstractController
     }
 
     #[Route('/ads/create', name: 'backoffice_ad_create', methods: ['GET', 'POST'])]
-    public function createAd(Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    public function createAd(Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService, ValidatorInterface $validator): Response
     {
         $ad = new Ad();
         $form = $this->createForm(AdType::class, $ad);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Validation côté serveur avec assertions
+            $errors = $validator->validate($ad);
+            if (count($errors) > 0) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+                return $this->render('backoffice/ad/create.html.twig', [
+                    'form' => $form,
+                ]);
+            }
+
             $imageFile = $form->get('imagePath')->getData();
             if ($imageFile) {
                 $imagePath = $fileUploadService->uploadImage($imageFile);
@@ -437,6 +474,7 @@ final class BackController extends AbstractController
             $em->persist($ad);
             $em->flush();
 
+            $this->addFlash('success', 'Annonce créée avec succès');
             return $this->redirectToRoute('backoffice_ads');
         }
 
@@ -446,7 +484,7 @@ final class BackController extends AbstractController
     }
 
     #[Route('/ads/{id}/edit', name: 'backoffice_ad_edit', methods: ['GET', 'POST'])]
-    public function editAd(int $id, Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService): Response
+    public function editAd(int $id, Request $request, EntityManagerInterface $em, FileUploadService $fileUploadService, ValidatorInterface $validator): Response
     {
         $ad = $em->getRepository(Ad::class)->find($id);
         if (!$ad instanceof Ad) {
@@ -457,6 +495,18 @@ final class BackController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Validation côté serveur avec assertions
+            $errors = $validator->validate($ad);
+            if (count($errors) > 0) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+                return $this->render('backoffice/ad/edit.html.twig', [
+                    'form' => $form,
+                    'ad' => $ad,
+                ]);
+            }
+
             $imageFile = $form->get('imagePath')->getData();
             if ($imageFile) {
                 $oldImage = $ad->getImagePath();
@@ -469,6 +519,7 @@ final class BackController extends AbstractController
 
             $em->flush();
 
+            $this->addFlash('success', 'Annonce modifiée avec succès');
             return $this->redirectToRoute('backoffice_ads');
         }
 

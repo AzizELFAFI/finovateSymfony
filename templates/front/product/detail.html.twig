@@ -1,107 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>{{ product.name }} - Finovate</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <style>
-    body { padding-top: 80px; }
-    .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .product-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 0; }
-  </style>
-</head>
-<body>
-  <!-- NAVIGATION -->
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand fw-bold" href="{{ path('front_home') }}">Finovate</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link active" href="{{ path('front_products') }}">Produits</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ path('front_ads') }}">Annonces</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Dashboard</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+<html lang="fr">
 
-  <!-- BREADCRUMB -->
-  <div class="product-header">
-    <div class="container">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb breadcrumb-light">
-          <li class="breadcrumb-item"><a href="{{ path('front_home') }}" class="text-white">Accueil</a></li>
-          <li class="breadcrumb-item"><a href="{{ path('front_products') }}" class="text-white">Produits</a></li>
-          <li class="breadcrumb-item active text-white">{{ product.name }}</li>
-        </ol>
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="TemplateMo">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+
+    <title>Finovate - {{ product.name }}</title>
+
+    <base href="{{ asset('front/') }}">
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Additional CSS Files -->
+    <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+    <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+    <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  </head>
+
+  <body>
+
+    <!-- ***** Preloader Start ***** -->
+    <div id="preloader">
+        <div class="jumper">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>  
+    <!-- ***** Preloader End ***** -->
+
+    <header class="">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_home') }}">Accueil</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_about') }}">À propos</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_services') }}">Nos services</a>
+              </li>
+              <li class="nav-item active">
+                <a class="nav-link" href="{{ path('front_products') }}">Produits</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_ads') }}">Annonces</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_contact') }}">Contact</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_one_page') }}">Présentation</a>
+              </li>
+              <li class="nav-item" id="nav-login">
+                <a class="nav-link" href="{{ path('front_login') }}">Connexion</a>
+              </li>
+              <li class="nav-item" id="nav-dashboard" style="display: none;">
+                <a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a>
+              </li>
+              <li class="nav-item" id="nav-logout" style="display: none;">
+                <a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a>
+              </li>
+            </ul>
+          </div>
+        </div>
       </nav>
-    </div>
-  </div>
+    </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="py-5">
-    <div class="container">
-      <div class="row">
-        <!-- PRODUCT IMAGE -->
-        <div class="col-md-6 mb-4">
-          {% if product.image %}
-            <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid rounded-3 shadow-sm">
-          {% else %}
-            <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 500px;">
-              <i class="fas fa-image fa-5x text-muted"></i>
-            </div>
-          {% endif %}
-        </div>
-
-        <!-- PRODUCT INFO -->
-        <div class="col-md-6">
-          <h1 class="display-5 mb-3">{{ product.name }}</h1>
-          
-          <div class="mb-4">
-            <h4 class="text-muted mb-2">Prix</h4>
-            <div class="bg-warning bg-opacity-10 p-3 rounded-3">
-              <span class="display-6 fw-bold text-warning">{{ product.pricePoints }}</span>
-              <span class="fs-5 text-muted"> points</span>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <h4 class="text-muted mb-2">Stock disponible</h4>
-            <div class="alert {{ product.stock > 10 ? 'alert-success' : (product.stock > 0 ? 'alert-warning' : 'alert-danger') }}">
-              <i class="fas {{ product.stock > 0 ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
-              {{ product.stock > 0 ? product.stock ~ ' unité(s) en stock' : 'Produit actuellement indisponible' }}
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <h4 class="text-muted mb-2">Description</h4>
-            <p class="lead">{{ product.description ?? 'Pas de description disponible' }}</p>
-          </div>
-
-          <div class="d-flex gap-2">
-            {% if product.stock > 0 %}
-              <button type="button" class="btn btn-primary btn-lg">
-                <i class="fas fa-shopping-cart"></i> Acheter maintenant
-              </button>
-            {% else %}
-              <button type="button" class="btn btn-secondary btn-lg" disabled>
-                <i class="fas fa-ban"></i> Indisponible
-              </button>
-            {% endif %}
-            <a href="{{ path('front_products') }}" class="btn btn-outline-secondary btn-lg">
-              <i class="fas fa-arrow-left"></i> Retour
-            </a>
+    <!-- Page Content -->
+    <div class="page-heading header-text">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h1>{{ product.name }}</h1>
+            <span>Détails du produit</span>
           </div>
         </div>
       </div>
     </div>
-  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    <div class="product-detail-section">
+      <div class="container">
+        <div class="row" style="margin-top: 40px;">
+          <div class="col-md-6">
+            <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); padding: 0;">
+              {% if product.image %}
+                <img src="{{ asset(product.image) }}" alt="{{ product.name }}" style="width: 100%; display: block;">
+              {% else %}
+                <div style="width: 100%; height: 400px; background: #f5f5f5; display: flex; align-items: center; justify-content: center;">
+                  <i class="fa fa-image" style="font-size: 80px; color: #ccc;"></i>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div style="background: white; border-radius: 10px; padding: 30px; box-shadow: 0 0 20px rgba(0,0,0,0.1); margin-bottom: 30px;">
+              <h2 style="color: #1a1a1a; margin-bottom: 20px; font-weight: 600;">{{ product.name }}</h2>
+              
+              <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid #eee;">
+                <div>
+                  <span style="font-size: 14px; color: #666; display: block; margin-bottom: 5px;">Prix en Points</span>
+                  <span style="font-size: 32px; font-weight: bold; color: #ff6b35;">{{ product.pricePoints }} pts</span>
+                </div>
+                <div style="flex: 1;">
+                  <span style="font-size: 14px; color: #666; display: block; margin-bottom: 5px;">Disponibilité</span>
+                  <span style="padding: 8px 15px; border-radius: 5px; font-weight: 600; color: white; background-color: {{ product.stock > 0 ? '#28a745' : '#dc3545' }}; display: inline-block;">
+                    {{ product.stock > 0 ? 'En stock (' ~ product.stock ~ ')' : 'Rupture' }}
+                  </span>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 30px;">
+                <h4 style="color: #1a1a1a; margin-bottom: 10px;">Description</h4>
+                <p style="color: #666; line-height: 1.6;">
+                  {{ product.description ? product.description : 'Pas de description disponible' }}
+                </p>
+              </div>
+
+              <div style="display: flex; gap: 10px;">
+                <a href="{{ path('front_products') }}" class="filled-button" style="flex: 1; text-align: center;">
+                  <i class="fa fa-arrow-left"></i> Retour
+                </a>
+                {% if product.stock > 0 %}
+                  <button class="filled-button" style="flex: 1; background-color: #28a745; cursor: pointer;" onclick="alert('Fonctionnalité d\'achat en développement')">
+                    <i class="fa fa-shopping-cart"></i> Acheter
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top: 50px; margin-bottom: 50px;">
+          <div class="col-md-12">
+            <h3 style="color: #1a1a1a; margin-bottom: 20px; text-align: center;">Produits similaires</h3>
+            <div class="row" style="margin-top: 30px;">
+              <!-- Similar products can be added here -->
+              <div class="col-md-12 text-center" style="color: #999; padding: 30px;">
+                <p>Plus de détails et produits connexes à venir...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('front/assets/js/custom.js') }}"></script>
+
+  </body>
+
 </html>

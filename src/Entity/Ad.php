@@ -6,6 +6,7 @@ use App\Repository\AdRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: AdRepository::class)]
 class Ad
@@ -16,15 +17,37 @@ class Ad
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le titre de l\'annonce est requis')]
+    #[Assert\Length(
+        min: 3,
+        max: 255,
+        minMessage: 'Le titre doit contenir au moins 3 caractères',
+        maxMessage: 'Le titre ne doit pas dépasser 255 caractères'
+    )]
     private ?string $title = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'L\'image est requise')]
     private ?string $imagePath = null;
 
     #[ORM\Column]
+    #[Assert\NotBlank(message: 'La durée en secondes est requise')]
+    #[Assert\Positive(message: 'La durée doit être positive')]
+    #[Assert\Range(
+        min: 1,
+        max: 3600,
+        notInRangeMessage: 'La durée doit être entre 1 et 3600 secondes'
+    )]
     private ?int $duration = null;
 
     #[ORM\Column]
+    #[Assert\NotBlank(message: 'Les points de récompense sont requis')]
+    #[Assert\Positive(message: 'Les points doivent être positifs')]
+    #[Assert\Range(
+        min: 1,
+        max: 10000,
+        notInRangeMessage: 'Les points doivent être entre 1 et 10000'
+    )]
     private ?int $rewardPoints = null;
 
     /**

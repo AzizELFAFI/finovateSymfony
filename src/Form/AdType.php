@@ -19,8 +19,7 @@ class AdType extends AbstractType
                 'label' => 'Titre de l\'annonce',
                 'required' => true,
                 'attr' => [
-                    'maxlength' => 255,
-                    'placeholder' => 'Titre de l\'annonce',
+                    'placeholder' => 'Titre de l\'annonce (min. 3 caractères)',
                     'class' => 'form-control'
                 ],
             ])
@@ -37,8 +36,7 @@ class AdType extends AbstractType
                 'label' => 'Durée (en secondes)',
                 'required' => true,
                 'attr' => [
-                    'placeholder' => 'Durée en secondes',
-                    'min' => '1',
+                    'placeholder' => 'Durée en secondes (1-3600)',
                     'class' => 'form-control'
                 ],
             ])
@@ -46,8 +44,7 @@ class AdType extends AbstractType
                 'label' => 'Points de récompense',
                 'required' => true,
                 'attr' => [
-                    'placeholder' => 'Points offerts au clic',
-                    'min' => '0',
+                    'placeholder' => 'Points offerts au clic (1-10000)',
                     'class' => 'form-control'
                 ],
             ])

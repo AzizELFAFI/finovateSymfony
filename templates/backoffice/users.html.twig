@@ -63,7 +63,7 @@
                   <a class="btn btn-sm {{ role == 'USER' ? 'btn-primary' : 'btn-outline-primary' }}" href="{{ path('backoffice_users', {'role': 'USER', 'search': search, 'sort': sort|default('lastname'), 'dir': dir|default('ASC')}) }}">Users</a>
                 </div>
 
-                <form action="{{ path('backoffice_users') }}" method="get" class="d-flex align-items-center">
+                <form action="{{ path('backoffice_users') }}" method="get" class="d-flex align-items-center ">
                   <div class="input-group">
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Rechercher un utilisateur..." value="{{ search }}">
                     <input type="hidden" name="role" value="{{ role }}">

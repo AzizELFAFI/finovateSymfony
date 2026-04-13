@@ -20,8 +20,7 @@ class ProductType extends AbstractType
                 'label' => 'Nom du produit',
                 'required' => true,
                 'attr' => [
-                    'maxlength' => 255,
-                    'placeholder' => 'Nom du produit',
+                    'placeholder' => 'Nom du produit (min. 3 caractères)',
                     'class' => 'form-control'
                 ],
             ])
@@ -38,8 +37,7 @@ class ProductType extends AbstractType
                 'label' => 'Prix (en points)',
                 'required' => true,
                 'attr' => [
-                    'placeholder' => 'Prix en points',
-                    'min' => '0',
+                    'placeholder' => 'Prix en points (1-1000000)',
                     'class' => 'form-control'
                 ],
             ])
@@ -56,8 +54,7 @@ class ProductType extends AbstractType
                 'label' => 'Stock',
                 'required' => true,
                 'attr' => [
-                    'placeholder' => 'Quantité en stock',
-                    'min' => '0',
+                    'placeholder' => 'Quantité en stock (0+)',
                     'class' => 'form-control'
                 ],
             ])

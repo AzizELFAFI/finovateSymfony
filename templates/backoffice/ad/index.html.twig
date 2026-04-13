@@ -60,9 +60,9 @@
                 </a>
                 <h4 class="mb-0">Liste des annonces</h4>
               </div>
-              <form action="{{ path('backoffice_ads') }}" method="get" class="d-flex align-items-center">
+              <form action="{{ path('backoffice_ads') }}" method="get" class="d-flex align-items-center ">
                 <div class="input-group">
-                  <input type="text" name="search" class="form-control form-control-sm" placeholder="Rechercher une annonce..." value="{{ search }}">
+                  <input type="text" name="search" class="form-control form-control-sm margin-top: 10px;" placeholder="Rechercher une annonce..." value="{{ search }}">
                   <input type="hidden" name="sort" value="{{ sort|default('title') }}">
                   <input type="hidden" name="dir" value="{{ dir|default('ASC') }}">
                   <button class="btn btn-primary btn-sm" type="submit">

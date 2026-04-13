@@ -1,103 +1,167 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Finovate - Marché des Produits</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('backoffice/assets/images/favicon_io/apple-touch-icon.png') }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('backoffice/assets/images/favicon_io/favicon-32x32.png') }}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('backoffice/assets/images/favicon_io/favicon-16x16.png') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <style>
-    body { padding-top: 80px; }
-    .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .card { transition: transform 0.3s; border: none; }
-    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-    .product-image { height: 200px; object-fit: cover; }
-    .price-badge { font-size: 1.5rem; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <!-- NAVIGATION -->
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand fw-bold" href="{{ path('front_home') }}">Finovate</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link active" href="{{ path('front_products') }}">Produits</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ path('front_ads') }}">Annonces</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Dashboard</a></li>
-        </ul>
+<html lang="fr">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="TemplateMo">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+
+    <title>Finovate - Marché des Produits</title>
+
+    <base href="{{ asset('front/') }}">
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Additional CSS Files -->
+    <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+    <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+    <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  </head>
+
+  <body>
+
+    <!-- ***** Preloader Start ***** -->
+    <div id="preloader">
+        <div class="jumper">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>  
+    <!-- ***** Preloader End ***** -->
+
+    <header class="">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_home') }}">Accueil</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_about') }}">À propos</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_services') }}">Nos services</a>
+              </li>
+              <li class="nav-item active">
+                <a class="nav-link" href="{{ path('front_products') }}">Produits</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_ads') }}">Annonces</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_contact') }}">Contact</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_one_page') }}">Présentation</a>
+              </li>
+              <li class="nav-item" id="nav-login">
+                <a class="nav-link" href="{{ path('front_login') }}">Connexion</a>
+              </li>
+              <li class="nav-item" id="nav-dashboard" style="display: none;">
+                <a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a>
+              </li>
+              <li class="nav-item" id="nav-logout" style="display: none;">
+                <a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-heading header-text">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h1>Marché des Produits</h1>
+            <span>Découvrez notre sélection de produits exclusifs et échangez vos points</span>
+          </div>
+        </div>
       </div>
     </div>
-  </nav>
 
-  <!-- MAIN CONTENT -->
-  <main class="py-5">
-    <div class="container">
-      <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-          <h1 class="display-4">Marché des Produits</h1>
-          <p class="lead text-muted">Découvrez nos produits exclusifs et échangez vos points</p>
-        </div>
-        <div class="col-md-6">
-          <form action="{{ path('front_products') }}" method="get" class="d-flex gap-2">
-            <input type="text" name="search" class="form-control" placeholder="Rechercher un produit..." value="{{ search }}">
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-search"></i> Rechercher
-            </button>
-            {% if search %}
-              <a href="{{ path('front_products') }}" class="btn btn-outline-secondary">Réinitialiser</a>
-            {% endif %}
-          </form>
-        </div>
-      </div>
-
-      {% if products is empty %}
-        <div class="alert alert-info text-center py-5">
-          <i class="fas fa-box-open fa-3x mb-3"></i>
-          <h4>Aucun produit trouvé</h4>
-          <p>Revenez bientôt pour découvrir nos nouveaux produits!</p>
-        </div>
-      {% else %}
-        <div class="row g-4">
-          {% for product in products %}
-          <div class="col-md-6 col-lg-4">
-            <div class="card h-100 shadow-sm">
-              {% if product.image %}
-                <img src="{{ asset(product.image) }}" class="card-img-top product-image" alt="{{ product.name }}">
-              {% else %}
-                <div class="card-img-top product-image bg-light d-flex align-items-center justify-content-center">
-                  <i class="fas fa-image fa-3x text-muted"></i>
-                </div>
+    <div class="products-section">
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-md-12">
+            <form action="{{ path('front_products') }}" method="get" style="display: flex; gap: 10px;">
+              <input type="text" name="search" class="form-control" placeholder="Rechercher un produit..." value="{{ search }}" style="flex: 1;">
+              <button type="submit" class="filled-button">
+                <i class="fa fa-search"></i> Rechercher
+              </button>
+              {% if search %}
+                <a href="{{ path('front_products') }}" class="filled-button" style="background-color: #999;">Réinitialiser</a>
               {% endif %}
-              <div class="card-body">
-                <h5 class="card-title">{{ product.name }}</h5>
-                <p class="card-text text-muted">{{ product.description ? product.description : 'Pas de description' }}</p>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <span class="badge bg-warning text-dark price-badge">{{ product.pricePoints }} pts</span>
-                  <span class="badge {{ product.stock > 0 ? 'bg-success' : 'bg-danger' }}">
-                    {{ product.stock > 0 ? 'En stock' : 'Rupture' }}
-                  </span>
-                </div>
-                
-                <a href="{{ path('front_product_detail', {'id': product.id}) }}" class="btn btn-primary btn-sm w-100">
-                  <i class="fas fa-eye"></i> Détails
-                </a>
-              </div>
+            </form>
+          </div>
+        </div>
+
+        {% if products is empty %}
+          <div class="row">
+            <div class="col-md-12 text-center" style="padding: 60px 0;">
+              <i class="fa fa-box-open" style="font-size: 60px; color: #ccc; margin-bottom: 20px;"></i>
+              <h3>Aucun produit trouvé</h3>
+              <p>Revenez bientôt pour découvrir nos nouveaux produits!</p>
             </div>
           </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+        {% else %}
+          <div class="row" style="margin-top: 40px;">
+            {% for product in products %}
+            <div class="col-md-6 col-lg-4">
+              <div class="product-item" style="background: white; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 30px; transition: all 0.3s ease;">
+                <div class="product-image" style="position: relative; height: 250px; overflow: hidden; background: #f5f5f5;">
+                  {% if product.image %}
+                    <img src="{{ asset(product.image) }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                  {% else %}
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ccc;">
+                      <i class="fa fa-image" style="font-size: 60px;"></i>
+                    </div>
+                  {% endif %}
+                </div>
+                
+                <div class="product-body" style="padding: 20px;">
+                  <h5 style="margin-bottom: 10px; font-weight: 600; color: #1a1a1a;">{{ product.name }}</h5>
+                  <p style="font-size: 14px; color: #666; margin-bottom: 15px; min-height: 40px;">
+                    {{ product.description ? product.description|length > 100 ? product.description|slice(0, 100) ~ '...' : product.description : 'Pas de description disponible' }}
+                  </p>
+                  
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <span style="font-size: 20px; font-weight: bold; color: #ff6b35;">{{ product.pricePoints }} pts</span>
+                    <span style="padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; color: white; background-color: {{ product.stock > 0 ? '#28a745' : '#dc3545' }};">
+                      {{ product.stock > 0 ? 'En stock (' ~ product.stock ~ ')' : 'Rupture' }}
+                    </span>
+                  </div>
+                  
+                  <a href="{{ path('front_product_detail', {'id': product.id}) }}" class="filled-button" style="width: 100%; text-align: center; display: block;">
+                    <i class="fa fa-eye"></i> Voir les détails
+                  </a>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
     </div>
-  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    <!-- Scripts -->
+    <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('front/assets/js/custom.js') }}"></script>
+
+  </body>
+
 </html>
+
