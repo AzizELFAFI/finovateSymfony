@@ -75,6 +75,15 @@
       font-size: 0.85rem;
     }
 
+    .chart-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      padding: 20px;
+      height: 100%;
+    }
+
     .sidebar {
       border-radius: 18px;
       background: rgba(255, 255, 255, 0.92);
@@ -564,6 +573,9 @@
                           <p class="t">Points</p>
                         </div>
                       </div>
+                    </div>
+
+                    <div class="row">
                       <div class="col-md-12 mb-3">
                         <div class="bank-card">
                           <div class="d-flex justify-content-between align-items-start">
@@ -580,6 +592,77 @@
                             <div>
                               <p class="label">STATUT</p>
                               <p class="value">ACTIVE</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Transaction Statistics Charts Section -->
+                    <div id="transaction-stats" style="display:none;">
+                      <h4 style="font-weight: 800; margin: 25px 0 20px 0; color: #0f766e; border-bottom: 2px solid rgba(15,118,110,0.15); padding-bottom: 10px;">
+                        <span style="display:inline-flex; width: 32px; height: 32px; border-radius: 10px; align-items:center; justify-content:center; background: rgba(15, 118, 110, 0.12); color: #0f766e; margin-right: 10px;">
+                          <svg viewBox="0 0 24 24" fill="none" style="width: 18px; height: 18px;">
+                            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </span>
+                        Statistiques de Transactions
+                      </h4>
+                      <div class="row">
+                        <!-- Daily Limit Progress -->
+                        <div class="col-md-6 mb-4">
+                          <div class="chart-card">
+                            <h5 style="font-weight: 700; margin: 0 0 15px 0; color: #334155; font-size: 14px;">Limite Quotidienne</h5>
+                            <div style="position: relative; height: 200px;">
+                              <canvas id="dailyLimitChart"></canvas>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px;">
+                              <span style="font-size: 12px; color: #6b7280;">Restant: </span>
+                              <span id="tx-daily-remaining" style="font-weight: 800; color: #28a745; font-size: 16px;">3000 TND</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Sent vs Received -->
+                        <div class="col-md-6 mb-4">
+                          <div class="chart-card">
+                            <h5 style="font-weight: 700; margin: 0 0 15px 0; color: #334155; font-size: 14px;">Envoyé vs Reçu</h5>
+                            <div style="position: relative; height: 200px;">
+                              <canvas id="sentReceivedChart"></canvas>
+                            </div>
+                            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 10px;">
+                              <span style="font-size: 12px; color: #6b7280;">
+                                <span style="display: inline-block; width: 12px; height: 12px; background: #ef4444; border-radius: 3px; margin-right: 5px;"></span>
+                                Envoyé: <span id="tx-sent-month" style="font-weight: 700; color: #ef4444;">0 TND</span>
+                              </span>
+                              <span style="font-size: 12px; color: #6b7280;">
+                                <span style="display: inline-block; width: 12px; height: 12px; background: #28a745; border-radius: 3px; margin-right: 5px;"></span>
+                                Reçu: <span id="tx-total-received" style="font-weight: 700; color: #28a745;">0 TND</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Transaction Counts -->
+                        <div class="col-md-6 mb-4">
+                          <div class="chart-card">
+                            <h5 style="font-weight: 700; margin: 0 0 15px 0; color: #334155; font-size: 14px;">Nombre de Transactions</h5>
+                            <div style="position: relative; height: 200px;">
+                              <canvas id="transactionCountChart"></canvas>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Today's Activity -->
+                        <div class="col-md-6 mb-4">
+                          <div class="chart-card">
+                            <h5 style="font-weight: 700; margin: 0 0 15px 0; color: #334155; font-size: 14px;">Activité Aujourd'hui</h5>
+                            <div style="position: relative; height: 200px;">
+                              <canvas id="todayActivityChart"></canvas>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px;">
+                              <span style="font-size: 12px; color: #6b7280;">Envoyé aujourd'hui: </span>
+                              <span id="tx-sent-today" style="font-weight: 800; color: #0f766e; font-size: 16px;">0 TND</span>
                             </div>
                           </div>
                         </div>
@@ -796,6 +879,7 @@
   <script src="{{ asset('front/assets/js/owl.js') }}"></script>
   <script src="{{ asset('front/assets/js/slick.js') }}"></script>
   <script src="{{ asset('front/assets/js/accordions.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <script>
   function toggleForums(e) {
@@ -979,6 +1063,150 @@
         var navAdminSide = document.getElementById('nav-admin-side');
         if (navAdminSide && data.roles && data.roles.includes('ROLE_ADMIN')) {
           navAdminSide.style.display = 'block';
+        }
+
+        // Transaction statistics
+        var txStatsEl = document.getElementById('transaction-stats');
+        if (txStatsEl && data.transaction_stats) {
+          var stats = data.transaction_stats;
+          
+          var sentTodayEl = document.getElementById('tx-sent-today');
+          var sentMonthEl = document.getElementById('tx-sent-month');
+          var sentCountEl = document.getElementById('tx-sent-count');
+          var receivedCountEl = document.getElementById('tx-received-count');
+          var totalReceivedEl = document.getElementById('tx-total-received');
+          var dailyRemainingEl = document.getElementById('tx-daily-remaining');
+
+          if (sentTodayEl) sentTodayEl.textContent = Number(stats.sent_today).toFixed(2) + ' TND';
+          if (sentMonthEl) sentMonthEl.textContent = Number(stats.sent_this_month).toFixed(2) + ' TND';
+          if (totalReceivedEl) totalReceivedEl.textContent = Number(stats.total_received).toFixed(2) + ' TND';
+          if (dailyRemainingEl) dailyRemainingEl.textContent = Number(stats.daily_remaining).toFixed(2) + ' TND';
+
+          txStatsEl.style.display = '';
+
+          // Create Charts
+          var dailyLimit = Number(stats.daily_limit) || 3000;
+          var sentToday = Number(stats.sent_today) || 0;
+          var remaining = Math.max(0, dailyLimit - sentToday);
+
+          // Daily Limit Doughnut Chart
+          var dailyLimitCanvas = document.getElementById('dailyLimitChart');
+          if (dailyLimitCanvas) {
+            new Chart(dailyLimitCanvas, {
+              type: 'doughnut',
+              data: {
+                labels: ['Utilisé', 'Restant'],
+                datasets: [{
+                  data: [sentToday, remaining],
+                  backgroundColor: ['#ef4444', '#28a745'],
+                  borderWidth: 0
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                  legend: { display: false }
+                }
+              }
+            });
+          }
+
+          // Sent vs Received Bar Chart
+          var sentReceivedCanvas = document.getElementById('sentReceivedChart');
+          if (sentReceivedCanvas) {
+            new Chart(sentReceivedCanvas, {
+              type: 'bar',
+              data: {
+                labels: ['Ce mois'],
+                datasets: [
+                  {
+                    label: 'Envoyé',
+                    data: [Number(stats.sent_this_month) || 0],
+                    backgroundColor: '#ef4444',
+                    borderRadius: 6
+                  },
+                  {
+                    label: 'Reçu',
+                    data: [Number(stats.total_received) || 0],
+                    backgroundColor: '#28a745',
+                    borderRadius: 6
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false }
+                },
+                scales: {
+                  y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                  x: { grid: { display: false } }
+                }
+              }
+            });
+          }
+
+          // Transaction Count Bar Chart
+          var txCountCanvas = document.getElementById('transactionCountChart');
+          if (txCountCanvas) {
+            new Chart(txCountCanvas, {
+              type: 'bar',
+              data: {
+                labels: ['Envoyés', 'Reçus'],
+                datasets: [{
+                  data: [Number(stats.sent_count) || 0, Number(stats.received_count) || 0],
+                  backgroundColor: ['#0f766e', '#10b981'],
+                  borderRadius: 8
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false }
+                },
+                scales: {
+                  y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                  x: { grid: { display: false } }
+                }
+              }
+            });
+          }
+
+          // Today Activity Gauge Chart
+          var todayCanvas = document.getElementById('todayActivityChart');
+          if (todayCanvas) {
+            var percentUsed = dailyLimit > 0 ? Math.min(100, (sentToday / dailyLimit) * 100) : 0;
+            new Chart(todayCanvas, {
+              type: 'doughnut',
+              data: {
+                labels: ['Utilisé', 'Restant'],
+                datasets: [{
+                  data: [percentUsed, 100 - percentUsed],
+                  backgroundColor: ['#0f766e', 'rgba(15,118,110,0.15)'],
+                  borderWidth: 0
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        return context.dataIndex === 0 ? percentUsed.toFixed(1) + '% utilisé' : '';
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
         }
       }
 

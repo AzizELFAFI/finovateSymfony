@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Repository\TransactionRepository;
 use App\Service\EmailVerifier;
 use App\Service\AiService;
 use App\Service\FaceApiClient;
@@ -466,7 +467,7 @@ final class ApiAuthController extends AbstractController
     }
 
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
-    public function me(Security $security): JsonResponse
+    public function me(Security $security, TransactionRepository $transactionRepo): JsonResponse
     {
         $user = $security->getUser();
 
@@ -478,6 +479,9 @@ final class ApiAuthController extends AbstractController
         if ($user->getImageName()) {
             $imageUrl = '/uploads/profile/' . $user->getImageName();
         }
+
+        // Get transaction statistics
+        $transactionStats = $transactionRepo->getUserStats((int) $user->getId());
 
         return $this->json([
             'nom' => $user->getLastname(),
@@ -492,6 +496,7 @@ final class ApiAuthController extends AbstractController
             'numero_carte' => $user->getNumero_carte(),
             'image_url' => $imageUrl,
             'face_enabled' => $user->isFaceAuthEnabled(),
+            'transaction_stats' => $transactionStats,
         ]);
     }
 
