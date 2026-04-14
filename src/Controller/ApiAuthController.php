@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -254,6 +255,11 @@ final class ApiAuthController extends AbstractController
             return $this->json(['message' => 'Non authentifié.'], 401);
         }
 
+        $imageUrl = null;
+        if ($user->getImageName()) {
+            $imageUrl = '/uploads/profile/' . $user->getImageName();
+        }
+
         return $this->json([
             'nom' => $user->getLastname(),
             'prenom' => $user->getFirstname(),
@@ -265,6 +271,83 @@ final class ApiAuthController extends AbstractController
             'solde' => $user->getSolde(),
             'points' => $user->getPoints(),
             'numero_carte' => $user->getNumero_carte(),
+            'image_url' => $imageUrl,
+        ]);
+    }
+
+    #[Route('/api/me/avatar', name: 'api_me_avatar', methods: ['POST'])]
+    public function uploadAvatar(Request $request, Security $security, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $security->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $file = $request->files->get('image');
+        if (!$file instanceof UploadedFile) {
+            return $this->json(['message' => 'Fichier image manquant (champ "image").'], 422);
+        }
+
+        if (!$file->isValid()) {
+            return $this->json(['message' => 'Upload invalide.'], 422);
+        }
+
+        $mime = (string) $file->getMimeType();
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            return $this->json(['message' => 'Format image non supporté. Utilisez JPG/PNG/WebP.'], 422);
+        }
+
+        if ($file->getSize() !== null && $file->getSize() > 2 * 1024 * 1024) {
+            return $this->json(['message' => 'Image trop grande (max 2MB).'], 422);
+        }
+
+        $user->setImageFile($file);
+
+        try {
+            $entityManager->flush();
+        } catch (\Throwable $e) {
+            $msg = 'Mise à jour impossible.';
+            if ($this->getParameter('kernel.environment') === 'dev') {
+                $msg = $e->getMessage();
+            }
+            return $this->json(['message' => $msg], 500);
+        }
+
+        $imageUrl = null;
+        if ($user->getImageName()) {
+            $imageUrl = '/uploads/profile/' . $user->getImageName();
+        }
+
+        return $this->json([
+            'message' => 'Image mise à jour.',
+            'image_url' => $imageUrl,
+        ]);
+    }
+
+    #[Route('/api/me/avatar', name: 'api_me_avatar_delete', methods: ['DELETE'])]
+    public function deleteAvatar(Security $security, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $security->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $user->setImageName(null);
+        $user->setUpdatedAt(new \DateTime());
+
+        try {
+            $entityManager->flush();
+        } catch (\Throwable $e) {
+            $msg = 'Mise à jour impossible.';
+            if ($this->getParameter('kernel.environment') === 'dev') {
+                $msg = $e->getMessage();
+            }
+            return $this->json(['message' => $msg], 500);
+        }
+
+        return $this->json([
+            'message' => 'Photo supprimée.',
+            'image_url' => null,
         ]);
     }
 

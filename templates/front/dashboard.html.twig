@@ -239,6 +239,92 @@
       margin: 8px 0;
     }
 
+    .avatar-uploader {
+      position: relative;
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(15, 118, 110, 0.25);
+      background: rgba(15, 118, 110, 0.06);
+      flex: 0 0 auto;
+    }
+
+    .avatar-uploader img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .avatar-uploader .camera-btn {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
+      padding: 0;
+    }
+
+    .avatar-uploader .camera-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-delete-avatar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 20px;
+      border: 2px solid #ef4444;
+      color: #dc2626;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.04) 100%);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+    }
+
+    .btn-delete-avatar:hover {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
+      box-shadow: 0 8px 24px rgba(220, 38, 38, 0.25);
+      transform: translateY(-2px);
+      border-color: #dc2626;
+    }
+
+    .btn-delete-avatar:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+    }
+
+    .btn-delete-avatar:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-delete-avatar svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn-delete-avatar .spinner-border {
+      width: 18px;
+      height: 18px;
+      border-width: 2px;
+    }
+
     @keyframes shimmer {
       0% {
         background-position: 100% 0
@@ -303,8 +389,13 @@
     <div class="container">
       <div class="row">
         <div class="col-md-8">
-          <h4 id="welcome-title" class="welcome-title">Bienvenue</h4>
-          <p id="welcome-sub" class="welcome-sub">Chargement de votre profil...</p>
+          <div class="d-flex align-items-center" style="gap: 12px; flex-wrap: wrap;">
+            <img id="user-avatar" alt="Avatar" src="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; display: none;">
+            <div>
+              <h4 id="welcome-title" class="welcome-title">Bienvenue</h4>
+              <p id="welcome-sub" class="welcome-sub">Chargement de votre profil...</p>
+            </div>
+          </div>
         </div>
         <div class="col-md-4">
           <a href="{{ path('front_logout') }}" class="border-button">Déconnexion</a>
@@ -320,7 +411,10 @@
           <div class="row">
             <div class="col-lg-3 mb-4">
               <div class="sidebar" id="sidebar">
-                <div class="title">Mon espace</div>
+                <div class="d-flex align-items-center" style="gap: 10px; margin-bottom: 10px;">
+                  <img id="sidebar-avatar" alt="Avatar" src="" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: none;">
+                  <div class="title" style="margin: 0;">Mon espace</div>
+                </div>
                 <a href="#" id="nav-dashboard-side" class="active">Dashboard</a>
                 <a href="{{ path('user_transactions') }}" id="nav-transactions">Transactions</a>
                 <a href="{{ path('user_goals') }}" id="nav-goals">Goals</a>
@@ -423,6 +517,36 @@
 
                   <form id="edit-profile-form" novalidate="novalidate">
                     <div class="form-row">
+                      <div class="form-group col-md-12">
+                        <label>Photo de profil</label>
+                        <div class="d-flex align-items-center" style="gap: 14px; flex-wrap: wrap;">
+                          <div class="avatar-uploader">
+                            <img id="edit-avatar-preview" alt="Avatar" src="{{ asset('backoffice/assets/images/avatar-user.jpg') }}" style="display: block;">
+                            <button type="button" class="camera-btn" id="open-avatar-picker" aria-label="Choisir une photo">
+                              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 6.5L10.2 5H13.8L15 6.5H18.5C19.3284 6.5 20 7.17157 20 8V18.5C20 19.3284 19.3284 20 18.5 20H5.5C4.67157 20 4 19.3284 4 18.5V8C4 7.17157 4.67157 6.5 5.5 6.5H9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                                <path d="M12 17C13.6569 17 15 15.6569 15 14C15 12.3431 13.6569 11 12 11C10.3431 11 9 12.3431 9 14C9 15.6569 10.3431 17 12 17Z" stroke="currentColor" stroke-width="1.6"/>
+                              </svg>
+                            </button>
+                          </div>
+
+                          <div>
+                            <input type="file" id="edit-avatar-file" accept="image/png,image/jpeg,image/webp" style="display:none">
+                            <small class="form-text text-muted">JPG / PNG / WebP (max 2MB)</small>
+                            <div class="mt-2">
+                              <button type="button" class="btn-delete-avatar" id="delete-avatar-btn" style="display:none">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>Supprimer la photo</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-row">
                       <div class="form-group col-md-6">
                         <label for="edit-prenom">Prénom</label>
                         <input type="text" class="form-control" id="edit-prenom" placeholder="Votre prénom">
@@ -477,6 +601,43 @@
     </div>
   </div>
 
+  <!-- Modal de confirmation de suppression -->
+  <div class="modal fade" id="confirmDeleteAvatarModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteAvatarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
+        <div class="modal-header" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-bottom: 1px solid rgba(239, 68, 68, 0.1); padding: 20px 24px;">
+          <h5 class="modal-title" id="confirmDeleteAvatarLabel" style="color: #dc2626; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 24px; height: 24px;">
+              <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Supprimer la photo
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #dc2626; opacity: 0.8; transition: opacity 0.2s;">
+            <span aria-hidden="true" style="font-size: 28px;">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" style="padding: 30px 24px; text-align: center;">
+          <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" fill="none" style="width: 36px; height: 36px; color: #dc2626;">
+              <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <p style="font-size: 17px; color: #1f2937; font-weight: 700; margin: 0;">Voulez-vous vraiment supprimer votre photo de profil ?</p>
+          <p style="font-size: 14px; color: #6b7280; margin: 10px 0 0; font-weight: 500;">Cette action ne peut pas être annulée.</p>
+        </div>
+        <div class="modal-footer" style="border-top: 1px solid #f3f4f6; padding: 20px 24px; justify-content: center; gap: 15px;">
+          <button type="button" class="btn" data-dismiss="modal" style="border-radius: 999px; padding: 12px 28px; font-weight: 700; background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; transition: all 0.2s;">
+            Annuler
+          </button>
+          <button type="button" class="btn" id="confirm-delete-avatar" style="border-radius: 999px; padding: 12px 28px; font-weight: 700; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25); transition: all 0.2s;">
+            <span id="confirm-text">Supprimer</span>
+            <span id="confirm-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
   <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ asset('front/assets/js/custom.js') }}"></script>
@@ -501,6 +662,8 @@
       var loginItem = document.getElementById('nav-login');
       var dashboardItem = document.getElementById('nav-dashboard');
       var logoutItem = document.getElementById('nav-logout');
+
+      var defaultAvatarUrl = '{{ asset('backoffice/assets/images/avatar-user.jpg') }}';
 
       function setAuthedUI(isAuthed) {
         if (!loginItem || !dashboardItem || !logoutItem) return;
@@ -556,6 +719,9 @@
         var editEmailEl = document.getElementById('edit-email');
         var editBirthdateEl = document.getElementById('edit-date-naissance');
         var editCinEl = document.getElementById('edit-cin');
+        var editAvatarPreviewEl = document.getElementById('edit-avatar-preview');
+        var headerAvatarEl = document.getElementById('user-avatar');
+        var sidebarAvatarEl = document.getElementById('sidebar-avatar');
 
         if (nomEl) nomEl.textContent = data.nom || '';
         if (prenomEl) prenomEl.textContent = data.prenom || '';
@@ -574,6 +740,35 @@
         if (editEmailEl) editEmailEl.value = data.email || '';
         if (editBirthdateEl) editBirthdateEl.value = data.date_naissance || '';
         if (editCinEl) editCinEl.value = data.cin || '';
+
+        if (editAvatarPreviewEl) {
+          if (data.image_url) {
+            editAvatarPreviewEl.src = data.image_url + '?t=' + Date.now();
+            editAvatarPreviewEl.style.display = '';
+          } else {
+            editAvatarPreviewEl.src = defaultAvatarUrl;
+            editAvatarPreviewEl.style.display = '';
+          }
+        }
+
+        var deleteAvatarBtn = document.getElementById('delete-avatar-btn');
+        if (deleteAvatarBtn) {
+          deleteAvatarBtn.style.display = data.image_url ? '' : 'none';
+        }
+
+        function applyAvatar(el) {
+          if (!el) return;
+          if (data.image_url) {
+            el.src = data.image_url + '?t=' + Date.now();
+            el.style.display = '';
+          } else {
+            el.removeAttribute('src');
+            el.style.display = 'none';
+          }
+        }
+
+        applyAvatar(headerAvatarEl);
+        applyAvatar(sidebarAvatarEl);
 
         var navAdminSide = document.getElementById('nav-admin-side');
         if (navAdminSide && data.roles && data.roles.includes('ROLE_ADMIN')) {
@@ -626,6 +821,193 @@
 
       var editForm = document.getElementById('edit-profile-form');
       if (editForm) {
+        var avatarInput = document.getElementById('edit-avatar-file');
+        var deleteAvatarBtn = document.getElementById('delete-avatar-btn');
+        var confirmDeleteAvatarBtn = document.getElementById('confirm-delete-avatar');
+        var confirmDeleteAvatarModal = document.getElementById('confirmDeleteAvatarModal');
+        var confirmSpinner = document.getElementById('confirm-spinner');
+        var confirmText = document.getElementById('confirm-text');
+
+        var openAvatarPickerBtn = document.getElementById('open-avatar-picker');
+        if (openAvatarPickerBtn && avatarInput) {
+          openAvatarPickerBtn.addEventListener('click', function () {
+            avatarInput.click();
+          });
+        }
+        if (avatarInput) {
+          avatarInput.addEventListener('change', function () {
+
+            var successEl = document.getElementById('edit-success');
+            var errorEl = document.getElementById('edit-error');
+            if (successEl) successEl.style.display = 'none';
+            if (errorEl) errorEl.style.display = 'none';
+
+            var file = avatarInput.files && avatarInput.files.length > 0 ? avatarInput.files[0] : null;
+            if (!file) return;
+
+            try {
+              var previewEl = document.getElementById('edit-avatar-preview');
+              if (previewEl) {
+                previewEl.src = URL.createObjectURL(file);
+                previewEl.style.display = '';
+              }
+              var headerAvatarEl = document.getElementById('user-avatar');
+              if (headerAvatarEl) {
+                headerAvatarEl.src = previewEl ? previewEl.src : URL.createObjectURL(file);
+                headerAvatarEl.style.display = '';
+              }
+              var sidebarAvatarEl = document.getElementById('sidebar-avatar');
+              if (sidebarAvatarEl) {
+                sidebarAvatarEl.src = previewEl ? previewEl.src : URL.createObjectURL(file);
+                sidebarAvatarEl.style.display = '';
+              }
+            } catch (e) {}
+
+            if (file.size && file.size > 2 * 1024 * 1024) {
+              if (errorEl) {
+                errorEl.textContent = 'Image trop grande (max 2MB).';
+                errorEl.style.display = '';
+
+              }
+              avatarInput.value = '';
+              return;
+            }
+
+            var fd = new FormData();
+            fd.append('image', file);
+
+            fetch('/api/me/avatar', {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer ' + token
+              },
+              body: fd
+            })
+              .then(function (res) {
+                return res.json().then(function (data) {
+                  return { ok: res.ok, data: data };
+                }).catch(function () {
+                  return { ok: res.ok, data: {} };
+                });
+              })
+              .then(function (result) {
+                if (!result.ok) {
+                  if (errorEl) {
+                    errorEl.textContent = (result.data && result.data.message) ? result.data.message : 'Upload impossible.';
+                    errorEl.style.display = '';
+                  }
+                  return;
+                }
+
+                if (successEl) {
+                  successEl.textContent = (result.data && result.data.message) ? result.data.message : 'Image mise à jour.';
+                  successEl.style.display = '';
+                }
+
+                fetch('/api/me', {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': 'Bearer ' + token
+                  }
+                })
+                  .then(function (r) { return r.json(); })
+                  .then(function (d) { showProfile(d || {}); });
+              })
+              .catch(function () {
+                if (errorEl) {
+                  errorEl.textContent = 'Erreur réseau.';
+                  errorEl.style.display = '';
+                }
+              });
+          });
+        }
+
+        if (deleteAvatarBtn) {
+          deleteAvatarBtn.addEventListener('click', function () {
+            var successEl = document.getElementById('edit-success');
+            var errorEl = document.getElementById('edit-error');
+            if (successEl) successEl.style.display = 'none';
+            if (errorEl) errorEl.style.display = 'none';
+
+            if (typeof window.jQuery !== 'undefined' && confirmDeleteAvatarModal) {
+              window.jQuery('#confirmDeleteAvatarModal').modal('show');
+              return;
+            }
+
+            var ok = window.confirm('Voulez-vous vraiment supprimer votre photo de profil ?');
+            if (!ok) return;
+
+            if (confirmDeleteAvatarBtn) confirmDeleteAvatarBtn.click();
+          });
+        }
+
+        if (confirmDeleteAvatarBtn) {
+          confirmDeleteAvatarBtn.addEventListener('click', function () {
+            var successEl = document.getElementById('edit-success');
+            var errorEl = document.getElementById('edit-error');
+            if (successEl) successEl.style.display = 'none';
+            if (errorEl) errorEl.style.display = 'none';
+
+            confirmDeleteAvatarBtn.disabled = true;
+            if (confirmSpinner) confirmSpinner.style.display = '';
+            if (confirmText) confirmText.style.display = 'none';
+
+            fetch('/api/me/avatar', {
+              method: 'DELETE',
+              headers: {
+                'Authorization': 'Bearer ' + token
+              }
+            })
+              .then(function (res) {
+                return res.json().then(function (data) {
+                  return { ok: res.ok, data: data };
+                }).catch(function () {
+                  return { ok: res.ok, data: {} };
+                });
+              })
+              .then(function (result) {
+                if (!result.ok) {
+                  if (errorEl) {
+                    errorEl.textContent = (result.data && result.data.message) ? result.data.message : 'Suppression impossible.';
+                    errorEl.style.display = '';
+                  }
+                  return;
+                }
+
+                if (avatarInput) avatarInput.value = '';
+
+                if (successEl) {
+                  successEl.textContent = (result.data && result.data.message) ? result.data.message : 'Photo supprimée.';
+                  successEl.style.display = '';
+                }
+
+                if (typeof window.jQuery !== 'undefined' && confirmDeleteAvatarModal) {
+                  window.jQuery('#confirmDeleteAvatarModal').modal('hide');
+                }
+
+                fetch('/api/me', {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': 'Bearer ' + token
+                  }
+                })
+                  .then(function (r) { return r.json(); })
+                  .then(function (d) { showProfile(d || {}); });
+              })
+              .catch(function () {
+                if (errorEl) {
+                  errorEl.textContent = 'Erreur réseau.';
+                  errorEl.style.display = '';
+                }
+              })
+              .finally(function () {
+                confirmDeleteAvatarBtn.disabled = false;
+                if (confirmSpinner) confirmSpinner.style.display = 'none';
+                if (confirmText) confirmText.style.display = '';
+              });
+          });
+        }
+
         editForm.addEventListener('submit', function (e) {
           e.preventDefault();
 
