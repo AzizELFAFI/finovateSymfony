@@ -334,4 +334,48 @@ class AiService
         $decoded = json_decode($result, true);
         return $decoded ?? ['toxic' => false, 'level' => 'low', 'suggestion' => ''];
     }
+
+    /** Generate personalized financial advice based on user data */
+    public function generateFinancialAdvice(array $userData): string
+    {
+        $prompt = sprintf(
+            "Données financières de l'utilisateur:\n" .
+            "- Solde actuel: %.2f TND\n" .
+            "- Points de fidélité: %d\n" .
+            "- Transactions envoyées aujourd'hui: %.2f TND\n" .
+            "- Transactions envoyées ce mois: %.2f TND\n" .
+            "- Total reçu ce mois: %.2f TND\n" .
+            "- Nombre de transactions envoyées: %d\n" .
+            "- Nombre de transactions reçues: %d\n" .
+            "- Limite quotidienne restante: %.2f TND\n" .
+            "- Nombre de goals: %d\n" .
+            "- Goals en cours: %d\n" .
+            "- Goals complétés: %d\n" .
+            "- Montant total épargné dans goals: %.2f TND",
+            $userData['solde'] ?? 0,
+            $userData['points'] ?? 0,
+            $userData['sent_today'] ?? 0,
+            $userData['sent_this_month'] ?? 0,
+            $userData['total_received'] ?? 0,
+            $userData['sent_count'] ?? 0,
+            $userData['received_count'] ?? 0,
+            $userData['daily_remaining'] ?? 3000,
+            $userData['goals_count'] ?? 0,
+            $userData['goals_in_progress'] ?? 0,
+            $userData['goals_completed'] ?? 0,
+            $userData['goals_total_saved'] ?? 0
+        );
+
+        return $this->call(
+            "Tu es un conseiller financier personnel expert de FINOVATE, une application bancaire tunisienne. Analyse les données financières de l'utilisateur et donne des conseils personnalisés en français. " .
+            "Ton conseil doit être structuré avec:\n" .
+            "1. Une analyse rapide de sa situation financière actuelle\n" .
+            "2. 2-3 conseils concrets et actionnables pour améliorer sa gestion financière\n" .
+            "3. Des suggestions sur ses goals si applicable\n" .
+            "4. Une recommandation finale motivante\n\n" .
+            "Sois bienveillant, pratique et utilise des émojis pour rendre le conseil engageant. Reste concis (max 300 mots).",
+            $prompt,
+            0.8
+        );
+    }
 }

@@ -760,4 +760,61 @@ final class ApiAuthController extends AbstractController
             'stored_password' => $user->getPassword(),
         ]);
     }
+
+    #[Route('/api/ai/financial-advice', name: 'api_ai_financial_advice', methods: ['POST'])]
+    public function generateFinancialAdvice(
+        Request $request,
+        AiService $aiService,
+        TransactionRepository $transactionRepository,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        // Get transaction stats
+        $txStats = $transactionRepository->getUserStats((int) $user->getId());
+
+        // Get goals stats
+        $goals = $entityManager->getRepository(\App\Entity\Goal::class)->findBy(['id_user' => (int) $user->getId()]);
+        $goalsCount = count($goals);
+        $goalsInProgress = 0;
+        $goalsCompleted = 0;
+        $goalsTotalSaved = 0;
+
+        foreach ($goals as $goal) {
+            if ($goal->getStatus() === 'COMPLETED') {
+                $goalsCompleted++;
+            } else {
+                $goalsInProgress++;
+            }
+            $goalsTotalSaved += (float) str_replace(',', '.', (string) $goal->getCurrent_amount());
+        }
+
+        $userData = [
+            'solde' => (float) str_replace(',', '.', (string) $user->getSolde()),
+            'points' => (int) $user->getPoints(),
+            'sent_today' => (float) ($txStats['sent_today'] ?? 0),
+            'sent_this_month' => (float) ($txStats['sent_this_month'] ?? 0),
+            'total_received' => (float) ($txStats['total_received'] ?? 0),
+            'sent_count' => (int) ($txStats['sent_count'] ?? 0),
+            'received_count' => (int) ($txStats['received_count'] ?? 0),
+            'daily_remaining' => (float) ($txStats['daily_remaining'] ?? 3000),
+            'goals_count' => $goalsCount,
+            'goals_in_progress' => $goalsInProgress,
+            'goals_completed' => $goalsCompleted,
+            'goals_total_saved' => $goalsTotalSaved,
+        ];
+
+        try {
+            $advice = $aiService->generateFinancialAdvice($userData);
+            return $this->json(['advice' => $advice]);
+        } catch (\Throwable $e) {
+            return $this->json([
+                'message' => 'Erreur lors de la génération du conseil.',
+                'advice' => 'Désolé, je ne peux pas générer de conseil pour le moment. Veuillez réessayer plus tard.'
+            ], 500);
+        }
+    }
 }
