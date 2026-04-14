@@ -67,6 +67,85 @@
       .fin-links a {
         font-weight: 600;
       }
+
+      .voice-field {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .voice-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        background: #ffffff;
+        color: #237f4e;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .15s ease;
+        cursor: pointer;
+        flex: 0 0 auto;
+      }
+
+      .voice-btn:hover {
+        border-color: #237f4e;
+        box-shadow: 0 0 0 .2rem rgba(35, 127, 78, .12);
+      }
+
+      .voice-btn[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .voice-btn.is-listening {
+        background: rgba(35, 127, 78, 0.08);
+        border-color: #237f4e;
+      }
+
+      .voice-status {
+        margin-top: 12px;
+        display: none;
+        border-radius: 12px;
+      }
+
+      .dictate-all-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 12px;
+        border: 2px solid #237f4e;
+        background: linear-gradient(135deg, #1a5f3a 0%, #237f4e 100%);
+        color: #ffffff;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .15s ease;
+        margin-bottom: 16px;
+      }
+
+      .dictate-all-btn:hover {
+        box-shadow: 0 4px 12px rgba(35, 127, 78, 0.3);
+        transform: translateY(-1px);
+      }
+
+      .dictate-all-btn[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .dictate-all-btn.is-listening {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border-color: #dc3545;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+        50% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+      }
     </style>
 
   </head>
@@ -147,6 +226,10 @@
               <h4 class="fin-login-title">Créer un compte</h4>
               <div class="fin-login-subtitle">Complétez les informations ci-dessous pour démarrer.</div>
               <form id="signup" action="" method="post" novalidate="novalidate">
+                <button type="button" id="dictate-all-btn" class="dictate-all-btn">
+                  <svg viewBox="0 0 24 24" fill="none" style="width:20px; height:20px;"><path d="M12 14a3 3 0 003-3V7a3 3 0 10-6 0v4a3 3 0 003 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 11a7 7 0 01-14 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 22h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span id="dictate-all-text">Dicter tout le formulaire</span>
+                </button>
                 <div class="row">
                   <div class="col-lg-6 col-md-12 col-sm-12 mb-3">
                     <fieldset>
@@ -307,6 +390,276 @@
 
         var form = document.getElementById('signup');
         if (!form) return;
+
+        var voiceStatus = document.createElement('div');
+        voiceStatus.className = 'alert alert-info voice-status';
+        voiceStatus.setAttribute('role', 'alert');
+        voiceStatus.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right:8px;"></span><span id="voice-status-text">Écoute en cours...</span>';
+        form.prepend(voiceStatus);
+
+        function setVoiceStatus(show, text) {
+          if (!voiceStatus) return;
+          if (show) {
+            var t = document.getElementById('voice-status-text');
+            if (t) t.textContent = text || 'Écoute en cours...';
+            voiceStatus.style.display = '';
+          } else {
+            voiceStatus.style.display = 'none';
+          }
+        }
+
+        function createMicButton() {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'voice-btn';
+          btn.setAttribute('aria-label', 'Saisie vocale');
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" style="width:18px; height:18px;"><path d="M12 14a3 3 0 003-3V7a3 3 0 10-6 0v4a3 3 0 003 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 11a7 7 0 01-14 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 22h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          return btn;
+        }
+
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        var supportsSpeech = !!SpeechRecognition;
+
+        // Dictate all button logic
+        var dictateAllBtn = document.getElementById('dictate-all-btn');
+        var dictateAllText = document.getElementById('dictate-all-text');
+
+        async function extractAllFieldsWithAi(transcript) {
+          var res = await fetch('/api/ai/signup-all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: transcript })
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) {
+            throw new Error(data.message || 'IA indisponible.');
+          }
+          return data;
+        }
+
+        function startDictateAll() {
+          if (!supportsSpeech) {
+            showSignupError('Saisie vocale non supportée par ce navigateur. Utilisez Chrome/Edge.');
+            return;
+          }
+
+          var rec = new SpeechRecognition();
+          rec.lang = 'fr-FR';
+          rec.interimResults = false;
+          rec.maxAlternatives = 1;
+
+          dictateAllBtn.classList.add('is-listening');
+          dictateAllBtn.disabled = true;
+          dictateAllText.textContent = 'Parle maintenant...';
+
+          clearSignupError();
+          setVoiceStatus(true, 'Dicte tes informations personnelles (nom, prenom, email, date de naissance, CIN, telephone)...');
+
+          var finished = false;
+          function cleanup() {
+            if (finished) return;
+            finished = true;
+            setVoiceStatus(false);
+            dictateAllBtn.classList.remove('is-listening');
+            dictateAllBtn.disabled = false;
+            dictateAllText.textContent = 'Dicter tout le formulaire';
+          }
+
+          rec.onerror = function () {
+            cleanup();
+            showSignupError('Erreur de reconnaissance vocale.');
+          };
+
+          rec.onresult = async function (evt) {
+            try {
+              var transcript = '';
+              if (evt && evt.results && evt.results[0] && evt.results[0][0]) {
+                transcript = (evt.results[0][0].transcript || '').trim();
+              }
+              if (!transcript) {
+                cleanup();
+                showSignupError('Aucun texte detecte.');
+                return;
+              }
+
+              setVoiceStatus(true, 'Analyse IA en cours...');
+              var fields = await extractAllFieldsWithAi(transcript);
+              cleanup();
+
+              // Fill each field if value exists
+              var fieldMap = {
+                nom: 'nom',
+                prenom: 'prenom',
+                email: 'email',
+                date_naissance: 'date_naissance',
+                cin: 'cin',
+                telephone: 'telephone'
+              };
+
+              var filledCount = 0;
+              Object.keys(fieldMap).forEach(function (key) {
+                var val = fields[key];
+                if (val && typeof val === 'string' && val.trim() !== '') {
+                  var input = document.getElementById(fieldMap[key]);
+                  if (input) {
+                    input.value = val.trim();
+                    filledCount++;
+                  }
+                }
+              });
+
+              if (filledCount === 0) {
+                showSignupError('Aucune information reconnue. Resseye en parlant plus clairement.');
+              }
+            } catch (e) {
+              cleanup();
+              showSignupError((e && e.message) ? e.message : 'Erreur IA.');
+            }
+          };
+
+          rec.onend = function () {
+            cleanup();
+          };
+
+          try {
+            rec.start();
+          } catch (e) {
+            cleanup();
+            showSignupError('Impossible de demarrer le micro.');
+          }
+        }
+
+        if (dictateAllBtn) {
+          dictateAllBtn.addEventListener('click', startDictateAll);
+          if (!supportsSpeech) {
+            dictateAllBtn.disabled = true;
+          }
+        }
+
+        async function extractFieldWithAi(field, transcript) {
+          var res = await fetch('/api/ai/signup-field', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ field: field, transcript: transcript })
+          });
+
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) {
+            throw new Error(data.message || 'IA indisponible.');
+          }
+          return (data && typeof data.value === 'string') ? data.value : '';
+        }
+
+        function startVoiceForField(field, inputEl, btnEl) {
+          if (!supportsSpeech) {
+            showSignupError('Saisie vocale non supportée par ce navigateur. Utilisez Chrome/Edge.');
+            return;
+          }
+          if (!inputEl) return;
+
+          var rec = new SpeechRecognition();
+          rec.lang = 'fr-FR';
+          rec.interimResults = false;
+          rec.maxAlternatives = 1;
+
+          if (btnEl) {
+            btnEl.classList.add('is-listening');
+            btnEl.disabled = true;
+          }
+
+          clearSignupError();
+          setVoiceStatus(true, 'Parle maintenant...');
+
+          var finished = false;
+          function cleanup() {
+            if (finished) return;
+            finished = true;
+            setVoiceStatus(false);
+            if (btnEl) {
+              btnEl.classList.remove('is-listening');
+              btnEl.disabled = false;
+            }
+          }
+
+          rec.onerror = function () {
+            cleanup();
+            showSignupError('Erreur de reconnaissance vocale.');
+          };
+
+          rec.onresult = async function (evt) {
+            try {
+              var transcript = '';
+              if (evt && evt.results && evt.results[0] && evt.results[0][0]) {
+                transcript = (evt.results[0][0].transcript || '').trim();
+              }
+              if (!transcript) {
+                cleanup();
+                showSignupError('Aucun texte détecté.');
+                return;
+              }
+
+              setVoiceStatus(true, 'Analyse IA en cours...');
+              var value = await extractFieldWithAi(field, transcript);
+              cleanup();
+
+              if (!value) {
+                showSignupError('Impossible de comprendre. Réessaie en parlant plus clairement.');
+                return;
+              }
+
+              inputEl.value = value;
+              try { inputEl.focus(); } catch (e) {}
+            } catch (e) {
+              cleanup();
+              showSignupError((e && e.message) ? e.message : 'Erreur IA.');
+            }
+          };
+
+          rec.onend = function () {
+            cleanup();
+          };
+
+          try {
+            rec.start();
+          } catch (e) {
+            cleanup();
+            showSignupError('Impossible de démarrer le micro.');
+          }
+        }
+
+        var voiceFields = [
+          { field: 'nom', id: 'nom' },
+          { field: 'prenom', id: 'prenom' },
+          { field: 'email', id: 'email' },
+          { field: 'date_naissance', id: 'date_naissance' },
+          { field: 'cin', id: 'cin' },
+          { field: 'telephone', id: 'telephone' }
+        ];
+
+        voiceFields.forEach(function (vf) {
+          var inputEl = document.getElementById(vf.id);
+          if (!inputEl) return;
+          var fieldset = inputEl.closest('fieldset') || inputEl.parentElement;
+          if (!fieldset) return;
+
+          var wrapper = document.createElement('div');
+          wrapper.className = 'voice-field';
+          fieldset.appendChild(wrapper);
+
+          wrapper.appendChild(inputEl);
+          var micBtn = createMicButton();
+          wrapper.appendChild(micBtn);
+
+          if (!supportsSpeech) {
+            micBtn.disabled = true;
+          }
+
+          micBtn.addEventListener('click', function () {
+            startVoiceForField(vf.field, inputEl, micBtn);
+          });
+        });
 
         function showSignupError(message) {
           var existing = form.querySelector('.signup-validation-alert');

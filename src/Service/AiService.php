@@ -38,8 +38,87 @@ class AiService
         $data = $response->toArray();
         return trim($data['choices'][0]['message']['content'] ?? '');
     }
+    // ----------EXTRAIRE SIGNUP
 
-    // ── Features ──────────────────────────────────────────────────────────────
+    public function extractSignupField(string $field, string $transcript): string
+    {
+        $field = trim($field);
+        $transcript = trim($transcript);
+
+        if ($field === '' || $transcript === '') {
+            return '';
+        }
+
+        $allowed = ['nom', 'prenom', 'email', 'date_naissance', 'cin', 'telephone'];
+        if (!in_array($field, $allowed, true)) {
+            return '';
+        }
+
+        $constraints = match ($field) {
+            'nom', 'prenom' => 'Return a person name in French. Keep letters, spaces, hyphen, apostrophe. Minimum 3 characters.',
+            'email' => 'Return a valid email. Convert French spoken tokens: "arobase" -> "@", "point" -> ".". Remove spaces. Lowercase.',
+            'date_naissance' => 'Return a date in ISO format YYYY-MM-DD. Understand French dates (e.g. "12 janvier 2001", "douze janvier deux mille un").',
+            'cin' => 'Return exactly 8 digits. Remove spaces.',
+            'telephone' => 'Return exactly 8 digits. Remove spaces.',
+            default => 'Return a value.',
+        };
+
+        $result = $this->call(
+            'You are an information extraction engine. Reply ONLY with valid JSON: {"value":"..."}. No markdown. No extra keys. If unsure, return {"value":""}.',
+            "Field: {$field}\nConstraint: {$constraints}\nTranscript: {$transcript}",
+            0.2
+        );
+
+        $result = preg_replace('/^```(?:json)?\s*/i', '', trim($result));
+        $result = preg_replace('/\s*```$/', '', $result);
+
+        $decoded = json_decode($result, true);
+        if (!is_array($decoded)) {
+            return '';
+        }
+
+        $value = $decoded['value'] ?? '';
+        if (!is_string($value)) {
+            return '';
+        }
+
+        return trim($value);
+    }
+
+    /** Extract all signup fields from a single phrase */
+    public function extractAllSignupFields(string $transcript): array
+    {
+        $transcript = trim($transcript);
+        if ($transcript === '') {
+            return [];
+        }
+
+        $result = $this->call(
+            'You are an information extraction engine. Extract signup fields from the user spoken phrase in French. Reply ONLY with valid JSON object with these keys (use empty string if not found): {"nom":"...","prenom":"...","email":"...","date_naissance":"YYYY-MM-DD","cin":"8 digits","telephone":"8 digits"}. No markdown. No extra keys. Convert spoken tokens: "arobase" -> "@", "point" -> ".". Understand French dates like "12 janvier 2001". Remove spaces from CIN/telephone.',
+            $transcript,
+            0.2
+        );
+
+        $result = preg_replace('/^```(?:json)?\s*/i', '', trim($result));
+        $result = preg_replace('/\s*```$/', '', $result);
+
+        $decoded = json_decode($result, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        // Normalize each field
+        $fields = ['nom', 'prenom', 'email', 'date_naissance', 'cin', 'telephone'];
+        $out = [];
+        foreach ($fields as $f) {
+            $val = $decoded[$f] ?? '';
+            $out[$f] = is_string($val) ? trim($val) : '';
+        }
+
+        return $out;
+    }
+
+    // -------------------------------------------------------------------------
 
     /** General chat assistant */
     public function chat(string $message, array $history = []): string

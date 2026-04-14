@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Service\EmailVerifier;
+use App\Service\AiService;
 use App\Service\FaceApiClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
@@ -36,6 +37,63 @@ final class ApiAuthController extends AbstractController
         }
 
         return $this->toSha256Hex($password);
+    }
+
+    #[Route('/api/ai/signup-field', name: 'api_ai_signup_field', methods: ['POST'])]
+    public function aiSignupField(Request $request, AiService $aiService): JsonResponse
+    {
+        $payload = json_decode($request->getContent() ?: '', true);
+        if (!is_array($payload)) {
+            return $this->json(['message' => 'Payload JSON invalide.'], 400);
+        }
+
+        $field = trim((string) ($payload['field'] ?? ''));
+        $transcript = trim((string) ($payload['transcript'] ?? ''));
+
+        if ($field === '' || $transcript === '') {
+            return $this->json(['message' => 'Champs requis manquants.'], 422);
+        }
+
+        try {
+            $value = $aiService->extractSignupField($field, $transcript);
+        } catch (\Throwable $e) {
+            $msg = 'IA indisponible.';
+            if ($this->getParameter('kernel.environment') === 'dev') {
+                $msg = $e->getMessage();
+            }
+            return $this->json(['message' => $msg], 502);
+        }
+
+        return $this->json([
+            'value' => $value,
+        ]);
+    }
+
+    #[Route('/api/ai/signup-all', name: 'api_ai_signup_all', methods: ['POST'])]
+    public function aiSignupAll(Request $request, AiService $aiService): JsonResponse
+    {
+        $payload = json_decode($request->getContent() ?: '', true);
+        if (!is_array($payload)) {
+            return $this->json(['message' => 'Payload JSON invalide.'], 400);
+        }
+
+        $transcript = trim((string) ($payload['transcript'] ?? ''));
+
+        if ($transcript === '') {
+            return $this->json(['message' => 'Transcription manquante.'], 422);
+        }
+
+        try {
+            $fields = $aiService->extractAllSignupFields($transcript);
+        } catch (\Throwable $e) {
+            $msg = 'IA indisponible.';
+            if ($this->getParameter('kernel.environment') === 'dev') {
+                $msg = $e->getMessage();
+            }
+            return $this->json(['message' => $msg], 502);
+        }
+
+        return $this->json($fields);
     }
 
     #[Route('/api/face/disable', name: 'api_face_disable', methods: ['POST'])]
