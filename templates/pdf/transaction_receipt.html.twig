@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Reçu - Finovate</title>
+    <style>
+        @page {
+            margin: 3mm;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'DejaVu Sans Mono', 'Courier New', monospace;
+            font-size: 9px;
+            color: #000;
+            width: 74mm;
+            padding: 2mm;
+        }
+        .center {
+            text-align: center;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .logo {
+            width: 50mm;
+            height: auto;
+            margin-bottom: 2mm;
+        }
+        .company-name {
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .separator {
+            border-top: 1px dashed #000;
+            margin: 3mm 0;
+        }
+        .separator-double {
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            height: 3px;
+            margin: 3mm 0;
+        }
+        .title {
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            margin: 2mm 0;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin: 1mm 0;
+        }
+        .row-center {
+            text-align: center;
+            margin: 1mm 0;
+        }
+        .label {
+            font-weight: bold;
+        }
+        .amount-section {
+            border: 1px solid #000;
+            padding: 3mm;
+            margin: 3mm 0;
+            text-align: center;
+        }
+        .amount-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .reference {
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .status {
+            font-weight: bold;
+            font-size: 10px;
+        }
+        .footer {
+            font-size: 7px;
+            text-align: center;
+            margin-top: 3mm;
+        }
+        .barcode {
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            letter-spacing: 2px;
+            text-align: center;
+            margin: 2mm 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="center">
+        <img src="{{ logo_path }}" alt="Logo" class="logo">
+        <div class="company-name">FINOVATE</div>
+        <div style="font-size: 7px;">Votre partenaire financier</div>
+    </div>
+
+    <div class="separator-double"></div>
+
+    <div class="title">RECU DE TRANSFERT</div>
+
+    <div class="separator"></div>
+
+    <div class="row">
+        <span class="label">REF:</span>
+        <span class="reference">{{ reference }}</span>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="row-center bold">EXPEDITEUR</div>
+    <div class="row">
+        <span>{{ sender_firstname }} {{ sender_lastname }}</span>
+    </div>
+    <div class="row">
+        <span>CIN: {{ sender_cin }}</span>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="row-center bold">BENEFICIAIRE</div>
+    <div class="row">
+        <span>{{ beneficiary_firstname }} {{ beneficiary_lastname }}</span>
+    </div>
+    <div class="row">
+        <span>CIN: {{ beneficiary_cin }}</span>
+    </div>
+    <div class="row">
+        <span>CARTE: {{ beneficiary_card_number }}</span>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="amount-section">
+        <div class="label">MONTANT</div>
+        <div class="amount-value">{{ amount }} TND</div>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="row">
+        <span class="label">DATE:</span>
+        <span>{{ date }}</span>
+    </div>
+    <div class="row">
+        <span class="label">HEURE:</span>
+        <span>{{ time }}</span>
+    </div>
+    <div class="row">
+        <span class="label">STATUT:</span>
+        <span class="status">APPROUVE</span>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="row-center" style="font-size: 8px;">
+        {{ description }}
+    </div>
+
+    <div class="separator-double"></div>
+
+    <div class="barcode">{{ reference }}</div>
+
+    <div class="footer">
+        Merci de votre confiance<br>
+        Conservez ce recu<br>
+        Service client: contact@finovate.tn
+    </div>
+
+    <div class="separator"></div>
+    <div class="center" style="font-size: 7px;">
+        {{ "now"|date("d/m/Y H:i") }}
+    </div>
+</body>
+</html>

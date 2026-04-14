@@ -17,12 +17,15 @@ use App\Model\TransferRequest;
 use App\Entity\Product;
 use App\Entity\Ad;
 use App\Entity\UserAdClick;
+use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
@@ -183,7 +186,34 @@ final class FrontController extends AbstractController
                     $em->persist($tx);
                     $em->flush();
 
-                    $this->addFlash('success', 'Virement effectué avec succès.');
+                    // Generate PDF receipt and save to uploads
+                    $receiptsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/receipts';
+                    if (!is_dir($receiptsDir)) {
+                        mkdir($receiptsDir, 0777, true);
+                    }
+
+                    $pdfService = new PdfService($this->container->get('twig'));
+                    $pdfContent = $pdfService->generateTransactionReceipt([
+                        'logo_path' => $this->getParameter('kernel.project_dir') . '/public/logo.png',
+                        'reference' => 'TRX-' . str_pad((string) $tx->getId(), 8, '0', STR_PAD_LEFT),
+                        'sender_firstname' => $user->getFirstname(),
+                        'sender_lastname' => $user->getLastname(),
+                        'sender_email' => $user->getEmail(),
+                        'sender_cin' => $user->getCin(),
+                        'beneficiary_firstname' => $beneficiary->getFirstname(),
+                        'beneficiary_lastname' => $beneficiary->getLastname(),
+                        'beneficiary_cin' => $beneficiary->getCin(),
+                        'beneficiary_card_number' => $beneficiary->getNumero_carte(),
+                        'amount' => number_format($amount, 2, ',', ' '),
+                        'date' => $tx->getDate()->format('d/m/Y'),
+                        'time' => $tx->getDate()->format('H:i:s'),
+                        'description' => $description ?: 'Virement bancaire',
+                    ]);
+
+                    $pdfFilename = 'receipt_' . $tx->getId() . '.pdf';
+                    file_put_contents($receiptsDir . '/' . $pdfFilename, $pdfContent);
+
+                    $this->addFlash('success', 'Virement effectué avec succès. <a href="/uploads/receipts/' . $pdfFilename . '" class="alert-link" download>Télécharger le reçu PDF</a>');
                     return $this->redirectToRoute('user_transactions');
                     }
                 }
