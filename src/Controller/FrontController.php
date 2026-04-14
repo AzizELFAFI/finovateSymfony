@@ -157,6 +157,16 @@ final class FrontController extends AbstractController
                 } elseif ($senderBalance < $amount) {
                     $form->get('montant')->addError(new \Symfony\Component\Form\FormError("Solde insuffisant."));
                 } else {
+                    // Check daily limit (3000)
+                    $transactionRepo = $em->getRepository(Transaction::class);
+                    $sentToday = $transactionRepo->getTotalSentToday((int) $user->getId());
+                    $dailyLimit = 3000.0;
+                    
+                    if (($sentToday + $amount) > $dailyLimit) {
+                        $remaining = max(0, $dailyLimit - $sentToday);
+                        $this->addFlash('danger', "Limite journalière de 3000 dépassée. Vous avez déjà envoyé " . number_format($sentToday, 2, ',', ' ') . " aujourd'hui. Restant: " . number_format($remaining, 2, ',', ' ') . ".");
+                        return $this->redirectToRoute('user_transactions');
+                    } else {
                     $receiverBalance = (float) str_replace(',', '.', (string) $beneficiary->getSolde());
                     $user->setSolde((string) ($senderBalance - $amount));
                     $beneficiary->setSolde((string) ($receiverBalance + $amount));
@@ -174,6 +184,7 @@ final class FrontController extends AbstractController
 
                     $this->addFlash('success', 'Virement effectué avec succès.');
                     return $this->redirectToRoute('user_transactions');
+                    }
                 }
             }
         }
