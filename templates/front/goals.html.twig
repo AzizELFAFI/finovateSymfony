@@ -228,6 +228,23 @@
               {% set percent = (t > 0) ? ((c / t) * 100) : 0 %}
               {% if percent > 100 %}{% set percent = 100 %}{% endif %}
 
+              {# Calculate monthly amount needed #}
+              {% set remaining = t - c %}
+              {% set monthlyAmount = 0 %}
+              {% set monthsLeft = 0 %}
+              {% if goal.deadline and goal.status != 'COMPLETED' and remaining > 0 %}
+                {% set now = "now"|date("Y-m-d") %}
+                {% set deadlineDate = goal.deadline|date("Y-m-d") %}
+                {% set diffSeconds = deadlineDate|date("U") - now|date("U") %}
+                {% set monthsLeft = (diffSeconds / (30 * 24 * 3600))|round(1, 'ceil') %}
+                {% if monthsLeft > 0 %}
+                  {% set monthlyAmount = remaining / monthsLeft %}
+                {% else %}
+                  {% set monthsLeft = 0 %}
+                  {% set monthlyAmount = remaining %}
+                {% endif %}
+              {% endif %}
+
               <div class="col-md-6 mb-4">
                 <div class="goal-card">
                   <div class="d-flex justify-content-between align-items-start" style="gap:12px">
@@ -244,11 +261,37 @@
 
                   <div style="height:12px"></div>
 
-                  <div class="meta">{{ c }} / {{ t }}</div>
+                  <div class="meta">{{ c|number_format(2, ',', ' ') }} / {{ t|number_format(2, ',', ' ') }} TND</div>
                   <div style="height:8px"></div>
                   <div class="progress">
                     <div class="progress-bar bg-success" role="progressbar" style="width: {{ percent }}%"></div>
                   </div>
+
+                  {# Monthly amount to save #}
+                  {% if goal.status != 'COMPLETED' and remaining > 0 %}
+                    <div style="height:12px"></div>
+                    <div class="monthly-suggestion" style="background: linear-gradient(135deg, rgba(15,118,110,0.08) 0%, rgba(16,185,129,0.05) 100%); border-radius: 12px; padding: 12px 14px; border: 1px solid rgba(15,118,110,0.15);">
+                      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <svg viewBox="0 0 24 24" fill="none" style="width: 18px; height: 18px; color: #0f766e;">
+                          <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span style="font-weight: 800; color: #0f766e; font-size: 0.85rem;">Épargne mensuelle suggérée</span>
+                      </div>
+                      <div style="font-size: 1.25rem; font-weight: 900; color: #0f766e;">
+                        {{ monthlyAmount|number_format(2, ',', ' ') }} TND
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #6b7280;"> / mois</span>
+                      </div>
+                      {% if monthsLeft > 0 %}
+                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">
+                          Restant: {{ remaining|number_format(2, ',', ' ') }} TND sur {{ monthsLeft|number_format(0) }} mois
+                        </div>
+                      {% else %}
+                        <div style="font-size: 0.75rem; color: #dc2626; margin-top: 2px;">
+                          Deadline dépassée ! Montant restant: {{ remaining|number_format(2, ',', ' ') }} TND
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% endif %}
 
                   <div style="height:14px"></div>
 
