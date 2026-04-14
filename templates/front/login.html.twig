@@ -218,10 +218,15 @@
                   <div class="col-lg-12" style="margin-top: 14px;">
                     <div class="fin-actions">
                       <button type="submit" class="filled-button" style="width: 100%; border-radius: 12px; height: 46px;">Connexion</button>
+                      <button type="button" id="face-only-login-btn" class="filled-button" style="width: 100%; border-radius: 12px; height: 46px; background: #0f766e; border-color: #0f766e;">Connexion (email + visage)</button>
+                      <div id="face-only-scan" class="alert alert-info" style="display:none; margin: 0; border-radius: 12px;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right:8px;"></span>
+                        <span id="face-only-scan-text">Scan du visage en cours...</span>
+                      </div>
                       <div class="fin-divider">ou</div>
                       <a href="{{ path('connect_google_start') }}" class="fin-google-btn">
                         <i class="fa fa-google"></i>
-                        Se connecter avec Google
+                        Continuer avec Google
                       </a>
                       <a href="{{ path('connect_github_start') }}" class="fin-github-btn">
                         <i class="fa fa-github"></i>
@@ -410,6 +415,166 @@
             showLoginError('Erreur réseau. Réessaie.');
           }
         });
+
+        var faceOnlyBtn = document.getElementById('face-only-login-btn');
+        if (faceOnlyBtn) {
+          faceOnlyBtn.addEventListener('click', async function () {
+            var scanEl = document.getElementById('face-only-scan');
+            var scanTextEl = document.getElementById('face-only-scan-text');
+            var email = document.getElementById('email') ? document.getElementById('email').value : '';
+            email = (email || '').trim();
+
+            if (!email) {
+              showLoginError('L\'adresse e-mail est obligatoire.');
+              return;
+            }
+            if (!/^\S+@\S+\.\S+$/.test(email)) {
+              showLoginError('Veuillez saisir une adresse e-mail valide.');
+              return;
+            }
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+              showLoginError('Caméra non supportée par ce navigateur.');
+              return;
+            }
+
+            faceOnlyBtn.disabled = true;
+            if (scanTextEl) scanTextEl.textContent = 'Ouverture de la caméra...';
+            if (scanEl) scanEl.style.display = '';
+
+            var stream = null;
+            var video = null;
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                  facingMode: 'user',
+                  width: { ideal: 1280 },
+                  height: { ideal: 720 },
+                  frameRate: { ideal: 30 }
+                },
+                audio: false
+              });
+
+              video = document.createElement('video');
+              video.autoplay = true;
+              video.playsInline = true;
+              video.muted = true;
+              video.srcObject = stream;
+
+              video.style.position = 'fixed';
+              video.style.left = '-9999px';
+              video.style.top = '-9999px';
+              video.style.width = '1px';
+              video.style.height = '1px';
+              document.body.appendChild(video);
+
+              await new Promise(function (resolve) {
+                if (video.readyState >= 2) return resolve();
+                video.onloadedmetadata = function () { resolve(); };
+              });
+
+              try { await video.play(); } catch (e) {}
+
+              await new Promise(function (resolve) {
+                var tries = 0;
+                (function tick() {
+                  tries++;
+                  if ((video.videoWidth || 0) > 0 && (video.videoHeight || 0) > 0) return resolve();
+                  if (tries > 60) return resolve();
+                  requestAnimationFrame(tick);
+                })();
+              });
+
+              await new Promise(function (resolve) {
+                if (typeof video.requestVideoFrameCallback === 'function') {
+                  video.requestVideoFrameCallback(function () { resolve(); });
+                  return;
+                }
+                setTimeout(resolve, 250);
+              });
+
+              await new Promise(function (resolve) { setTimeout(resolve, 600); });
+
+              if (scanTextEl) scanTextEl.textContent = 'Capture du visage...';
+
+              var blob = null;
+              try {
+                if (window.ImageCapture && stream.getVideoTracks && stream.getVideoTracks().length) {
+                  var track = stream.getVideoTracks()[0];
+                  var imageCapture = new ImageCapture(track);
+                  blob = await imageCapture.takePhoto();
+                }
+              } catch (e) {
+                blob = null;
+              }
+
+              if (!blob) {
+                var canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                blob = await new Promise(function (resolve) {
+                  canvas.toBlob(function (b) { resolve(b); }, 'image/jpeg', 0.9);
+                });
+              }
+
+              if (!blob) {
+                showLoginError('Capture caméra impossible.');
+                return;
+              }
+
+              if (scanTextEl) scanTextEl.textContent = 'Vérification du visage...';
+
+              var formData = new FormData();
+              formData.append('email', email);
+              formData.append('image', blob, 'face.jpg');
+
+              var res = await fetch('/api/login-face-only', {
+                method: 'POST',
+                body: formData
+              });
+
+              var data = await res.json().catch(function () { return {}; });
+              if (!res.ok || !data.token) {
+                showLoginError(data.message || 'Connexion visage impossible.');
+                return;
+              }
+
+              var rememberMe = !!document.getElementById('remember_me') && document.getElementById('remember_me').checked;
+              if (rememberMe) {
+                localStorage.setItem('finovate_token', data.token);
+                var expires = new Date();
+                expires.setTime(expires.getTime() + 30 * 24 * 60 * 60 * 1000);
+                document.cookie = 'finovate_token=' + data.token + '; path=/; expires=' + expires.toUTCString() + '; SameSite=Lax';
+              } else {
+                sessionStorage.setItem('finovate_token', data.token);
+                document.cookie = 'finovate_token=' + data.token + '; path=/; SameSite=Lax';
+              }
+
+              var target = (data && data.redirect_url) ? data.redirect_url : '{{ path('user_dashboard') }}';
+              window.location.href = target;
+            } catch (err) {
+              showLoginError('Erreur réseau. Réessaie.');
+            } finally {
+              try {
+                try {
+                  if (video && video.parentNode) {
+                    video.pause();
+                    video.srcObject = null;
+                    video.parentNode.removeChild(video);
+                  }
+                } catch (e) {}
+                if (stream) {
+                  stream.getTracks().forEach(function (t) { t.stop(); });
+                }
+              } catch (e) {}
+              if (scanEl) scanEl.style.display = 'none';
+              faceOnlyBtn.disabled = false;
+            }
+          });
+        }
       })();
     </script>
 

@@ -10,6 +10,13 @@
 /vendor/
 ###< symfony/framework-bundle ###
 
+
+face_service/.venv/
+face_service/venv/
+face_service/__pycache__/
+
+
+
 ###> phpunit/phpunit ###
 /phpunit.xml
 /.phpunit.cache/

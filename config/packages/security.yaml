@@ -66,6 +66,7 @@ security:
         - { path: ^/investissement, roles: ROLE_USER }
         - { path: ^/forum, roles: ROLE_USER }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login-face-2fa, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 

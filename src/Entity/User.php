@@ -87,6 +87,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $faceAuthEnabled = false;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $faceEmbedding = null;
+
     public function getId(): string
     {
         return $this->id;
@@ -281,6 +287,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUpdatedAt(?\DateTimeInterface $updatedAt): void
     {
         $this->updatedAt = $updatedAt;
+    }
+
+    public function isFaceAuthEnabled(): bool
+    {
+        return $this->faceAuthEnabled;
+    }
+
+    public function setFaceAuthEnabled(bool $enabled): void
+    {
+        $this->faceAuthEnabled = $enabled;
+    }
+
+    public function getFaceEmbedding(): ?string
+    {
+        return $this->faceEmbedding;
+    }
+
+    public function setFaceEmbedding(?string $embedding): void
+    {
+        $this->faceEmbedding = $embedding;
     }
 
     #[ORM\OneToMany(mappedBy: "creator", targetEntity: Forum::class)]

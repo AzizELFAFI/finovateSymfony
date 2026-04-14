@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Service\EmailVerifier;
+use App\Service\FaceApiClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use ReCaptcha\ReCaptcha;
@@ -35,6 +36,166 @@ final class ApiAuthController extends AbstractController
         }
 
         return $this->toSha256Hex($password);
+    }
+
+    #[Route('/api/face/disable', name: 'api_face_disable', methods: ['POST'])]
+    public function disableFace(Security $security, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $security->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $user->setFaceAuthEnabled(false);
+        $user->setFaceEmbedding(null);
+        $user->setUpdatedAt(new \DateTime());
+
+        try {
+            $entityManager->flush();
+        } catch (\Throwable $e) {
+            $msg = 'Mise à jour impossible.';
+            if ($this->getParameter('kernel.environment') === 'dev') {
+                $msg = $e->getMessage();
+            }
+            return $this->json(['message' => $msg], 500);
+        }
+
+        return $this->json([
+            'message' => 'Face ID désactivé.',
+            'face_enabled' => false,
+        ]);
+    }
+
+    #[Route('/api/face/enroll', name: 'api_face_enroll', methods: ['POST'])]
+    public function enrollFace(Request $request, Security $security, EntityManagerInterface $entityManager, FaceApiClient $faceApiClient): JsonResponse
+    {
+        $user = $security->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $file = $request->files->get('image');
+        if (!$file instanceof UploadedFile) {
+            return $this->json(['message' => 'Fichier image manquant (champ "image").'], 422);
+        }
+
+        if (!$file->isValid()) {
+            return $this->json(['message' => 'Upload invalide.'], 422);
+        }
+
+        $path = $file->getPathname();
+        if (!file_exists($path)) {
+            error_log("enrollFace - File not found: " . $path);
+            return $this->json(['message' => 'Fichier temporaire introuvable.'], 500);
+        }
+
+        $bytes = @file_get_contents($path);
+        if ($bytes === false || $bytes === '') {
+            error_log("enrollFace - Failed to read file bytes: " . $path);
+            return $this->json(['message' => 'Impossible de lire l\'image.'], 422);
+        }
+
+        try {
+            error_log("enrollFace - Calling FaceApiClient::enroll");
+            $result = $faceApiClient->enroll('user-' . $user->getId(), $bytes);
+            error_log("enrollFace - FaceApiClient::enroll success");
+            $embedding = $result['embedding'] ?? null;
+            if (!is_array($embedding)) {
+                return $this->json(['message' => 'Réponse API visage invalide.'], 422);
+            }
+
+            $user->setFaceEmbedding(json_encode($embedding, JSON_THROW_ON_ERROR));
+            $user->setFaceAuthEnabled(true);
+            $user->setUpdatedAt(new \DateTime());
+            $entityManager->flush();
+        } catch (\RuntimeException $e) {
+            // Extract detail from FastAPI error message
+            $msg = $e->getMessage();
+            return $this->json([
+                'message' => $msg,
+            ], 422);
+        } catch (\Throwable $e) {
+            return $this->json([
+                'message' => 'Enrôlement visage impossible: ' . $e->getMessage(),
+            ], 422);
+        }
+
+        return $this->json([
+            'message' => 'Visage enregistré. La connexion 2FA par visage est activée.',
+            'face_enabled' => true,
+        ]);
+    }
+
+    #[Route('/api/login-face-only', name: 'api_login_face_only', methods: ['POST'])]
+    public function loginFaceOnly(Request $request, EntityManagerInterface $entityManager, JWTTokenManagerInterface $jwtManager, FaceApiClient $faceApiClient): JsonResponse
+    {
+        $email = trim((string) $request->request->get('email', ''));
+
+        if ($email === '') {
+            return $this->json(['message' => 'Champs requis manquants.'], 422);
+        }
+
+        $file = $request->files->get('image');
+        if (!$file instanceof UploadedFile) {
+            return $this->json(['message' => 'Fichier image manquant (champ "image").'], 422);
+        }
+
+        if (!$file->isValid()) {
+            return $this->json(['message' => 'Upload invalide.'], 422);
+        }
+
+        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Invalid credentials.'], 401);
+        }
+
+        if (!$user->isVerified()) {
+            return $this->json(['message' => 'Compte non confirmé. Veuillez vérifier votre e-mail.'], 403);
+        }
+
+        if (!$user->isFaceAuthEnabled() || !$user->getFaceEmbedding()) {
+            return $this->json(['message' => 'Authentification par visage non activée pour ce compte.'], 403);
+        }
+
+        $bytes = @file_get_contents($file->getPathname());
+        if (!is_string($bytes) || $bytes === '') {
+            return $this->json(['message' => 'Impossible de lire l\'image.'], 422);
+        }
+
+        try {
+            $verify = $faceApiClient->verify($bytes, $user->getFaceEmbedding(), 0.35);
+            $match = (bool) ($verify['match'] ?? false);
+        } catch (\Throwable $e) {
+            $msg = 'Vérification visage impossible.';
+            if ($this->getParameter('kernel.environment') === 'dev') {
+                $msg = $e->getMessage();
+            }
+            return $this->json(['message' => $msg], 422);
+        }
+
+        if (!$match) {
+            return $this->json(['message' => 'Visage non reconnu.'], 401);
+        }
+
+        $token = $jwtManager->create($user);
+        $roles = $user->getRoles();
+        $redirectUrl = in_array('ROLE_ADMIN', $roles, true) ? '/admin' : '/user/dashboard';
+
+        $response = $this->json([
+            'token' => $token,
+            'roles' => $roles,
+            'redirect_url' => $redirectUrl,
+        ]);
+
+        $response->headers->setCookie(Cookie::create('finovate_token')
+            ->withValue($token)
+            ->withHttpOnly(true)
+            ->withSecure(false)
+            ->withSameSite('lax')
+            ->withPath('/')
+        );
+
+        return $response;
     }
 
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
@@ -272,6 +433,7 @@ final class ApiAuthController extends AbstractController
             'points' => $user->getPoints(),
             'numero_carte' => $user->getNumero_carte(),
             'image_url' => $imageUrl,
+            'face_enabled' => $user->isFaceAuthEnabled(),
         ]);
     }
 
