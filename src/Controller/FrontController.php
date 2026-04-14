@@ -155,7 +155,8 @@ final class FrontController extends AbstractController
                 if ($amount <= 0) {
                     $form->get('montant')->addError(new \Symfony\Component\Form\FormError("Montant invalide."));
                 } elseif ($senderBalance < $amount) {
-                    $form->get('montant')->addError(new \Symfony\Component\Form\FormError("Solde insuffisant."));
+                    $this->addFlash('danger', "Solde insuffisant. Votre solde actuel est de " . number_format($senderBalance, 2, ',', ' ') . ".");
+                    return $this->redirectToRoute('user_transactions');
                 } else {
                     // Check daily limit (3000)
                     $transactionRepo = $em->getRepository(Transaction::class);
