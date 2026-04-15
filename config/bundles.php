@@ -20,4 +20,5 @@ return [
     SymfonyCasts\Bundle\VerifyEmail\SymfonyCastsVerifyEmailBundle::class => ['all' => true],
     Vich\UploaderBundle\VichUploaderBundle::class => ['all' => true],
     Endroid\QrCodeBundle\EndroidQrCodeBundle::class => ['all' => true],
+    CalendarBundle\CalendarBundle::class => ['all' => true],
 ];

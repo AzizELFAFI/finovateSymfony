@@ -93,6 +93,48 @@
     .badge-soft.run { background: rgba(59,130,246,0.12); color: #1d4ed8; }
 
     .small-error { color: #dc3545; font-size: 0.85rem; }
+
+    /* Calendar styles */
+    #goals-calendar-container {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.06);
+    }
+    .fc {
+      font-family: inherit;
+    }
+    .fc .fc-toolbar-title {
+      font-weight: 900;
+      color: #0f766e;
+    }
+    .fc .fc-button-primary {
+      background: #0f766e;
+      border-color: #0f766e;
+      border-radius: 8px;
+    }
+    .fc .fc-button-primary:hover {
+      background: #0d5d57;
+      border-color: #0d5d57;
+    }
+    .fc .fc-button-primary:disabled {
+      background: #0f766e;
+      border-color: #0f766e;
+    }
+    .fc .fc-daygrid-day.fc-day-today {
+      background: rgba(15, 118, 110, 0.08);
+    }
+    .fc-event {
+      border-radius: 6px;
+      border: none;
+      padding: 2px 4px;
+      cursor: pointer;
+    }
+    .fc-event:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
   </style>
 </head>
 
@@ -212,6 +254,29 @@
 
               <button type="submit" class="btn btn-success">Ajouter</button>
             {{ form_end(createForm) }}
+          </div>
+
+          <!-- Calendar Section -->
+          <div class="card-shell mb-4">
+            <h4 style="font-weight: 800; color: #0f766e; margin-bottom: 20px;">
+              <span style="display:inline-flex; width: 32px; height: 32px; border-radius: 10px; align-items:center; justify-content:center; background: rgba(15, 118, 110, 0.12); margin-right: 10px;">
+                <svg viewBox="0 0 24 24" fill="none" style="width: 18px; height: 18px;">
+                  <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z" fill="currentColor"/>
+                </svg>
+              </span>
+              Calendrier des Goals
+            </h4>
+            <div id="goals-calendar-container">
+              <div id="goals-calendar"></div>
+            </div>
+            <div class="mt-3">
+              <small class="text-muted">
+                <span style="display:inline-block; width:12px; height:12px; background:#10b981; border-radius:3px; margin-right:4px;"></span> Complété
+                <span style="display:inline-block; width:12px; height:12px; background:#f59e0b; border-radius:3px; margin-left:12px; margin-right:4px;"></span> 75%+
+                <span style="display:inline-block; width:12px; height:12px; background:#3b82f6; border-radius:3px; margin-left:12px; margin-right:4px;"></span> 50%+
+                <span style="display:inline-block; width:12px; height:12px; background:#6366f1; border-radius:3px; margin-left:12px; margin-right:4px;"></span> En cours
+              </small>
+            </div>
           </div>
 
           <div class="row">
@@ -381,6 +446,62 @@
         {% endfor %}
         modal.find('#modal-csrf-token').val(csrfToken);
       });
+    });
+  </script>
+
+  <!-- FullCalendar JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.10/index.global.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var calendarEl = document.getElementById('goals-calendar');
+      if (!calendarEl) return;
+
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'fr',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,dayGridWeek'
+        },
+        buttonText: {
+          today: "Aujourd'hui",
+          month: 'Mois',
+          week: 'Semaine'
+        },
+        events: {
+          url: '/fc-load-events',
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + (localStorage.getItem('finovate_token') || sessionStorage.getItem('finovate_token') || '')
+          },
+          failure: function() {
+            console.error('Erreur lors du chargement des événements!');
+          },
+          success: function(content) {
+            console.log('Événements chargés:', content);
+          }
+        },
+        loading: function(isLoading) {
+          if (isLoading) console.log('Chargement des événements...');
+        },
+        eventClick: function(info) {
+          var props = info.event.extendedProps;
+          var statusLabel = props.status === 'COMPLETED' ? 'Complété' : 'En cours';
+          alert(
+            'Goal: ' + info.event.title + '\n' +
+            'Statut: ' + statusLabel + '\n' +
+            'Objectif: ' + props.target + ' TND\n' +
+            'Actuel: ' + props.current + ' TND\n' +
+            'Progression: ' + props.percent + '%'
+          );
+        },
+        height: 'auto',
+        eventDisplay: 'block'
+      });
+
+      calendar.render();
     });
   </script>
 </body>

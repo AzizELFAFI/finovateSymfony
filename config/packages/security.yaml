@@ -30,7 +30,7 @@ security:
             entry_point: App\Security\JwtRedirectEntryPoint
             jwt: ~
         api:
-            pattern: ^/api
+            pattern: ^/(api|fc-load-events)
             stateless: true
             provider: app_user_provider
             jwt: ~
