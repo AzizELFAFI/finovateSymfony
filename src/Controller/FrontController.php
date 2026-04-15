@@ -19,6 +19,7 @@ use App\Entity\Ad;
 use App\Entity\UserAdClick;
 use App\Service\PdfService;
 use App\Service\StripeService;
+use App\Service\TwilioService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -131,7 +132,7 @@ final class FrontController extends AbstractController
     }
 
     #[Route('/user/transactions', name: 'user_transactions', methods: ['GET', 'POST'])]
-    public function transactions(Request $request, EntityManagerInterface $em): Response
+    public function transactions(Request $request, EntityManagerInterface $em, TwilioService $twilioService): Response
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
@@ -186,6 +187,19 @@ final class FrontController extends AbstractController
 
                     $em->persist($tx);
                     $em->flush();
+
+                    try {
+                        $to = $twilioService->formatTunisiaNumber($beneficiary->getPhone_number());
+                        $message = sprintf(
+                            'FINOVATE: Vous avez reçu un virement de %s %s. Montant: %s TND. Réf: TRX-%s.',
+                            $user->getFirstname(),
+                            $user->getLastname(),
+                            number_format($amount, 2, ',', ' '),
+                            str_pad((string) $tx->getId(), 8, '0', STR_PAD_LEFT)
+                        );
+                        $twilioService->sendSms($to, $message);
+                    } catch (\Throwable $e) {
+                    }
 
                     // Generate PDF receipt and save to uploads
                     $receiptsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/receipts';
