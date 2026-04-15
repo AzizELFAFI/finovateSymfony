@@ -193,6 +193,46 @@
 
             {{ form_end(form) }}
           </div>
+
+          <!-- QR Code Section -->
+          <div class="card-shell mt-4">
+            <h4 style="font-weight: 800; color: #0f766e; margin-bottom: 20px;">
+              <span style="display:inline-flex; width: 32px; height: 32px; border-radius: 10px; align-items:center; justify-content:center; background: rgba(15, 118, 110, 0.12); margin-right: 10px;">
+                <svg viewBox="0 0 24 24" fill="none" style="width: 18px; height: 18px;">
+                  <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 15h6v6H3v-6zm2 2v2h2v-2H5zm13-2h1v1h-1v-1zm-3 0h1v1h-1v-1zm-1 1h1v1h-1v-1zm2 0h1v1h-1v-1zm1 1h1v1h-1v-1zm-2 0h1v1h-1v-1zm2 2h1v1h-1v-1zm0-2h1v1h-1v-1zm-2 0h1v1h-1v-1zm0 2h1v1h-1v-1zm4 0h1v1h-1v-1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              QR Code Historique Transactions
+            </h4>
+            
+            <div class="row align-items-end">
+              <div class="col-md-4">
+                <label for="qr-period" class="form-label" style="font-weight: 700;">Période</label>
+                <select id="qr-period" class="form-select" style="border-radius: 12px; padding: 12px; font-weight: 600;">
+                  <option value="day">Aujourd'hui</option>
+                  <option value="month" selected>Ce mois</option>
+                  <option value="3months">3 derniers mois</option>
+                  <option value="year">Cette année</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <button type="button" id="generate-qr-btn" class="btn btn-primary w-100" style="border-radius: 12px; padding: 12px; font-weight: 700;">
+                  <span id="qr-btn-text">Générer QR Code</span>
+                  <span id="qr-btn-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
+                </button>
+              </div>
+            </div>
+
+            <div id="qr-result" style="display: none; margin-top: 24px; text-align: center;">
+              <div style="background: #f8fafc; border-radius: 16px; padding: 24px; display: inline-block; border: 1px solid rgba(15, 118, 110, 0.2);">
+                <img id="qr-image" src="" alt="QR Code" style="max-width: 300px; border-radius: 12px;">
+                <p id="qr-info" style="margin-top: 12px; color: #64748b; font-weight: 600; font-size: 14px;"></p>
+              </div>
+              <p class="text-muted mt-3" style="font-size: 13px;">Scannez ce QR code pour voir l'historique de vos transactions.</p>
+            </div>
+
+            <div id="qr-error" class="alert alert-warning mt-3" style="display: none; border-radius: 12px;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -243,6 +283,104 @@
       cinInput.addEventListener('input', function () {
         if (timer) clearTimeout(timer);
         timer = setTimeout(fetchCard, 250);
+      });
+    })();
+
+    // QR Code generation
+    (function() {
+      var token = null;
+      try {
+        token = localStorage.getItem('finovate_token') || sessionStorage.getItem('finovate_token');
+      } catch (e) { console.error('Erreur récupération token:', e); }
+
+      var generateBtn = document.getElementById('generate-qr-btn');
+      var periodSelect = document.getElementById('qr-period');
+      var qrResult = document.getElementById('qr-result');
+      var qrImage = document.getElementById('qr-image');
+      var qrInfo = document.getElementById('qr-info');
+      var qrError = document.getElementById('qr-error');
+      var btnText = document.getElementById('qr-btn-text');
+      var btnSpinner = document.getElementById('qr-btn-spinner');
+
+      console.log('QR Code init - Button:', generateBtn, 'Token exists:', !!token);
+
+      if (!generateBtn) {
+        console.error('Bouton generate-qr-btn non trouvé');
+        return;
+      }
+
+      generateBtn.addEventListener('click', function() {
+        console.log('Bouton cliqué');
+        
+        if (!token) {
+          qrError.textContent = 'Vous devez être connecté pour générer un QR code.';
+          qrError.style.display = '';
+          console.error('Pas de token');
+          return;
+        }
+
+        var period = periodSelect.value;
+        console.log('Période sélectionnée:', period);
+        
+        qrError.style.display = 'none';
+        btnText.style.display = 'none';
+        btnSpinner.style.display = '';
+        generateBtn.disabled = true;
+
+        fetch('/api/transactions/qr-code', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ period: period })
+        })
+          .then(function(res) {
+            console.log('Response status:', res.status);
+            
+            if (!res.ok) {
+              return res.text().then(function(text) {
+                console.error('Erreur réponse:', text);
+                try {
+                  var data = JSON.parse(text);
+                  throw new Error(data.message || 'Erreur lors de la génération du QR code.');
+                } catch (parseErr) {
+                  throw new Error('Erreur serveur: ' + res.status);
+                }
+              });
+            }
+            return res.text().then(function(base64) {
+              console.log('Base64 reçu, longueur:', base64.length);
+              return {
+                base64: base64,
+                period: res.headers.get('X-Period'),
+                count: res.headers.get('X-Transaction-Count')
+              };
+            });
+          })
+          .then(function(result) {
+            console.log('QR code généré avec succès');
+            qrImage.src = 'data:image/png;base64,' + result.base64;
+            var periodLabels = {
+              'day': "Aujourd'hui",
+              'month': 'Ce mois',
+              '3months': '3 derniers mois',
+              'year': 'Cette année'
+            };
+            qrInfo.textContent = periodLabels[result.period] + ' - ' + result.count + ' transaction(s)';
+            qrResult.style.display = '';
+          })
+          .catch(function(err) {
+            console.error('Erreur:', err);
+            qrError.textContent = err.message;
+            qrError.style.display = '';
+            qrResult.style.display = 'none';
+          })
+          .finally(function() {
+            btnText.style.display = '';
+            btnSpinner.style.display = 'none';
+            generateBtn.disabled = false;
+          });
       });
     })();
   </script>

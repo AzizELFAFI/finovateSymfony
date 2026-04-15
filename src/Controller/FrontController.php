@@ -18,6 +18,7 @@ use App\Entity\Product;
 use App\Entity\Ad;
 use App\Entity\UserAdClick;
 use App\Service\PdfService;
+use App\Service\QRCodeService;
 use App\Service\StripeService;
 use App\Service\TwilioService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -681,5 +682,55 @@ final class FrontController extends AbstractController
         } catch (\Throwable $e) {
             return $this->json(['message' => 'Erreur lors de la confirmation: ' . $e->getMessage()], 500);
         }
+    }
+
+    #[Route('/api/transactions/qr-code', name: 'api_transactions_qrcode', methods: ['POST'])]
+    public function generateTransactionQrCode(
+        Request $request, 
+        EntityManagerInterface $em, 
+        QRCodeService $qrCodeService
+    ): Response {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $data = json_decode($request->getContent() ?: '', true);
+        $period = (string) ($data['period'] ?? 'month');
+
+        if (!in_array($period, ['day', 'month', '3months', 'year'])) {
+            return $this->json(['message' => 'Période invalide. Utilisez: day, month, 3months, year.'], 400);
+        }
+
+        $transactionRepo = $em->getRepository(Transaction::class);
+        $transactions = $transactionRepo->getTransactionsByPeriod((int) $user->getId(), $period);
+
+        if (empty($transactions)) {
+            return $this->json(['message' => 'Aucune transaction trouvée pour cette période.'], 404);
+        }
+
+        $periodLabels = [
+            'day' => 'Aujourd\'hui',
+            'month' => 'Ce mois',
+            '3months' => '3 derniers mois',
+            'year' => 'Cette année',
+        ];
+
+        $userName = $user->getFirstname() . ' ' . $user->getLastname();
+        $qrCodePng = $qrCodeService->generateTransactionHistoryQrCode(
+            $transactions, 
+            $periodLabels[$period], 
+            $userName
+        );
+
+        return new Response(
+            base64_encode($qrCodePng),
+            200,
+            [
+                'Content-Type' => 'text/plain',
+                'X-Period' => $period,
+                'X-Transaction-Count' => (string) count($transactions),
+            ]
+        );
     }
 }
