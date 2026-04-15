@@ -18,6 +18,7 @@ use App\Entity\Product;
 use App\Entity\Ad;
 use App\Entity\UserAdClick;
 use App\Service\PdfService;
+use App\Service\StripeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -609,5 +610,62 @@ final class FrontController extends AbstractController
             'message' => 'Clic enregistré avec succès',
             'rewardPoints' => $rewardPoints
         ], 200);
+    }
+
+    #[Route('/user/topup', name: 'user_topup', methods: ['GET'])]
+    public function topupPage(): Response
+    {
+        return $this->render('front/topup.html.twig');
+    }
+
+    #[Route('/api/stripe/create-payment-intent', name: 'api_stripe_create_payment_intent', methods: ['POST'])]
+    public function createStripePaymentIntent(Request $request, StripeService $stripeService): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $data = json_decode($request->getContent() ?: '', true);
+        $amount = (float) ($data['amount'] ?? 0);
+
+        if ($amount <= 0 || $amount < 1) {
+            return $this->json(['message' => 'Le montant doit être supérieur à 1 TND.'], 400);
+        }
+
+        if ($amount > 10000) {
+            return $this->json(['message' => 'Le montant maximum est de 10 000 TND.'], 400);
+        }
+
+        try {
+            $result = $stripeService->createPaymentIntent($amount);
+            $result['publishable_key'] = $stripeService->getPublishableKey();
+            return $this->json($result);
+        } catch (\Throwable $e) {
+            return $this->json(['message' => 'Erreur lors de la création du paiement: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/stripe/confirm-payment', name: 'api_stripe_confirm_payment', methods: ['POST'])]
+    public function confirmStripePayment(Request $request, StripeService $stripeService): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $data = json_decode($request->getContent() ?: '', true);
+        $paymentIntentId = (string) ($data['payment_intent_id'] ?? '');
+
+        if (empty($paymentIntentId)) {
+            return $this->json(['message' => 'ID de paiement manquant.'], 400);
+        }
+
+        try {
+            $result = $stripeService->confirmPaymentAndCredit($paymentIntentId, $user);
+            return $this->json($result, $result['success'] ? 200 : 400);
+        } catch (\Throwable $e) {
+            return $this->json(['message' => 'Erreur lors de la confirmation: ' . $e->getMessage()], 500);
+        }
     }
 }
