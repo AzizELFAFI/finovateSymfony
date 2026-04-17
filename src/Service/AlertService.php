@@ -24,6 +24,7 @@ class AlertService
         private VoteRepository         $voteRepo,
         private SharedPostRepository   $sharedRepo,
         private UserForumRepository    $userForumRepo,
+        private NotificationService    $notif,
     ) {}
 
     // ── Create alert ─────────────────────────────────────────────────────────
@@ -37,6 +38,23 @@ class AlertService
         $alert->setMessage($message);
         $alert->setRelatedUrl($url);
         $this->em->persist($alert);
+
+        // Fire push notification to all subscribed browsers for this user
+        $icon = match($type) {
+            Alert::TYPE_BADGE       => '🏆',
+            Alert::TYPE_MODERATION  => '🚨',
+            Alert::TYPE_WARNING     => '⚠️',
+            Alert::TYPE_RESTRICTION => '⏱',
+            Alert::TYPE_BAN         => '🚫',
+            Alert::TYPE_NEW_POST    => '📝',
+            Alert::TYPE_COMMENT     => '💬',
+            Alert::TYPE_VOTE        => '👍',
+            Alert::TYPE_SHARE       => '📤',
+            Alert::TYPE_JOIN        => '👥',
+            Alert::TYPE_LEAVE       => '👋',
+            default                 => '🔔',
+        };
+        $this->notif->sendToAll($icon . ' FINOVATE', $message, $url ?? '/');
         // don't flush here — caller flushes
     }
 

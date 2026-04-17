@@ -39,13 +39,15 @@ final class FrontController extends AbstractController
     #[Route('/', name: 'front_home', methods: ['GET'])]
     public function home(): Response
     {
-        return $this->render('front/index.html.twig');
+        $template = $this->getUser() ? 'front/index.html.twig' : 'front/index_guest.html.twig';
+        return $this->render($template);
     }
 
     #[Route('/about', name: 'front_about', methods: ['GET'])]
     public function about(): Response
     {
-        return $this->render('front/about.html.twig');
+        $template = $this->getUser() ? 'front/about.html.twig' : 'front/about_guest.html.twig';
+        return $this->render($template);
     }
 
     #[Route('/services', name: 'front_services', methods: ['GET'])]
@@ -73,8 +75,12 @@ final class FrontController extends AbstractController
     }
 
     #[Route('/logout', name: 'front_logout', methods: ['GET'])]
-    public function logout(): Response
+    public function logout(Request $request): Response
     {
+        // Clear the session
+        $session = $request->getSession();
+        $session->invalidate();
+        
         $response = $this->render('front/logout.html.twig');
         $response->headers->setCookie(Cookie::create('finovate_token')->withValue('')->withExpires(1)->withPath('/'));
         return $response;

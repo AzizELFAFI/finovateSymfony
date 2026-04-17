@@ -62,7 +62,6 @@
           <li><a class="nav-link" href="{{ path('backoffice_forums') }}"><i class="ti ti-list"></i><span class="nav-text">Liste des forums</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_liste_posts') }}"><i class="ti ti-file-text"></i><span class="nav-text">Liste des posts</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_liste_comments') }}"><i class="ti ti-message"></i><span class="nav-text">Liste des commentaires</span></a></li>
-          <li><a class="nav-link" href="{{ path('admin_overview') }}"><i class="ti ti-chart-bar"></i><span class="nav-text">Vue d'ensemble</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_users') }}"><i class="ti ti-users"></i><span class="nav-text">Utilisateurs</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_ai_flags') }}"><i class="ti ti-robot"></i><span class="nav-text">IA Flags</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_reports') }}"><i class="ti ti-flag"></i><span class="nav-text">Signalements</span></a></li>
@@ -142,6 +141,44 @@
                 <h3 class="fw-bold mb-0">{{ stats.total_comments }}</h3>
                 <p class="text-warning mb-0 small">Interactions totales</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# ── Statistiques Forums en Cercle (Bundle Statistiques) ── #}
+      {% include 'bundles/stats/circle_styles.html.twig' %}
+      <div class="row g-3 mb-3">
+        <div class="col-lg-4 col-12">
+          <div class="card">
+            <div class="card-header bg-transparent px-4 py-3">
+              <h3 class="h5 mb-0">Activité Forums</h3>
+              <small class="text-muted">Forums avec/sans posts</small>
+            </div>
+            <div class="card-body p-4">
+              {{ forum_activity_stats() }}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-12">
+          <div class="card">
+            <div class="card-header bg-transparent px-4 py-3">
+              <h3 class="h5 mb-0">Interaction Posts</h3>
+              <small class="text-muted">Posts avec/sans commentaires</small>
+            </div>
+            <div class="card-body p-4">
+              {{ post_interaction_stats() }}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-12">
+          <div class="card">
+            <div class="card-header bg-transparent px-4 py-3">
+              <h3 class="h5 mb-0">Activité Utilisateurs</h3>
+              <small class="text-muted">Utilisateurs actifs/inactifs</small>
+            </div>
+            <div class="card-body p-4">
+              {{ user_activity_stats() }}
             </div>
           </div>
         </div>

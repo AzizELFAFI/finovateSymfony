@@ -110,10 +110,21 @@ final class ForumController extends AbstractController
         }
     }
 
-    private function uploadImage(Request $request, string $field, SluggerInterface $slugger): ?string
+    private function uploadImage(Request $request, string $field, SluggerInterface $slugger, \App\Service\CloudinaryService $cloudinary): ?string
     {
         $file = $request->files->get($field);
         if (!$file) return null;
+
+        // Try Cloudinary first
+        try {
+            $cloudinaryUrl = $cloudinary->upload($file, 'finovate/forum');
+            return $cloudinaryUrl;
+        } catch (\Throwable $e) {
+            error_log('Cloudinary upload failed in ForumController: ' . $e->getMessage());
+            // Fallback to local
+        }
+
+        // Fallback: Local upload
         $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeFilename = $slugger->slug($originalFilename);
         $ext = $file->getClientOriginalExtension() ?: 'jpg';
@@ -143,6 +154,8 @@ final class ForumController extends AbstractController
     ): Response {
         $search = $request->query->get('q', '');
         $sort   = $request->query->get('sort', 'recent');
+        $page   = max(1, (int) $request->query->get('page', 1));
+        $limit  = 12; // Forums per page
 
         $qb = $forumRepo->createQueryBuilder('f');
         if ($search) {
@@ -155,14 +168,31 @@ final class ForumController extends AbstractController
             'posts'    => $qb->leftJoin('f.posts', 'p')->groupBy('f.id')->orderBy('COUNT(p.id)', 'DESC'),
             default    => $qb->orderBy('f.createdAt', 'DESC'),
         };
-        $forums = $qb->getQuery()->getResult();
 
-        $joinedIds = array_map(
-            fn($uf) => $uf->getForum()->getId(),
-            $ufRepo->createQueryBuilder('uf')->where('uf.user = :uid')->setParameter('uid', $this->getCurrentUserId())->getQuery()->getResult()
-        );
+        // Get total count for pagination
+        $totalQb = clone $qb;
+        $total = (int) $totalQb->select('COUNT(DISTINCT f.id)')->getQuery()->getSingleScalarResult();
+        
+        // Apply pagination
+        $forums = $qb->setFirstResult(($page - 1) * $limit)
+                    ->setMaxResults($limit)
+                    ->getQuery()->getResult();
 
-        // 5 most recent this week
+        $joinedIds = [];
+        $joinedForumsList = [];
+        
+        if ($this->getUser()) {
+            $joinedIds = array_map(
+                fn($uf) => $uf->getForum()->getId(),
+                $ufRepo->createQueryBuilder('uf')->where('uf.user = :uid')->setParameter('uid', $this->getCurrentUserId())->getQuery()->getResult()
+            );
+            
+            // Horizontal strips: joined forums + recommended (most posts)
+            $joinedForums = $ufRepo->createQueryBuilder('uf')
+                ->where('uf.user = :uid')->setParameter('uid', $this->getCurrentUserId())
+                ->getQuery()->getResult();
+            $joinedForumsList = array_map(fn($uf) => $uf->getForum(), $joinedForums);
+        }
         $weekAgo = new \DateTimeImmutable('-7 days');
         $recentWeek = $forumRepo->createQueryBuilder('f')
             ->where('f.createdAt >= :w')->setParameter('w', $weekAgo)
@@ -178,19 +208,16 @@ final class ForumController extends AbstractController
             ->groupBy('f.id')->orderBy('COUNT(v.id)', 'DESC')->setMaxResults(5)->getQuery()->getResult();
         $popularIds = array_map(fn($f) => $f->getId(), $popular);
 
-        // Remaining forums (not in recent or popular)
-        $usedIds = array_unique(array_merge($recentWeekIds, $popularIds));
-        $remaining = array_filter($forums, fn($f) => !in_array($f->getId(), $usedIds));
-        $remaining = array_values($remaining);
-        $half = (int) ceil(count($remaining) / 2);
-        $remainingFirst  = array_slice($remaining, 0, $half);
-        $remainingSecond = array_slice($remaining, $half);
-
-        // Horizontal strips: joined forums + recommended (most posts)
-        $joinedForums = $ufRepo->createQueryBuilder('uf')
-            ->where('uf.user = :uid')->setParameter('uid', $this->getCurrentUserId())
-            ->getQuery()->getResult();
-        $joinedForumsList = array_map(fn($uf) => $uf->getForum(), $joinedForums);
+        // Remaining forums (not in recent or popular) - only for first page
+        $remainingFirst = $remainingSecond = [];
+        if ($page === 1) {
+            $usedIds = array_unique(array_merge($recentWeekIds, $popularIds));
+            $remaining = array_filter($forums, fn($f) => !in_array($f->getId(), $usedIds));
+            $remaining = array_values($remaining);
+            $half = (int) ceil(count($remaining) / 2);
+            $remainingFirst  = array_slice($remaining, 0, $half);
+            $remainingSecond = array_slice($remaining, $half);
+        }
 
         $recommended = $forumRepo->createQueryBuilder('f')
             ->leftJoin('f.posts', 'p')->groupBy('f.id')->orderBy('COUNT(p.id)', 'DESC')
@@ -216,11 +243,17 @@ final class ForumController extends AbstractController
             if ($creatorPosts) $creatorOfWeek = $creatorPosts[0]->getAuthor();
         }
 
-        return $this->render('forum/forums_home.html.twig', [
+        // Determine which template to render based on user login status
+        $template = $this->getUser() ? 'forum/forums_home.html.twig' : 'forum/forums_home_guest.html.twig';
+
+        return $this->render($template, [
             'forums'          => $forums,
             'joinedIds'       => $joinedIds,
             'search'          => $search,
             'sort'            => $sort,
+            'page'            => $page,
+            'pages'           => (int) ceil($total / $limit),
+            'total'           => $total,
             'recentWeek'      => $recentWeek,
             'popular'         => $popular,
             'remainingFirst'  => $remainingFirst,
@@ -272,7 +305,7 @@ final class ForumController extends AbstractController
     // ── Forum CRUD ────────────────────────────────────────────────────────────
 
     #[Route('/create-forum', name: 'app_forum_create', methods: ['GET', 'POST'])]
-    public function createForum(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, AdminRestrictionService $restrictionService): Response
+    public function createForum(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, AdminRestrictionService $restrictionService, \App\Service\CloudinaryService $cloudinary): Response
     {
         if ($redirect = $this->checkRestriction('create_forum', $restrictionService, $em)) return $redirect;
         if ($request->isMethod('POST')) {
@@ -280,7 +313,7 @@ final class ForumController extends AbstractController
             $forum->setTitle($request->request->get('title'));
             $forum->setDescription($request->request->get('description'));
             $forum->setCreator($this->getCurrentUser($em));
-            $imageUrl = $this->uploadImage($request, 'image', $slugger);
+            $imageUrl = $this->uploadImage($request, 'image', $slugger, $cloudinary);
             if ($imageUrl) $forum->setImageUrl($imageUrl);
             $em->persist($forum);
             $em->flush();
@@ -290,12 +323,12 @@ final class ForumController extends AbstractController
     }
 
     #[Route('/{id}/edit-forum', name: 'app_forum_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function editForum(Forum $forum, Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    public function editForum(Forum $forum, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, \App\Service\CloudinaryService $cloudinary): Response
     {
         if ($request->isMethod('POST')) {
             $forum->setTitle($request->request->get('title'));
             $forum->setDescription($request->request->get('description'));
-            $imageUrl = $this->uploadImage($request, 'image', $slugger);
+            $imageUrl = $this->uploadImage($request, 'image', $slugger, $cloudinary);
             if ($imageUrl) $forum->setImageUrl($imageUrl);
             $em->flush();
             return $this->redirectToRoute('app_forum_my');
@@ -393,7 +426,10 @@ final class ForumController extends AbstractController
         $sort   = $request->query->get('sort', 'recent');
         $search = $request->query->get('q', '');
 
-        $hiddenIds = $blockRepo->findHiddenIds($this->getCurrentUserId());
+        $hiddenIds = [];
+        if ($this->getUser()) {
+            $hiddenIds = $blockRepo->findHiddenIds($this->getCurrentUserId());
+        }
 
         $qb = $postRepo->createQueryBuilder('p')
             ->where('p.forum = :forum')
@@ -416,7 +452,10 @@ final class ForumController extends AbstractController
             default     => $qb->orderBy('p.createdAt', 'DESC'),
         };
 
-        return $this->render('forum/posts.html.twig', [
+        // Determine which template to render based on user login status
+        $template = $this->getUser() ? 'forum/posts.html.twig' : 'forum/posts_guest.html.twig';
+
+        return $this->render($template, [
             'forum'  => $forum,
             'posts'  => $qb->getQuery()->getResult(),
             'sort'   => $sort,
@@ -468,7 +507,7 @@ final class ForumController extends AbstractController
     // ── Post CRUD ─────────────────────────────────────────────────────────────
 
     #[Route('/{id}/create-post', name: 'app_post_create', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function createPost(Forum $forum, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, AlertService $alerts, AdminRestrictionService $restrictionService): Response
+    public function createPost(Forum $forum, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, AlertService $alerts, AdminRestrictionService $restrictionService, \App\Service\CloudinaryService $cloudinary): Response
     {
         if ($redirect = $this->checkRestriction('post', $restrictionService, $em)) return $redirect;
         if ($request->isMethod('POST')) {
@@ -477,7 +516,7 @@ final class ForumController extends AbstractController
             $post->setContent($request->request->get('content'));
             $post->setForum($forum);
             $post->setAuthor($this->getCurrentUser($em));
-            $imageUrl = $this->uploadImage($request, 'image', $slugger);
+            $imageUrl = $this->uploadImage($request, 'image', $slugger, $cloudinary);
 
             // Fallback: use AI-generated image (already saved locally)
             if (!$imageUrl) {
@@ -514,13 +553,13 @@ final class ForumController extends AbstractController
     }
 
     #[Route('/post/{id}/edit', name: 'app_post_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function editPost(Post $post, Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    public function editPost(Post $post, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, \App\Service\CloudinaryService $cloudinary): Response
     {
         if ($request->isMethod('POST')) {
             $post->setTitle($request->request->get('title'));
             $post->setContent($request->request->get('content'));
             $post->setUpdatedAt(new \DateTime());
-            $imageUrl = $this->uploadImage($request, 'image', $slugger);
+            $imageUrl = $this->uploadImage($request, 'image', $slugger, $cloudinary);
             if ($imageUrl) $post->setImageUrl($imageUrl);
             $em->flush();
             return $this->redirectToRoute('app_post_detail', ['id' => $post->getId()]);
@@ -944,6 +983,66 @@ final class ForumController extends AbstractController
         $history = $data['history'] ?? [];
         if (!$message) return $this->json(['error' => 'empty'], 400);
         return $this->json(['reply' => $ai->chat($message, $history)]);
+    }
+
+    #[Route('/api/ai/transcribe', name: 'api_ai_transcribe', methods: ['POST'])]
+    public function aiTranscribe(Request $request, \App\Service\WhisperService $whisper): Response
+    {
+        $audioFile = $request->files->get('audio');
+        if (!$audioFile) {
+            return $this->json(['error' => 'No audio file provided'], 400);
+        }
+
+        try {
+            $tempPath = $audioFile->getRealPath();
+            $language = $request->request->get('language', '');
+            
+            $text = $language 
+                ? $whisper->transcribe($tempPath, $language)
+                : $whisper->transcribe($tempPath);
+            
+            return $this->json(['text' => $text]);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/ai/speech-to-speech', name: 'api_ai_speech_to_speech', methods: ['POST'])]
+    public function speechToSpeech(Request $request, \App\Service\SpeechToSpeechService $s2s): Response
+    {
+        $audioFile = $request->files->get('audio');
+        if (!$audioFile) {
+            return $this->json(['error' => 'No audio file provided'], 400);
+        }
+
+        try {
+            // Sauvegarder le fichier avec l'extension .webm
+            $uploadDir = $this->getParameter('kernel.project_dir') . '/var/tmp';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            $filename = 'recording_' . uniqid() . '.webm';
+            $tempPath = $uploadDir . '/' . $filename;
+            $audioFile->move($uploadDir, $filename);
+            
+            $language = $request->request->get('language', '');
+            $history = json_decode($request->request->get('history', '[]'), true) ?? [];
+            
+            $result = $s2s->processAudioToAudio($tempPath, $history, $language);
+            
+            // Nettoyer le fichier temporaire
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+            
+            return $this->json([
+                'text' => $result['text'],
+                'reply' => $result['reply'],
+            ]);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     #[Route('/api/ai/generate-post', name: 'api_ai_generate_post', methods: ['POST'])]

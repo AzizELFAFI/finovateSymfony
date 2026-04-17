@@ -35,12 +35,13 @@ security:
             provider: app_user_provider
             jwt: ~
         main:
-            lazy: true
+            stateless: true
             provider: app_user_provider
             entry_point: App\Security\JwtRedirectEntryPoint
             custom_authenticators:
                 - App\Security\GoogleAuthenticator
                 - App\Security\GithubAuthenticator
+            jwt: ~
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -64,12 +65,15 @@ security:
         # - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/user, roles: ROLE_USER }
         - { path: ^/investissement, roles: ROLE_USER }
-        - { path: ^/forum, roles: ROLE_USER }
+        # Forum: allow public access to home and posts pages (read-only for guests)
+        - { path: ^/forum/(api/search|policy|alerts|blocked-users|personality|ai-assistant|recommendations), roles: ROLE_USER }
+        - { path: ^/forum, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/login-face-2fa, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/ai/signup-field, roles: PUBLIC_ACCESS }
         - { path: ^/api/ai/signup-all, roles: PUBLIC_ACCESS }
+        - { path: ^/api/notifications, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

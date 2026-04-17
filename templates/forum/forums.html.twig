@@ -19,7 +19,7 @@
             {% for forum in forums %}
             <div class="forum-card" onclick="window.location.href='{{ path('app_forum_posts', {id: forum.id}) }}'">
                 {% if forum.imageUrl %}
-                <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}" class="forum-img">
+                <img src="{{ forum.imageUrl|image_url }}" alt="{{ forum.title }}" class="forum-img">
                 {% else %}
                 <div class="forum-icon">💼</div>
                 {% endif %}

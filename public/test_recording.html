@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Enregistrement Audio</title>
+    <style>
+        body { font-family: Arial; padding: 40px; background: #f0f0f0; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        button { padding: 15px 30px; font-size: 16px; margin: 10px; cursor: pointer; border: none; border-radius: 5px; }
+        .record { background: #ef4444; color: white; }
+        .stop { background: #10b981; color: white; }
+        .play { background: #3b82f6; color: white; }
+        #status { margin: 20px 0; padding: 15px; background: #f0fdf4; border-radius: 5px; }
+        audio { width: 100%; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Test Enregistrement Audio</h1>
+        <div id="status">Prêt à enregistrer</div>
+        
+        <button class="record" onclick="startRecording()">🔴 Démarrer Enregistrement</button>
+        <button class="stop" onclick="stopRecording()" disabled>⏹️ Arrêter</button>
+        <button class="play" onclick="playRecording()" disabled>▶️ Écouter</button>
+        
+        <audio id="audioPlayer" controls style="display:none"></audio>
+        
+        <div id="info" style="margin-top: 20px; font-size: 14px; color: #666;"></div>
+    </div>
+
+    <script>
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let audioBlob = null;
+        let stream = null;
+
+        async function startRecording() {
+            try {
+                document.getElementById('status').textContent = '🎤 Demande d\'accès au micro...';
+                
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                document.getElementById('status').textContent = '🔴 Enregistrement en cours...';
+                document.querySelector('.record').disabled = true;
+                document.querySelector('.stop').disabled = false;
+                
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        audioChunks.push(e.data);
+                        console.log('Chunk reçu:', e.data.size, 'bytes');
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    console.log('Enregistrement arrêté, chunks:', audioChunks.length);
+                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    console.log('Blob créé:', audioBlob.size, 'bytes');
+                    
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const player = document.getElementById('audioPlayer');
+                    player.src = audioUrl;
+                    player.style.display = 'block';
+                    
+                    document.getElementById('status').textContent = '✅ Enregistrement terminé (' + audioBlob.size + ' bytes)';
+                    document.querySelector('.play').disabled = false;
+                    
+                    document.getElementById('info').innerHTML = 
+                        '<strong>Détails:</strong><br>' +
+                        'Type: ' + audioBlob.type + '<br>' +
+                        'Taille: ' + (audioBlob.size / 1024).toFixed(2) + ' KB<br>' +
+                        'Chunks: ' + audioChunks.length;
+                };
+                
+                mediaRecorder.start();
+                console.log('MediaRecorder démarré');
+                
+            } catch(err) {
+                console.error('Erreur:', err);
+                document.getElementById('status').textContent = '❌ Erreur: ' + err.message;
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                console.log('Arrêt demandé');
+            }
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('Track arrêté');
+                });
+            }
+            document.querySelector('.record').disabled = false;
+            document.querySelector('.stop').disabled = true;
+        }
+
+        function playRecording() {
+            const player = document.getElementById('audioPlayer');
+            player.play();
+        }
+    </script>
+</body>
+</html>

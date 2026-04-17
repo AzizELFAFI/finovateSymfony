@@ -1,0 +1,276 @@
+{% extends 'backoffice/base.html.twig' %}
+{% block title %}Statistiques - Admin{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">📊 Statistiques des Forums</h1>
+        </div>
+    </div>
+
+    {# Overview Cards #}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ totalForums }}</h4>
+                            <p class="mb-0">Forums</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-comments fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ totalPosts }}</h4>
+                            <p class="mb-0">Posts</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ totalComments }}</h4>
+                            <p class="mb-0">Commentaires</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-comment fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ totalUsers }}</h4>
+                            <p class="mb-0">Utilisateurs</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {# User Roles Pie Chart #}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Répartition des Utilisateurs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="userRolesChart" width="400" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Activity Chart #}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Activité Forum (30 jours)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="activityChart" width="400" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        {# Most Active Forums #}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Forums les Plus Actifs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Forum</th>
+                                    <th>Posts</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for forum in activeForums %}
+                                <tr>
+                                    <td>{{ forum.title }}</td>
+                                    <td><span class="badge bg-primary">{{ forum.postCount }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Most Active Users #}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Utilisateurs les Plus Actifs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Posts</th>
+                                    <th>Commentaires</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in activeUsers %}
+                                <tr>
+                                    <td>{{ user.firstname }} {{ user.lastname }}</td>
+                                    <td><span class="badge bg-success">{{ user.postCount }}</span></td>
+                                    <td><span class="badge bg-info">{{ user.commentCount }}</span></td>
+                                    <td><span class="badge bg-primary">{{ user.totalActivity }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// User Roles Pie Chart
+const userRolesCtx = document.getElementById('userRolesChart').getContext('2d');
+new Chart(userRolesCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Utilisateurs', 'Administrateurs'],
+        datasets: [{
+            data: [{{ userCount }}, {{ adminCount }}],
+            backgroundColor: [
+                '#28a745',
+                '#dc3545'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Activity Line Chart
+const activityCtx = document.getElementById('activityChart').getContext('2d');
+const activityData = {
+    posts: {{ recentPosts|json_encode|raw }},
+    comments: {{ recentComments|json_encode|raw }}
+};
+
+// Prepare data for chart
+const dates = [];
+const postsData = [];
+const commentsData = [];
+
+// Get all unique dates from the last 30 days
+const today = new Date();
+for (let i = 29; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    dates.push(dateStr);
+    
+    // Find data for this date
+    const postEntry = activityData.posts.find(p => p.date === dateStr);
+    const commentEntry = activityData.comments.find(c => c.date === dateStr);
+    
+    postsData.push(postEntry ? parseInt(postEntry.count) : 0);
+    commentsData.push(commentEntry ? parseInt(commentEntry.count) : 0);
+}
+
+new Chart(activityCtx, {
+    type: 'line',
+    data: {
+        labels: dates.map(date => {
+            const d = new Date(date);
+            return d.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' });
+        }),
+        datasets: [{
+            label: 'Posts',
+            data: postsData,
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Commentaires',
+            data: commentsData,
+            borderColor: '#17a2b8',
+            backgroundColor: 'rgba(23, 162, 184, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

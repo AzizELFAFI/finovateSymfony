@@ -23,7 +23,7 @@
             {% for membership in memberships %}
             <div class="forum-card" onclick="window.location.href='{{ path('app_forum_posts', {id: membership.forum.id}) }}'">
                 {% if membership.forum.imageUrl %}
-                <img src="/{{ membership.forum.imageUrl }}" alt="{{ membership.forum.title }}" class="forum-img">
+                <img src="{{ membership.forum.imageUrl|image_url }}" alt="{{ membership.forum.title }}" class="forum-img">
                 {% else %}
                 <div class="forum-icon">💼</div>
                 {% endif %}
