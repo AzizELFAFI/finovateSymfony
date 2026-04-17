@@ -5,14 +5,13 @@
 <div class="card border-0 shadow-sm">
   <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
     <h4 class="mb-0">Liste des posts</h4>
-    <span class="badge bg-light text-dark">{{ posts|length }}</span>
+    <span class="badge bg-light text-dark">{{ total ?? posts|length }} total</span>
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-hover table-centered mb-0 text-nowrap">
         <thead class="table-light">
           <tr>
-            <th>ID</th>
             <th>Titre</th>
             <th>Auteur</th>
             <th>Forum</th>
@@ -24,7 +23,6 @@
         <tbody>
           {% for post in posts %}
           <tr>
-            <td>{{ post.id }}</td>
             <td class="fw-bold">{{ post.title }}</td>
             <td>
               {% if post.author %}
@@ -45,12 +43,23 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="7" class="text-center py-4">Aucun post trouvé.</td>
+            <td colspan="6" class="text-center py-4">Aucun post trouvé.</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+  
+  {# Pagination #}
+  {% if pages is defined and pages > 1 %}
+    <div class="card-footer bg-white">
+      {{ include('_pagination.html.twig', {
+        page: page, 
+        pages: pages, 
+        route: 'admin_liste_posts'
+      }) }}
+    </div>
+  {% endif %}
 </div>
 {% endblock %}

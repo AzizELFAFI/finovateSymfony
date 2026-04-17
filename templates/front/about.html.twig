@@ -20,13 +20,6 @@
     <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
     <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
     <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
-<!--
-
-Finance Business TemplateMo
-
-https://templatemo.com/tm-545-finance-business
-
--->
   </head>
 
   <body>
@@ -43,11 +36,60 @@ https://templatemo.com/tm-545-finance-business
 
     
     
+    {% if app.user %}
     <header class="">
       <nav class="navbar navbar-expand-lg">
         <div class="container">
           <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_home') }}">Accueil
+                  <span class="sr-only">(current)</span>
+                </a>
+              </li>
+              <li class="nav-item active">
+                <a class="nav-link" href="{{ path('front_about') }}">À propos</a>
+              </li>  
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('front_ads') }}">Annonces</a>
+              </li>                          
+              <li class="nav-item">
+                <a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a>
+              </li>
+              
+              <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('app_forum_alerts') }}" style="position:relative;display:inline-flex;align-items:center" title="Alertes et notifications">
+                  🔔
+                  <span id="notif-badge" style="display:none;position:absolute;top:-8px;right:-8px;background:#ef4444;color:white;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:bold;display:flex;align-items:center;justify-content:center"></span>
+                </a>
+              </li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('forum_policy') }}" style="display:inline-flex;align-items:center" title="Règles de la communauté">
+                  📜
+                </a>
+              </li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('app_forum_blocked_users') }}" style="display:inline-flex;align-items:center" title="Utilisateurs bloqués">
+                  🚫
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    {% else %}
+    <header class="">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarResponsive">
@@ -61,28 +103,269 @@ https://templatemo.com/tm-545-finance-business
                 <a class="nav-link" href="{{ path('front_about') }}">À propos</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{{ path('front_services') }}">Nos services</a>
+                <a class="nav-link" href="{{ path('front_ads') }}">Annonces</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{{ path('front_contact') }}">Contact</a>
+                <a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{ path('front_one_page') }}">Présentation</a>
-              </li>
-              <li class="nav-item" id="nav-login">
-                <a class="nav-link" href="{{ path('front_login') }}">Connexion</a>
-              </li>
-              <li class="nav-item" id="nav-dashboard" style="display: none;">
-                <a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a>
-              </li>
-              <li class="nav-item" id="nav-logout" style="display: none;">
-                <a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a>
-              </li>
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_login') }}">Connexion</a></li>
             </ul>
           </div>
         </div>
       </nav>
     </header>
+    {% endif %}
+
+    <!-- Page Content -->
+    <div class="page-heading header-text">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <h1>À propos</h1>
+            <span>Finovate, une banque en ligne conçue pour une expérience simple et sécurisée</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="more-info about-info">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="more-info-content">
+              <div class="row">
+                <div class="col-md-6 align-self-center">
+                  <div class="right-content">
+                    <span>Notre vision</span>
+                    <h2>La banque digitale <em>à votre rythme</em></h2>
+                    <p>Finovate est une banque en ligne pensée pour simplifier la gestion du quotidien: ouverture de compte, carte, virements, épargne et suivi budgétaire.
+                    <br><br>Nous combinons une application moderne, des alertes en temps réel et des standards de sécurité élevés pour que vous gardiez le contrôle, partout et à tout moment.</p>
+                    <a href="{{ path('front_services') }}" class="filled-button">Voir nos services</a>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="left-image">
+                    <img src="assets/images/about-image.jpg" alt="">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="team">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="section-heading">
+              <h2>Notre <em>équipe</em></h2>
+              <span>Des experts finance, sécurité et relation client</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="team-item">
+              <img src="assets/images/team_01.jpg" alt="">
+              <div class="down-content">
+                <h4>William Smith</h4>
+                <span>Co-fondateur</span>
+                <p>Pilote la vision produit Finovate et l'expérience bancaire digitale: ouverture de compte, cartes et parcours client simplifiés.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="team-item">
+              <img src="assets/images/team_02.jpg" alt="">
+              <div class="down-content">
+                <h4>Mary Houston</h4>
+                <span>Responsable expérience client</span>
+                <p>Assure un support réactif et des processus clairs (litiges, assistance carte, suivi des opérations) pour une relation de confiance.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="team-item">
+              <img src="assets/images/team_03.jpg" alt="">
+              <div class="down-content">
+                <h4>Paul Walker</h4>
+                <span>Analyste risque & conformité</span>
+                <p>Supervise la sécurité, l'anti-fraude et la conformité, pour protéger vos transactions et vos données au quotidien.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fun-facts">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="left-content">
+              <span>Pourquoi Finovate ?</span>
+              <h2>Une approche <em>transparente</em> et moderne</h2>
+              <p>Nous simplifions les opérations du quotidien: virements, cartes, budget et épargne, avec des alertes en temps réel.
+              <br><br>Notre priorité: sécurité, simplicité et accompagnement humain quand vous en avez besoin.</p>
+              <a href="{{ path('front_contact') }}" class="filled-button">Parler à un conseiller</a>
+            </div>
+          </div>
+          <div class="col-md-6 align-self-center">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="count-area-content">
+                  <div class="count-digit">945</div>
+                  <div class="count-title">Demandes traitées</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="count-area-content">
+                  <div class="count-digit">1280</div>
+                  <div class="count-title">Avis clients</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="count-area-content">
+                  <div class="count-digit">578</div>
+                  <div class="count-title">Comptes ouverts</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="count-area-content">
+                  <div class="count-digit">26</div>
+                  <div class="count-title">Partenaires</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonials">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="section-heading">
+              <h2>Ce que disent <em>nos clients</em></h2>
+              <span>Des retours d'expérience sur Finovate</span>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="owl-testimonials owl-carousel">
+              
+              <div class="testimonial-item">
+                <div class="inner-content">
+                  <h4>George Walker</h4>
+                  <span>Conseiller financier</span>
+                  <p>"Finovate m'a permis de centraliser mes dépenses et de suivre mon budget sans effort. Les alertes sont très utiles au quotidien."</p>
+                </div>
+              </div>
+              
+              <div class="testimonial-item">
+                <div class="inner-content">
+                  <h4>John Smith</h4>
+                  <span>Spécialiste épargne</span>
+                  <p>"Les objectifs d'épargne sont clairs et motivants. Je vois exactement où j'en suis et je peux ajuster en un clic."</p>
+                </div>
+              </div>
+              
+              <div class="testimonial-item">
+                <div class="inner-content">
+                  <h4>David Wood</h4>
+                  <span>Responsable conformité</span>
+                  <p>"La sécurité est bien pensée: contrôle de la carte, notifications instantanées et historique clair. Très rassurant."</p>
+                </div>
+                <img src="{{ asset('front/assets/images/client-01.png') }}" alt="">
+              </div>
+              
+              <div class="testimonial-item">
+                <div class="inner-content">
+                  <h4>Andrew Boom</h4>
+                  <span>Responsable expérience client</span>
+                  <p>"L'application est simple et rapide. J'ai pu bloquer ma carte en quelques secondes après un doute sur un paiement."</p>
+                </div>
+                <img src="{{ asset('front/assets/images/client-01.png') }}" alt="">
+              </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Starts Here -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-3 footer-item">
+            <h4>Liens utiles</h4>
+            <ul class="menu-list">
+              <li><a href="{{ path('front_home') }}">Accueil</a></li>
+              <li><a href="{{ path('front_services') }}">Nos services</a></li>
+              <li><a href="{{ path('front_about') }}">À propos</a></li>
+              <li><a href="{{ path('front_contact') }}">Contact</a></li>
+              <li><a href="{{ path('front_one_page') }}">Présentation</a></li>
+            </ul>
+          </div>
+          
+          <div class="col-md-3 footer-item last-item">
+            <h4>Nous écrire</h4>
+            <div class="contact-form">
+              <form id="contact-footer" action="{{ path('front_contact_send') }}" method="post" novalidate="novalidate">
+                <input type="hidden" name="_token" value="{{ csrf_token('contact_form') }}">
+                <input type="hidden" name="subject" value="Contact depuis le footer (About)">
+                <div class="row">
+                  <div class="col-lg-12 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="name" type="text" class="form-control" id="name" placeholder="Nom complet" required="" pattern=".*\D.*" title="Le nom complet ne doit pas être un entier.">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12 col-md-12 col-sm-12">
+                    <fieldset>
+                      <input name="email" type="email" class="form-control" id="email" placeholder="Adresse e-mail" required="">
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12">
+                    <fieldset>
+                      <textarea name="message" rows="6" class="form-control" id="message" placeholder="Votre message" required=""></textarea>
+                    </fieldset>
+                  </div>
+                  <div class="col-lg-12">
+                    <fieldset>
+                      <button type="submit" id="form-submit" class="filled-button">Envoyer</button>
+                    </fieldset>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    
+    <div class="sub-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <p>Copyright &copy; 2026 Finovate.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Additional Scripts -->
+    <script src="assets/js/custom.js"></script>
+    <script src="assets/js/owl.js"></script>
+    <script src="assets/js/slick.js"></script>
+    <script src="assets/js/accordions.js"></script>
+
+  </body>
+</html>
 
     <!-- Page Content -->
     <div class="page-heading header-text">

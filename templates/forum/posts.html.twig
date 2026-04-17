@@ -1,5 +1,7 @@
 {% extends 'forum/_layout.html.twig' %}
 {% block title %}{{ forum.title }} - Posts{% endblock %}
+{% block page_title %}{{ forum.title }}{% endblock %}
+{% block page_subtitle %}Découvrez les posts de ce forum{% endblock %}
 {% block content %}
 <div class="fp-page">
 
@@ -7,7 +9,7 @@
     <div class="fp-forum-header">
         {% if forum.imageUrl %}
         <div class="fp-forum-img">
-            <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}">
+            <img src="{{ forum.imageUrl|image_url }}" alt="{{ forum.title }}">
         </div>
         {% endif %}
         <div class="fp-forum-info {% if not forum.imageUrl %}fp-forum-info-full{% endif %}">
@@ -24,8 +26,10 @@
                 {% endif %}
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+                {% if app.user %}
                 <a href="{{ path('app_post_create', {id: forum.id}) }}" class="fp-btn-new" style="margin-top:0">+ Nouveau Post</a>
                 <button onclick="openAiDialog('{{ forum.id }}')" class="fp-btn-ai">✨ Générer avec IA</button>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -60,7 +64,7 @@
         <a href="{{ path('app_post_detail', {id: post.id}) }}" class="fp-post-card">
             {% if post.imageUrl %}
             <div class="fp-post-img">
-                <img src="/{{ post.imageUrl }}" alt="{{ post.title }}">
+                <img src="{{ post.imageUrl|image_url }}" alt="{{ post.title }}">
             </div>
             {% else %}
             <div class="fp-post-img fp-post-img-placeholder">📝</div>

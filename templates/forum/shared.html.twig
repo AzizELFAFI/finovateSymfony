@@ -15,7 +15,7 @@
             {% for sp in sharedPosts %}
             <div class="post-card">
                 {% if sp.post.imageUrl %}
-                <div class="post-img"><img src="/{{ sp.post.imageUrl }}" alt="post"></div>
+                <div class="post-img"><img src="{{ sp.post.imageUrl|image_url }}" alt="post"></div>
                 {% endif %}
                 <div class="post-info">
                     <h3 class="post-title">

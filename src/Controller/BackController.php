@@ -998,10 +998,20 @@ final class BackController extends AbstractController
     // ── Forum Management ──────────────────────────────────────────────────────
 
     #[Route('/forums', name: 'backoffice_forums', methods: ['GET'])]
-    public function forums(EntityManagerInterface $em): Response
+    public function forums(EntityManagerInterface $em, Request $request): Response
     {
-        $forums = $em->getRepository(Forum::class)->findBy([], ['createdAt' => 'DESC']);
-        return $this->render('backoffice/forums.html.twig', ['forums' => $forums]);
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 10;
+        $repo = $em->getRepository(Forum::class);
+        $total = $repo->count([]);
+        $forums = $repo->findBy([], ['createdAt' => 'DESC'], $limit, ($page - 1) * $limit);
+
+        return $this->render('backoffice/forums.html.twig', [
+            'forums' => $forums,
+            'page'   => $page,
+            'pages'  => (int) ceil($total / $limit),
+            'total'  => $total,
+        ]);
     }
 
     #[Route('/forums/{id}/delete', name: 'backoffice_forum_delete', methods: ['POST'])]

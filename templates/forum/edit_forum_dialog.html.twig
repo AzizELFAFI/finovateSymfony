@@ -20,7 +20,7 @@
             <div class="form-group">
                 <label>Image (laisser vide pour garder l'actuelle)</label>
                 {% if forum.imageUrl %}
-                <img src="/{{ forum.imageUrl }}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px">
+                <img src="{{ forum.imageUrl|image_url }}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px">
                 {% endif %}
                 <input type="file" name="image" accept="image/*">
             </div>

@@ -23,15 +23,33 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # CloudinaryService MUST be defined BEFORE FileUploadService
+    App\Service\CloudinaryService:
+        arguments:
+            $cloudName: '%env(CLOUDINARY_CLOUD_NAME)%'
+            $apiKey: '%env(CLOUDINARY_API_KEY)%'
+            $apiSecret: '%env(CLOUDINARY_API_SECRET)%'
+
     # Configuration du service FileUploadService
     App\Service\FileUploadService:
         arguments:
             $projectRoot: '%kernel.project_dir%'
-
+            $cloudinary: '@App\Service\CloudinaryService'
 
     App\Service\AiService:
         arguments:
             $groqApiKey: '%env(GROQ_API_KEY)%'
+            $langblyApiKey: '%env(LANGBLY_API_KEY)%'
+
+    App\Service\WhisperService:
+        arguments:
+            $openaiApiKey: '%env(OPENAI_API_KEY)%'
+
+    App\Service\SpeechToSpeechService:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+            $projectDir: '%kernel.project_dir%'
 
     App\Service\AdminEmailService:
         arguments:
@@ -48,6 +66,17 @@ services:
     App\Service\FaceApiClient:
         arguments:
             $baseUrl: '%env(resolve:FACE_API_BASE_URL)%'
+
+    App\Service\NotificationService:
+        arguments:
+            $vapidPublicKey: '%env(VAPID_PUBLIC_KEY)%'
+            $vapidPrivateKey: '%env(VAPID_PRIVATE_KEY)%'
+            $vapidSubject: '%env(VAPID_SUBJECT)%'
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\AlertService:
+        arguments:
+            $notif: '@App\Service\NotificationService'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

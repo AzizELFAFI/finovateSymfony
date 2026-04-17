@@ -5,14 +5,13 @@
 <div class="card border-0 shadow-sm">
   <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
     <h4 class="mb-0">Liste des commentaires</h4>
-    <span class="badge bg-light text-dark">{{ comments|length }}</span>
+    <span class="badge bg-light text-dark">{{ total ?? comments|length }} total</span>
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-hover table-centered mb-0 text-nowrap">
         <thead class="table-light">
           <tr>
-            <th>ID</th>
             <th>Contenu</th>
             <th>Auteur</th>
             <th>Post</th>
@@ -23,7 +22,6 @@
         <tbody>
           {% for comment in comments %}
           <tr>
-            <td>{{ comment.id }}</td>
             <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
               {{ comment.content|slice(0,80) }}{% if comment.content|length > 80 %}…{% endif %}
             </td>
@@ -45,12 +43,23 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="6" class="text-center py-4">Aucun commentaire trouvé.</td>
+            <td colspan="5" class="text-center py-4">Aucun commentaire trouvé.</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+  
+  {# Pagination #}
+  {% if pages is defined and pages > 1 %}
+    <div class="card-footer bg-white">
+      {{ include('_pagination.html.twig', {
+        page: page, 
+        pages: pages, 
+        route: 'admin_liste_comments'
+      }) }}
+    </div>
+  {% endif %}
 </div>
 {% endblock %}

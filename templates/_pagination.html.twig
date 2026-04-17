@@ -1,0 +1,16 @@
+{# Reusable pagination macro #}
+{# Usage: {{ include('_pagination.html.twig', {page: page, pages: pages, route: 'route_name', routeParams: {}}) }} #}
+{% if pages > 1 %}
+<nav class="d-flex justify-content-center align-items-center gap-1 mt-4">
+  {% if page > 1 %}
+    <a href="{{ path(route, (routeParams ?? {})|merge({page: page - 1})) }}" class="btn btn-sm btn-light">‹</a>
+  {% endif %}
+  {% for p in max(1, page-2)..min(pages, page+2) %}
+    <a href="{{ path(route, (routeParams ?? {})|merge({page: p})) }}" class="btn btn-sm {{ p == page ? 'btn-primary' : 'btn-light' }}">{{ p }}</a>
+  {% endfor %}
+  {% if page < pages %}
+    <a href="{{ path(route, (routeParams ?? {})|merge({page: page + 1})) }}" class="btn btn-sm btn-light">›</a>
+  {% endif %}
+  <span class="text-muted small ms-2">Page {{ page }}/{{ pages }}</span>
+</nav>
+{% endif %}

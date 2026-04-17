@@ -44,13 +44,13 @@ https://templatemo.com/tm-545-finance-business
       <nav class="navbar navbar-expand-lg">
         <div class="container">
           <a class="navbar-brand" href="{{ path('front_home') }}"><h2>Finovate</h2></a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarResponsive">
             <ul class="navbar-nav ml-auto">
               <li class="nav-item active">
-                <a class="nav-link" href="#top">Accueil
+                <a class="nav-link" href="{{ path('front_home') }}">Accueil
                   <span class="sr-only">(current)</span>
                 </a>
               </li>
@@ -58,23 +58,34 @@ https://templatemo.com/tm-545-finance-business
                 <a class="nav-link" href="{{ path('front_about') }}">À propos</a>
               </li>  
               <li class="nav-item">
-                <a class="nav-link" href="{{ path('front_services') }}">Nos services</a>
+                <a class="nav-link" href="{{ path('front_ads') }}">Annonces</a>
               </li>                          
               <li class="nav-item">
-                <a class="nav-link" href="{{ path('front_contact') }}">Contact</a>
+                <a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{ path('front_one_page') }}">Présentation</a>
-              </li>
-              <li class="nav-item" id="nav-login">
-                <a class="nav-link" href="{{ path('front_login') }}">Connexion</a>
-              </li>
-              <li class="nav-item" id="nav-dashboard" style="display: none;">
-                <a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a>
-              </li>
-              <li class="nav-item" id="nav-logout" style="display: none;">
-                <a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a>
-              </li>
+              
+              {% if app.user %}
+                <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+                <li class="nav-item" style="margin-left: 8px;">
+                  <a class="nav-link" href="{{ path('app_forum_alerts') }}" style="position:relative;display:inline-flex;align-items:center" title="Alertes et notifications">
+                    🔔
+                    <span id="notif-badge" style="display:none;position:absolute;top:-8px;right:-8px;background:#ef4444;color:white;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:bold;display:flex;align-items:center;justify-content:center"></span>
+                  </a>
+                </li>
+                <li class="nav-item" style="margin-left: 8px;">
+                  <a class="nav-link" href="{{ path('forum_policy') }}" style="display:inline-flex;align-items:center" title="Règles de la communauté">
+                    📜
+                  </a>
+                </li>
+                <li class="nav-item" style="margin-left: 8px;">
+                  <a class="nav-link" href="{{ path('app_forum_blocked_users') }}" style="display:inline-flex;align-items:center" title="Utilisateurs bloqués">
+                    🚫
+                  </a>
+                </li>
+              {% else %}
+                <li class="nav-item"><a class="nav-link" href="{{ path('front_login') }}">Connexion</a></li>
+              {% endif %}
             </ul>
           </div>
         </div>

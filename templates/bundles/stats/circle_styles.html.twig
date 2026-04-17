@@ -1,0 +1,183 @@
+{# Bundle Statistiques - Circle Statistics Styles #}
+<style>
+.stats-circle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 250px;
+  padding: 15px;
+}
+
+.circle-chart {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.circle-chart::before {
+  content: '';
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  background: white;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.circle-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: #374151;
+  width: 120px;
+}
+
+.stat-item {
+  margin: 1px 0;
+}
+
+.stat-number {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 9px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  line-height: 1;
+  margin-bottom: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-count {
+  display: block;
+  font-size: 7px;
+  color: #9ca3af;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.total-stat {
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.total-number {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+
+.total-label {
+  display: block;
+  font-size: 8px;
+  color: #64748b;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+/* Forum Activity: Forums avec posts (vert) vs sans posts (gris) */
+.forum-activity .circle-chart {
+  background: conic-gradient(
+    #10b981 0deg 210deg,
+    #e5e7eb 210deg 360deg
+  );
+}
+
+.forum-activity .stat-item.active .stat-number {
+  color: #10b981;
+}
+
+.forum-activity .stat-item.inactive .stat-number {
+  color: #9ca3af;
+}
+
+/* Post Interaction: Posts avec commentaires (bleu) vs sans commentaires (orange) */
+.post-interaction .circle-chart {
+  background: conic-gradient(
+    #3b82f6 0deg 260deg,
+    #f59e0b 260deg 360deg
+  );
+}
+
+.post-interaction .stat-item.active .stat-number {
+  color: #3b82f6;
+}
+
+.post-interaction .stat-item.inactive .stat-number {
+  color: #f59e0b;
+}
+
+/* User Activity: Utilisateurs actifs (vert) vs inactifs (gris) */
+.user-activity .circle-chart {
+  background: conic-gradient(
+    #059669 0deg 180deg,
+    #d1d5db 180deg 360deg
+  );
+}
+
+.user-activity .stat-item.active .stat-number {
+  color: #059669;
+}
+
+.user-activity .stat-item.inactive .stat-number {
+  color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .circle-chart {
+    width: 160px;
+    height: 160px;
+  }
+  
+  .circle-chart::before {
+    width: 110px;
+    height: 110px;
+  }
+  
+  .circle-content {
+    width: 100px;
+  }
+  
+  .stat-number {
+    font-size: 18px;
+  }
+  
+  .total-number {
+    font-size: 16px;
+  }
+}
+
+/* Animation hover effect */
+.stats-circle:hover .circle-chart {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+.stats-circle .circle-chart {
+  transition: transform 0.2s ease;
+}
+</style>

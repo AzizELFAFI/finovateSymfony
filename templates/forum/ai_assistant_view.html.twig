@@ -10,12 +10,10 @@
     {# Central visualizer circle #}
     <div class="audi-center">
         <canvas id="visualizer" width="320" height="320"></canvas>
-        <div class="audi-circle" id="audiCircle">
+        <div class="audi-circle" id="audiCircle" onclick="toggleListening()">
             <div class="audi-state" id="audiState">🎤</div>
             <div class="audi-label" id="audiLabel">Cliquez pour parler</div>
         </div>
-        <button class="audi-mic-btn" id="micBtn" onclick="toggleListening()">
-        </button>
     </div>
 
     {# Status bar #}
@@ -47,12 +45,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* Center visualizer */
 .audi-center { position: relative; width: 320px; height: 320px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
 #visualizer { position: absolute; top: 0; left: 0; pointer-events: none; }
-.audi-circle { position: absolute; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #f0fdf4 0%, #dcfce7 100%); border: 2px solid rgba(35,127,78,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 2; transition: border-color 0.3s; pointer-events: none; box-shadow: 0 4px 20px rgba(35,127,78,0.15); }
+.audi-circle { position: absolute; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #f0fdf4 0%, #dcfce7 100%); border: 2px solid rgba(35,127,78,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 2; transition: border-color 0.3s; box-shadow: 0 4px 20px rgba(35,127,78,0.15); cursor: pointer; }
 .audi-circle.listening { border-color: #237f4e; box-shadow: 0 0 30px rgba(35,127,78,0.3); }
 .audi-circle.speaking { border-color: #4ade80; box-shadow: 0 0 30px rgba(74,222,128,0.3); }
-.audi-state { font-size: 32px; }
-.audi-label { font-size: 11px; color: #64748b; text-align: center; letter-spacing: 0.5px; }
-.audi-mic-btn { position: absolute; width: 160px; height: 160px; border-radius: 50%; background: transparent; border: none; cursor: pointer; z-index: 3; }
+.audi-state { font-size: 32px; pointer-events: none; }
+.audi-label { font-size: 11px; color: #64748b; text-align: center; letter-spacing: 0.5px; pointer-events: none; }
 
 /* Status */
 .audi-status { font-size: 13px; color: #237f4e; text-align: center; min-height: 20px; margin-bottom: 8px; letter-spacing: 0.5px; font-weight: 500; }
@@ -77,20 +74,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 <script>
 var chatHistory = [];
-var chatUrl     = '{{ path("api_ai_chat") }}';
-var recognition = null;
-var isListening = false;
-var audioCtx    = null;
-var analyser    = null;
-var micStream   = null;
-var animFrame   = null;
-var transcriptResult = '';
-var currentUtterance = null;
-var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+var s2sUrl = '{{ path("api_ai_speech_to_speech") }}';
+var chatUrl = '{{ path("api_ai_chat") }}';
+var mediaRecorder = null;
+var audioChunks = [];
+var isRecording = false;
+var audioCtx = null;
+var analyser = null;
+var micStream = null;
+var animFrame = null;
 
 // ── Visualizer ────────────────────────────────────────────────────────────
-var canvas  = document.getElementById('visualizer');
-var ctx     = canvas.getContext('2d');
+var canvas = document.getElementById('visualizer');
+var ctx = canvas.getContext('2d');
 var cx = 160, cy = 160, baseR = 80;
 var idleAngle = 0;
 
@@ -152,179 +148,250 @@ function stopVisualizer() {
     drawIdle();
 }
 
-// Start idle animation
 drawIdle();
 
-// ── Speech Recognition ────────────────────────────────────────────────────
+// ── Speech-to-Speech Pipeline ─────────────────────────────────────────────
 function toggleListening() {
-    if (isListening) { stopListening(); } else { startListening(); }
-}
-
-function initRecognition() {
-    if (!SpeechRecognition) return null;
-    var r = new SpeechRecognition();
-    r.lang = 'fr-FR';
-    r.interimResults = true;
-    r.continuous = false;
-    r.maxAlternatives = 1;
-
-    r.onresult = function(e) {
-        var interim = '';
-        transcriptResult = '';
-        for (var i = e.resultIndex; i < e.results.length; i++) {
-            if (e.results[i].isFinal) transcriptResult += e.results[i][0].transcript;
-            else interim += e.results[i][0].transcript;
-        }
-        var display = transcriptResult || interim;
-        if (display) {
-            document.getElementById('audiTranscript').textContent = display;
-            document.getElementById('audiTranscript').style.display = 'block';
-        }
-    };
-
-    r.onend = function() {
-        isListening = false;
-        if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-        stopVisualizer();
-        var text = transcriptResult.trim();
-        if (text) {
-            setCircle('idle', '⏳', 'Traitement...');
-            addHistory('user', text);
-            chatHistory.push({ role: 'user', content: text });
-            sendToAI(text);
-        } else {
-            setCircle('idle', '🎤', 'Cliquez pour parler');
-            setStatus('Aucune parole détectée, réessayez');
-            document.getElementById('audiTranscript').style.display = 'none';
-        }
-    };
-
-    r.onerror = function(e) {
-        isListening = false;
-        if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-        stopVisualizer();
-        setCircle('idle', '🎤', 'Cliquez pour parler');
-        setStatus('Erreur: ' + e.error + ' — réessayez');
-    };
-    return r;
-}
-
-async function startListening() {
-    if (isListening) return;
-    isListening = true;
-    transcriptResult = '';
-    window.speechSynthesis && window.speechSynthesis.cancel();
-    setCircle('listening', '🎤', 'Parlez... (cliquez pour arrêter)');
-    setStatus('🔴 En écoute...');
-    document.getElementById('audiTranscript').style.display = 'none';
-    document.getElementById('audiTranscript').textContent = '';
-
-    recognition = initRecognition();
-    if (!recognition) {
-        setStatus('❌ SpeechRecognition non supporté — utilisez Chrome ou Edge');
-        isListening = false;
-        setCircle('idle', '🎤', 'Cliquez pour parler');
-        return;
+    console.log('toggleListening appelé, isRecording:', isRecording);
+    if (isRecording) { 
+        stopRecording(); 
+    } else { 
+        startRecording(); 
     }
+}
+
+async function startRecording() {
+    console.log('startRecording appelé');
+    if (isRecording) return;
+    isRecording = true;
+    audioChunks = [];
+    
+    // Arrêter toute synthèse vocale en cours
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+    
+    setCircle('listening', '🎤', 'Parlez... (cliquez pour arrêter)');
+    setStatus('🔴 Enregistrement...');
+    document.getElementById('audiTranscript').style.display = 'none';
 
     try {
         micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         startVisualizer(micStream);
-        recognition.start();
+        
+        // Essayer d'utiliser un format audio compatible avec Groq
+        // Groq supporte: flac, mp3, mp4, mpeg, mpga, m4a, ogg, opus, wav, webm
+        var options = {};
+        
+        // Essayer les formats dans cet ordre de préférence
+        var mimeTypes = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus',
+            'audio/ogg',
+            'audio/mp4',
+        ];
+        
+        for (var i = 0; i < mimeTypes.length; i++) {
+            if (MediaRecorder.isTypeSupported(mimeTypes[i])) {
+                options = { mimeType: mimeTypes[i] };
+                console.log('Using MIME type:', mimeTypes[i]);
+                break;
+            }
+        }
+        
+        mediaRecorder = new MediaRecorder(micStream, options);
+        console.log('MediaRecorder mimeType:', mediaRecorder.mimeType);
+        
+        mediaRecorder.ondataavailable = (e) => { 
+            if (e.data.size > 0) audioChunks.push(e.data); 
+        };
+        mediaRecorder.onstop = () => { 
+            processAudio(); 
+        };
+        mediaRecorder.start();
+        console.log('MediaRecorder démarré');
     } catch(err) {
-        isListening = false;
+        console.error('Erreur accès micro:', err);
+        isRecording = false;
         setStatus('❌ Accès micro refusé');
         setCircle('idle', '🎤', 'Cliquez pour parler');
     }
 }
 
-function stopListening() {
-    if (!isListening) return;
-    if (recognition) { try { recognition.stop(); } catch(ex) {} }
+function stopRecording() {
+    console.log('stopRecording appelé');
+    if (!isRecording) return;
+    isRecording = false;
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+    if (micStream) {
+        micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+    }
+    stopVisualizer();
 }
 
-// ── AI ────────────────────────────────────────────────────────────────────
-async function sendToAI(msg) {
-    setCircle('speaking', '💭', 'Réflexion...');
-    setStatus('ChitChat réfléchit...');
-
+async function processAudio() {
+    console.log('processAudio appelé, chunks:', audioChunks.length);
+    setCircle('speaking', '💭', 'Traitement...');
+    setStatus('⏳ Transcription et analyse...');
+    
+    // Déterminer le type MIME et l'extension basée sur le MediaRecorder
+    var mimeType = mediaRecorder.mimeType || 'audio/webm';
+    var extension = 'webm';
+    
+    if (mimeType.includes('ogg')) {
+        extension = 'ogg';
+    } else if (mimeType.includes('mp4')) {
+        extension = 'mp4';
+    } else if (mimeType.includes('wav')) {
+        extension = 'wav';
+    }
+    
+    var audioBlob = new Blob(audioChunks, { type: mimeType });
+    console.log('Audio blob size:', audioBlob.size, 'MIME type:', mimeType, 'Extension:', extension);
+    
+    var formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.' + extension);
+    formData.append('language', 'fr');
+    formData.append('history', JSON.stringify(chatHistory.slice(-10)));
+    
     try {
-        var res  = await fetch(chatUrl, {
+        var token = localStorage.getItem('finovate_token');
+        var headers = {};
+        if (token) { 
+            headers['Authorization'] = 'Bearer ' + token; 
+        }
+        
+        console.log('Envoi vers:', s2sUrl);
+        var res = await fetch(s2sUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: msg, history: chatHistory.slice(-10) })
+            headers: headers,
+            body: formData
         });
+        
+        console.log('Réponse status:', res.status);
         var data = await res.json();
-        var reply = data.reply || 'Désolé, une erreur est survenue.';
-        chatHistory.push({ role: 'assistant', content: reply });
-        addHistory('ai', reply);
-        speakReply(reply);
+        console.log('Réponse data:', data);
+        
+        if (data.error) {
+            setStatus('❌ ' + data.error);
+            setCircle('idle', '🎤', 'Cliquez pour parler');
+            return;
+        }
+        
+        // Afficher la transcription
+        document.getElementById('audiTranscript').textContent = data.text;
+        document.getElementById('audiTranscript').style.display = 'block';
+        
+        // Ajouter à l'historique
+        addHistory('user', data.text);
+        addHistory('ai', data.reply);
+        chatHistory.push({ role: 'user', content: data.text });
+        chatHistory.push({ role: 'assistant', content: data.reply });
+        
+        // Utiliser la synthèse vocale du navigateur
+        speakReply(data.reply);
+        
     } catch(err) {
+        console.error('Erreur processAudio:', err);
+        setStatus('❌ Erreur de connexion');
         setCircle('idle', '🎤', 'Cliquez pour parler');
-        setStatus('Erreur de connexion');
     }
 }
 
 function speakReply(text) {
-    if (!window.speechSynthesis) {
-        setCircle('idle', '🎤', 'Appuyez pour parler');
-        return;
-    }
-    window.speechSynthesis.cancel();
-    setCircle('speaking', '🔊', 'AUDI parle...');
+    console.log('speakReply:', text);
+    setCircle('speaking', '🔊', 'ChitChat parle...');
     setStatus('');
-
-    var u = new SpeechSynthesisUtterance(text);
-    u.lang = 'fr-FR';
-    u.rate = 1.0;
-
-    var speakAnim = null;
-    var t = 0;
-    function animSpeak() {
-        t += 0.05;
-        ctx.clearRect(0, 0, 320, 320);
-        var dots = 60;
-        for (var i = 0; i < dots; i++) {
-            var angle = (i / dots) * Math.PI * 2;
-            var wave  = Math.sin(t * 4 + i * 0.2) * 20 + Math.sin(t * 2 + i * 0.5) * 10;
-            var r     = baseR + 10 + wave;
-            var x     = cx + Math.cos(angle) * r;
-            var y     = cy + Math.sin(angle) * r;
-            var hue   = 280 + Math.sin(t + i * 0.1) * 40;
-            ctx.beginPath();
-            ctx.arc(x, y, 3, 0, Math.PI * 2);
-            ctx.fillStyle = 'hsl(' + hue + ',80%,65%)';
-            ctx.fill();
-        }
-        speakAnim = requestAnimationFrame(animSpeak);
-    }
-    cancelAnimationFrame(animFrame);
-    animSpeak();
-
-    u.onend = function() {
-        cancelAnimationFrame(speakAnim);
-        drawIdle();
+    
+    if (window.speechSynthesis) {
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'fr-FR';
+        u.rate = 1.0;
+        u.onend = () => {
+            setCircle('idle', '🎤', 'Cliquez pour parler');
+            setStatus('');
+        };
+        u.onerror = (e) => {
+            console.error('Erreur synthèse vocale:', e);
+            setCircle('idle', '🎤', 'Cliquez pour parler');
+            setStatus('');
+        };
+        window.speechSynthesis.speak(u);
+    } else {
         setCircle('idle', '🎤', 'Cliquez pour parler');
-        document.getElementById('audiTranscript').style.display = 'none';
-    };
-
-    window.speechSynthesis.speak(u);
+        setStatus('');
+    }
 }
 
-// ── Text input ────────────────────────────────────────────────────────────
+// ── Text Input ────────────────────────────────────────────────────────────
 function sendText() {
     var input = document.getElementById('textInput');
-    var msg   = input.value.trim();
-    if (!msg) return;
+    var text = input.value.trim();
+    if (!text) return;
+    
     input.value = '';
-    document.getElementById('audiTranscript').textContent = msg;
-    document.getElementById('audiTranscript').style.display = 'block';
-    addHistory('user', msg);
-    chatHistory.push({ role: 'user', content: msg });
-    sendToAI(msg);
+    addHistory('user', text);
+    chatHistory.push({ role: 'user', content: text });
+    
+    sendTextToAI(text);
 }
 
-function handleKey(e) { if (e.key === 'Enter') sendText(); }
+async function sendTextToAI(text) {
+    setCircle('speaking', '💭', 'Réflexion...');
+    setStatus('ChitChat réfléchit...');
+    
+    try {
+        var token = localStorage.getItem('finovate_token');
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) { 
+            headers['Authorization'] = 'Bearer ' + token; 
+        }
+        
+        var res = await fetch(chatUrl, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ 
+                message: text, 
+                history: chatHistory.slice(-10) 
+            })
+        });
+        
+        var data = await res.json();
+        var reply = data.reply || 'Désolé, une erreur est survenue.';
+        
+        addHistory('ai', reply);
+        chatHistory.push({ role: 'assistant', content: reply });
+        
+        // Utiliser la synthèse vocale du navigateur pour le texte
+        if (window.speechSynthesis) {
+            var u = new SpeechSynthesisUtterance(reply);
+            u.lang = 'fr-FR';
+            u.rate = 1.0;
+            u.onend = () => {
+                setCircle('idle', '🎤', 'Cliquez pour parler');
+                setStatus('');
+            };
+            setCircle('speaking', '🔊', 'ChitChat parle...');
+            window.speechSynthesis.speak(u);
+        } else {
+            setCircle('idle', '🎤', 'Cliquez pour parler');
+            setStatus('');
+        }
+        
+    } catch(err) {
+        console.error('Erreur sendTextToAI:', err);
+        setStatus('❌ Erreur de connexion');
+        setCircle('idle', '🎤', 'Cliquez pour parler');
+    }
+}
+
+function handleKey(e) { 
+    if (e.key === 'Enter') sendText(); 
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 function setCircle(state, icon, label) {
@@ -348,4 +415,3 @@ function addHistory(role, text) {
 }
 </script>
 {% endblock %}
-

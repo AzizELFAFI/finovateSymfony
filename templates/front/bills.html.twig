@@ -91,20 +91,38 @@
         <a class="navbar-brand" href="{{ path('front_home') }}">
           <h2>Finovate</h2>
         </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
-          aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
           <span class="navbar-toggler-icon"></span>
         </button>
-
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
             <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ path('front_services') }}">Nos services</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ path('front_contact') }}">Contact</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ path('front_one_page') }}">One-page</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_ads') }}">Annonces</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
+            
+            {% if app.user %}
+              <li class="nav-item active"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('app_forum_alerts') }}" style="position:relative;display:inline-flex;align-items:center" title="Alertes et notifications">
+                  🔔
+                  <span id="notif-badge" style="display:none;position:absolute;top:-8px;right:-8px;background:#ef4444;color:white;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:bold;display:flex;align-items:center;justify-content:center"></span>
+                </a>
+              </li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('forum_policy') }}" style="display:inline-flex;align-items:center" title="Règles de la communauté">
+                  📜
+                </a>
+              </li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('app_forum_blocked_users') }}" style="display:inline-flex;align-items:center" title="Utilisateurs bloqués">
+                  🚫
+                </a>
+              </li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_login') }}">Connexion</a></li>
+            {% endif %}
           </ul>
         </div>
       </div>
@@ -137,20 +155,6 @@
             <a href="{{ path('front_ads') }}">Annonces</a>
             <a href="{{ path('user_topup') }}">Alimenter carte</a>
             <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
-            <a href="#" class="forum-folder" onclick="toggleForums(event)">Forums <span class="f-arrow">▶</span></a>
-            <div class="forum-sub">
-              <a href="{{ path('app_forum_home') }}">🏠 Tous les forums</a>
-              <a href="{{ path('app_forum_my') }}">📁 Mes Forums</a>
-              <a href="{{ path('app_forum_joined') }}">👥 Rejoints</a>
-              <a href="{{ path('app_forum_shared') }}">📤 Partagés</a>
-              <a href="{{ path('app_forum_alerts') }}">🔔 Alertes</a>
-              <a href="{{ path('app_forum_badges') }}">🏆 Badges</a>
-              <a href="{{ path('app_forum_recommendations') }}">⭐ Recommandations</a>
-              <a href="{{ path('app_forum_personality') }}">🧠 Personnalité</a>
-              <a href="{{ path('app_forum_ai_assistant') }}">💬 ChitChat</a>
-              <a href="{{ path('forum_policy') }}">📜 Règles</a>
-              <a href="{{ path('app_forum_blocked_users') }}">🚫 Bloqués</a>
-            </div>
             <a href="{{ path('front_logout') }}">Déconnexion</a>
           </div>
         </div>

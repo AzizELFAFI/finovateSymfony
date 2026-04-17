@@ -8,10 +8,12 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class FileUploadService
 {
     private string $uploadPath;
-    private array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    private array $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif'];
 
-    public function __construct(string $projectRoot)
-    {
+    public function __construct(
+        string $projectRoot,
+        private ?CloudinaryService $cloudinary = null
+    ) {
         $this->uploadPath = $projectRoot . '/public/uploads';
     }
 
@@ -28,6 +30,29 @@ class FileUploadService
             );
         }
 
+        // Debug: Check if Cloudinary is injected
+        if ($this->cloudinary === null) {
+            error_log('⚠️ CloudinaryService is NULL - using local upload');
+        } else {
+            error_log('✅ CloudinaryService is available - attempting upload');
+        }
+
+        // Try to upload to Cloudinary first
+        if ($this->cloudinary !== null) {
+            try {
+                error_log('📤 Uploading to Cloudinary...');
+                $cloudinaryUrl = $this->cloudinary->upload($file, 'finovate/forum');
+                error_log('✅ Cloudinary upload successful: ' . $cloudinaryUrl);
+                return $cloudinaryUrl;
+            } catch (\Throwable $e) {
+                // Fallback to local upload if Cloudinary fails
+                error_log('❌ Cloudinary upload failed: ' . $e->getMessage());
+                error_log('Stack trace: ' . $e->getTraceAsString());
+            }
+        }
+
+        // Fallback: Local upload
+        error_log('💾 Falling back to local upload');
         $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         // Nettoyer le nom du fichier
         $originalFilename = preg_replace('/[^a-zA-Z0-9_-]/', '', $originalFilename);
@@ -53,7 +78,17 @@ class FileUploadService
 
     public function deleteImage(?string $imagePath): bool
     {
-        if (!$imagePath || !str_starts_with($imagePath, '/uploads/')) {
+        if (!$imagePath) {
+            return false;
+        }
+
+        // If it's a Cloudinary URL, we don't delete it (handled by Cloudinary)
+        if (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://')) {
+            return true;
+        }
+
+        // Local file deletion
+        if (!str_starts_with($imagePath, '/uploads/')) {
             return false;
         }
 

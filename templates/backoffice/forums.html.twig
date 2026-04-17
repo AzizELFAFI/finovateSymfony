@@ -40,7 +40,6 @@
           <li><a class="nav-link" href="{{ path('backoffice_forums') }}"><i class="ti ti-list"></i><span class="nav-text">Liste des forums</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_liste_posts') }}"><i class="ti ti-file-text"></i><span class="nav-text">Liste des posts</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_liste_comments') }}"><i class="ti ti-message"></i><span class="nav-text">Liste des commentaires</span></a></li>
-          <li><a class="nav-link" href="{{ path('admin_overview') }}"><i class="ti ti-chart-bar"></i><span class="nav-text">Vue d'ensemble</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_users') }}"><i class="ti ti-users"></i><span class="nav-text">Utilisateurs</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_ai_flags') }}"><i class="ti ti-robot"></i><span class="nav-text">IA Flags</span></a></li>
           <li><a class="nav-link" href="{{ path('admin_reports') }}"><i class="ti ti-flag"></i><span class="nav-text">Signalements</span></a></li>
@@ -65,14 +64,13 @@
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
           <h4 class="mb-0">Liste des forums</h4>
-          <span class="badge bg-light text-dark">{{ forums|length }}</span>
+          <span class="badge bg-light text-dark">{{ total ?? forums|length }} total</span>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-hover table-centered mb-0 text-nowrap">
               <thead class="table-light">
                 <tr>
-                  <th>ID</th>
                   <th>Titre</th>
                   <th>Créateur</th>
                   <th>Posts</th>
@@ -84,7 +82,6 @@
               <tbody>
                 {% for forum in forums %}
                 <tr>
-                  <td>{{ forum.id }}</td>
                   <td class="fw-bold">
                     {% if forum.imageUrl %}
                       <img src="{{ forum.imageUrl }}" alt="" style="width:28px;height:28px;border-radius:6px;object-fit:cover;margin-right:8px;">
@@ -110,13 +107,24 @@
                 </tr>
                 {% else %}
                 <tr>
-                  <td colspan="7" class="text-center py-4">Aucun forum trouvé.</td>
+                  <td colspan="6" class="text-center py-4">Aucun forum trouvé.</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
         </div>
+        
+        {# Pagination #}
+        {% if pages is defined and pages > 1 %}
+          <div class="card-footer bg-white">
+            {{ include('_pagination.html.twig', {
+              page: page, 
+              pages: pages, 
+              route: 'backoffice_forums'
+            }) }}
+          </div>
+        {% endif %}
       </div>
 
     </div>

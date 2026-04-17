@@ -27,6 +27,7 @@
                 </div>
             </div>
             {# Action buttons under title #}
+            {% if app.user %}
             <div class="pd-actions">
                 <form method="post" action="{{ path('app_post_vote', {id: post.id}) }}" style="display:inline">
                     <input type="hidden" name="type" value="UPVOTE">
@@ -46,6 +47,7 @@
                 {% endif %}
                 <span class="pd-comment-count">💬 {{ post.comments|length }}</span>
             </div>
+            {% endif %}
 
             {# AI toolbar — under vote/share #}
             <div class="pd-ai-bar-hero">
@@ -65,7 +67,7 @@
         </div>
         {% if post.imageUrl %}
         <div class="pd-hero-right">
-            <img src="/{{ post.imageUrl }}" alt="{{ post.title }}" class="pd-hero-img">
+            <img src="{{ post.imageUrl|image_url }}" alt="{{ post.title }}" class="pd-hero-img">
         </div>
         {% endif %}
     </div>
@@ -202,6 +204,12 @@
     <div class="pd-modal-overlay" id="shareModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
         <div class="pd-modal">
             <div class="pd-modal-header"><span>📤 Partager ce post</span><button onclick="document.getElementById('shareModal').style.display='none'">×</button></div>
+
+            {# ── ShareBundle — Réseaux sociaux ── #}
+            {% set postUrl = app.request.schemeAndHttpHost ~ path('app_post_detail', {id: post.id}) %}
+            {{ include('bundles/share/buttons.html.twig', {url: postUrl, title: post.title}) }}
+            <div style="border-top:1px solid #e5e7eb;padding-top:14px;margin-bottom:12px;font-size:12px;color:#64748b;font-weight:600;">📤 Partager dans un forum FINOVATE</div>
+
             <form method="post" action="{{ path('app_post_share', {id: post.id}) }}">
                 <div class="pd-share-preview">
                     <div class="pd-share-author">{{ post.author ? post.author.firstname ~ ' ' ~ post.author.lastname : 'Anonyme' }}</div>
@@ -222,7 +230,8 @@
         </div>
     </div>
 
-    {# ── COMMENTS ── #}
+    {# ── COMMENTS (Only for Logged In Users) ── #}
+    {% if app.user %}
     <div class="pd-comments">
         <div class="pd-comments-header">
             <h2>Commentaires</h2>
@@ -292,6 +301,7 @@
             {% endfor %}
         </div>
     </div>
+    {% endif %}
 
 </div>
 

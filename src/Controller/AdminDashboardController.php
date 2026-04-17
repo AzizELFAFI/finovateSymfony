@@ -453,10 +453,18 @@ class AdminDashboardController extends AbstractController
     }
 
     #[Route('/liste-posts', name: 'liste_posts')]
-    public function listePosts(\App\Repository\PostRepository $postRepo): Response
+    public function listePosts(\App\Repository\PostRepository $postRepo, Request $request): Response
     {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 15;
+        $total = $postRepo->count([]);
+        $posts = $postRepo->findBy([], ['createdAt' => 'DESC'], $limit, ($page - 1) * $limit);
+
         return $this->render('forum dashboard/liste_posts.html.twig', [
-            'posts' => $postRepo->findBy([], ['createdAt' => 'DESC']),
+            'posts' => $posts,
+            'page'  => $page,
+            'pages' => (int) ceil($total / $limit),
+            'total' => $total,
         ]);
     }
 
@@ -469,10 +477,18 @@ class AdminDashboardController extends AbstractController
     }
 
     #[Route('/liste-comments', name: 'liste_comments')]
-    public function listeComments(\App\Repository\CommentRepository $commentRepo): Response
+    public function listeComments(\App\Repository\CommentRepository $commentRepo, Request $request): Response
     {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 20;
+        $total = $commentRepo->count([]);
+        $comments = $commentRepo->findBy([], ['createdAt' => 'DESC'], $limit, ($page - 1) * $limit);
+
         return $this->render('forum dashboard/liste_comments.html.twig', [
-            'comments' => $commentRepo->findBy([], ['createdAt' => 'DESC']),
+            'comments' => $comments,
+            'page'     => $page,
+            'pages'    => (int) ceil($total / $limit),
+            'total'    => $total,
         ]);
     }
 
@@ -482,5 +498,80 @@ class AdminDashboardController extends AbstractController
         $comment = $commentRepo->find($id);
         if ($comment) { $em->remove($comment); $em->flush(); }
         return $this->redirectToRoute('admin_liste_comments');
+    }
+
+    #[Route('/statistics', name: 'statistics')]
+    public function statistics(
+        ForumRepository $forumRepo,
+        PostRepository $postRepo,
+        CommentRepository $commentRepo,
+        UserRepository $userRepo,
+        EntityManagerInterface $em
+    ): Response {
+        // Basic counts
+        $totalForums = $forumRepo->count([]);
+        $totalPosts = $postRepo->count([]);
+        $totalComments = $commentRepo->count([]);
+        $totalUsers = $userRepo->count([]);
+
+        // User roles distribution
+        $adminCount = $userRepo->count(['role' => 'ROLE_ADMIN']);
+        $userCount = $userRepo->count(['role' => 'ROLE_USER']);
+
+        // Activity over last 30 days
+        $thirtyDaysAgo = new \DateTimeImmutable('-30 days');
+        $recentPosts = $postRepo->createQueryBuilder('p')
+            ->select('DATE(p.createdAt) as date, COUNT(p.id) as count')
+            ->where('p.createdAt >= :date')
+            ->setParameter('date', $thirtyDaysAgo)
+            ->groupBy('date')
+            ->orderBy('date', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $recentComments = $commentRepo->createQueryBuilder('c')
+            ->select('DATE(c.createdAt) as date, COUNT(c.id) as count')
+            ->where('c.createdAt >= :date')
+            ->setParameter('date', $thirtyDaysAgo)
+            ->groupBy('date')
+            ->orderBy('date', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        // Most active forums (by posts count)
+        $activeForums = $forumRepo->createQueryBuilder('f')
+            ->select('f.title, COUNT(p.id) as postCount')
+            ->leftJoin('f.posts', 'p')
+            ->groupBy('f.id')
+            ->orderBy('postCount', 'DESC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+
+        // Most active users (by posts + comments)
+        $activeUsers = $em->createQuery('
+            SELECT u.firstname, u.lastname, 
+                   COUNT(DISTINCT p.id) as postCount,
+                   COUNT(DISTINCT c.id) as commentCount,
+                   (COUNT(DISTINCT p.id) + COUNT(DISTINCT c.id)) as totalActivity
+            FROM App\Entity\User u
+            LEFT JOIN App\Entity\Post p WITH p.author = u
+            LEFT JOIN App\Entity\Comment c WITH c.author = u
+            GROUP BY u.id
+            ORDER BY totalActivity DESC
+        ')->setMaxResults(10)->getResult();
+
+        return $this->render('admin/statistics.html.twig', [
+            'totalForums' => $totalForums,
+            'totalPosts' => $totalPosts,
+            'totalComments' => $totalComments,
+            'totalUsers' => $totalUsers,
+            'adminCount' => $adminCount,
+            'userCount' => $userCount,
+            'recentPosts' => $recentPosts,
+            'recentComments' => $recentComments,
+            'activeForums' => $activeForums,
+            'activeUsers' => $activeUsers,
+        ]);
     }
 }

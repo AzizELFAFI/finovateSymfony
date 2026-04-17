@@ -10,10 +10,13 @@ class AiService
     private const MODEL      = 'llama-3.3-70b-versatile';
     private const OLLAMA_URL = 'http://localhost:11434/api/chat';
     private const OLLAMA_MODEL = 'gemma3:1b';
+    private const LANGBLY_URL = 'https://api.langbly.com/language/translate/v2';
 
     public function __construct(
         private HttpClientInterface $http,
         private string $groqApiKey,
+        private string $langblyApiKey,
+        private ?TranslationUsageService $usageService = null,
     ) {}
 
     // ── Core call ─────────────────────────────────────────────────────────────
@@ -178,13 +181,47 @@ class AiService
         );
     }
 
-    /** Translate a post */
+    /** Translate a post using Langbly API */
     public function translate(string $text, string $targetLang): string
     {
-        return $this->call(
-            "You are a translator. Translate the following text to $targetLang. Reply with only the translated text, nothing else.",
-            $text
-        );
+        // Map language names to ISO codes if needed
+        $langMap = [
+            'English' => 'en', 'French' => 'fr', 'Arabic' => 'ar',
+            'Spanish' => 'es', 'German' => 'de', 'Italian' => 'it',
+            'Portuguese' => 'pt', 'Russian' => 'ru', 'Chinese' => 'zh',
+            'Japanese' => 'ja', 'Korean' => 'ko', 'Dutch' => 'nl',
+        ];
+        $langCode = $langMap[$targetLang] ?? strtolower(substr($targetLang, 0, 2));
+
+        try {
+            $response = $this->http->request('POST', self::LANGBLY_URL, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'X-API-Key'    => $this->langblyApiKey,
+                ],
+                'json' => [
+                    'q'      => $text,
+                    'target' => $langCode,
+                    'format' => 'text',
+                ],
+            ]);
+            $data = $response->toArray();
+            $translation = $data['data']['translations'][0]['translatedText'] ?? $text;
+            
+            // Log successful translation
+            $this->usageService?->logTranslation($text, $targetLang, true);
+            
+            return $translation;
+        } catch (\Throwable $e) {
+            // Log failed Langbly translation
+            $this->usageService?->logTranslation($text, $targetLang, false);
+            
+            // Fallback to Groq if Langbly fails
+            return $this->call(
+                "You are a translator. Translate the following text to $targetLang. Reply with only the translated text, nothing else.",
+                $text
+            );
+        }
     }
 
     /** Analyse personality from activity stats */

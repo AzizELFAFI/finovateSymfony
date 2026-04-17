@@ -1,5 +1,7 @@
 {% extends 'forum/_layout.html.twig' %}
 {% block title %}Forums - FINOVATE{% endblock %}
+{% block page_title %}Forums{% endblock %}
+{% block page_subtitle %}Découvrez et rejoignez des discussions sur la finance, la blockchain et bien plus{% endblock %}
 {% block content %}
 <div class="forums-content">
     <div class="fh-container">
@@ -9,6 +11,83 @@
             <h1>Bienvenue sur les Forums FINOVATE</h1>
             <p>Découvrez et rejoignez des discussions sur la finance, la blockchain et bien plus</p>
         </div>
+
+        {# ── Quick Access Navigation (Only for Logged In Users) ── #}
+        {% if app.user %}
+        <div class="quick-access-nav">
+            <a href="{{ path('app_forum_recommendations') }}" class="qa-btn" title="Recommandations personnalisées">
+                <span class="qa-icon">💡</span>
+                <span class="qa-label">Recommandations</span>
+            </a>
+            <a href="{{ path('app_forum_personality') }}" class="qa-btn" title="Analyse de personnalité">
+                <span class="qa-icon">🧠</span>
+                <span class="qa-label">Personnalité</span>
+            </a>
+            <a href="{{ path('app_forum_ai_assistant') }}" class="qa-btn" title="Assistant IA ChitChat">
+                <span class="qa-icon">🤖</span>
+                <span class="qa-label">ChitChat</span>
+            </a>
+            <a href="{{ path('app_forum_create') }}" class="qa-btn qa-btn-create" title="Créer un nouveau forum">
+                <span class="qa-icon">➕</span>
+                <span class="qa-label">Créer Forum</span>
+            </a>
+        </div>
+        {% endif %}
+
+        {# ── My Forums Section ── #}
+        {% if app.user and (joinedForumsList is not empty or forums is not empty) %}
+        <div class="my-forums-section">
+            <div class="my-forums-header">
+                <h2 class="my-forums-title">Mes Forums</h2>
+            </div>
+            <div class="my-forums-grid">
+                {# Created Forums #}
+                {% set createdForums = forums|filter(f => f.creator and f.creator.id == app.user.id) %}
+                {% if createdForums is not empty %}
+                <div class="my-forums-subsection">
+                    <h3 class="subsection-title">📝 Forums Créés</h3>
+                    <div class="my-forums-list">
+                        {% for forum in createdForums %}
+                        <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="my-forum-card">
+                            {% if forum.imageUrl %}
+                                <img src="{{ forum.imageUrl|image_url }}" alt="{{ forum.title }}" class="my-forum-img">
+                            {% else %}
+                                <div class="my-forum-placeholder">📝</div>
+                            {% endif %}
+                            <div class="my-forum-body">
+                                <h4 class="my-forum-title">{{ forum.title }}</h4>
+                                <div class="my-forum-meta">👥 {{ forum.members|length }} · 📝 {{ forum.posts|length }}</div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {# Joined Forums #}
+                {% if joinedForumsList is not empty %}
+                <div class="my-forums-subsection">
+                    <h3 class="subsection-title">✓ Forums Rejoints</h3>
+                    <div class="my-forums-list">
+                        {% for forum in joinedForumsList %}
+                        <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="my-forum-card">
+                            {% if forum.imageUrl %}
+                                <img src="{{ forum.imageUrl|image_url }}" alt="{{ forum.title }}" class="my-forum-img">
+                            {% else %}
+                                <div class="my-forum-placeholder">✓</div>
+                            {% endif %}
+                            <div class="my-forum-body">
+                                <h4 class="my-forum-title">{{ forum.title }}</h4>
+                                <div class="my-forum-meta">👥 {{ forum.members|length }} · 📝 {{ forum.posts|length }}</div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
 
         {# ── Search + Sort ── #}
         <form class="search-bar" method="get" action="{{ path('app_forum_home') }}" id="forumSearchForm" autocomplete="off">
@@ -39,7 +118,7 @@
             {% set featured = recentWeek[0] %}
             <a href="{{ path('app_forum_posts', {id: featured.id}) }}" class="nn-featured">
                 {% if featured.imageUrl %}
-                    <img src="/{{ featured.imageUrl }}" alt="{{ featured.title }}" class="nn-featured-img">
+                    <img src="{{ featured.imageUrl|image_url }}" alt="{{ featured.title }}" class="nn-featured-img">
                 {% else %}
                     <div class="nn-featured-placeholder">💼</div>
                 {% endif %}
@@ -60,7 +139,7 @@
                 <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="nn-small">
                     <div class="nn-small-left">
                         {% if forum.imageUrl %}
-                            <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}" class="nn-small-img">
+                            <img src="{{ forum.imageUrl|image_url }}" alt="{{ forum.title }}" class="nn-small-img">
                         {% else %}
                             <div class="nn-small-placeholder">💼</div>
                         {% endif %}
@@ -89,7 +168,7 @@
             {% for forum in forums %}
             <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="mg-card">
                 {% if forum.imageUrl %}
-                    <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}" class="mg-img">
+                    <img src="{{ forum.imageUrl|image_url }}" alt="{{ forum.title }}" class="mg-img">
                 {% else %}
                     <div class="mg-placeholder">💼</div>
                 {% endif %}
@@ -98,14 +177,16 @@
                     <h3 class="mg-title">{{ forum.title }}</h3>
                     <div class="mg-meta">👥 {{ forum.members|length }} · 📝 {{ forum.posts|length }}</div>
                     <div class="mg-footer" onclick="event.stopPropagation()">
-                        {% if forum.id in joinedIds %}
-                        <form method="post" action="{{ path('app_forum_leave', {id: forum.id}) }}">
-                            <button type="submit" class="btn-joined">✓ Quitter</button>
-                        </form>
-                        {% else %}
-                        <form method="post" action="{{ path('app_forum_join', {id: forum.id}) }}">
-                            <button type="submit" class="btn-join">+ Rejoindre</button>
-                        </form>
+                        {% if app.user %}
+                            {% if forum.id in joinedIds %}
+                            <form method="post" action="{{ path('app_forum_leave', {id: forum.id}) }}">
+                                <button type="submit" class="btn-joined">✓ Quitter</button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{{ path('app_forum_join', {id: forum.id}) }}">
+                                <button type="submit" class="btn-join">+ Rejoindre</button>
+                            </form>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -126,7 +207,7 @@
             {% for forum in popular %}
             <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="pop-card">
                 {% if forum.imageUrl %}
-                    <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}" class="pop-img">
+                    <img src="{{ forum.imageUrl|image_url }}" alt="{{ forum.title }}" class="pop-img">
                 {% else %}
                     <div class="pop-placeholder">💼</div>
                 {% endif %}
@@ -137,6 +218,31 @@
                 </div>
             </a>
             {% endfor %}
+        </div>
+        {% endif %}
+
+        {# ══════════════════════════════════════════════════════════════════════
+           SECTION 5a — HORIZONTAL STRIP: Forums Rejoints
+        ══════════════════════════════════════════════════════════════════════ #}
+        {% if joinedForumsList is not empty %}
+        <div class="section-header">
+            <span class="section-label">MES FORUMS</span>
+            <h2 class="section-title">Forums Rejoints</h2>
+        </div>
+        <div class="h-scroll-wrap">
+            <div class="h-scroll">
+                {% for forum in joinedForumsList %}
+                <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="hs-card">
+                    {% if forum.imageUrl %}
+                        <img src="{{ forum.imageUrl|image_url }}" alt="{{ forum.title }}" class="hs-img">
+                    {% else %}
+                        <div class="hs-placeholder">✓</div>
+                    {% endif %}
+                    <span class="hs-category">REJOINT</span>
+                    <h4 class="hs-title">{{ forum.title }}</h4>
+                </a>
+                {% endfor %}
+            </div>
         </div>
         {% endif %}
 
@@ -153,7 +259,7 @@
                 {% for forum in recommended %}
                 <a href="{{ path('app_forum_posts', {id: forum.id}) }}" class="hs-card">
                     {% if forum.imageUrl %}
-                        <img src="/{{ forum.imageUrl }}" alt="{{ forum.title }}" class="hs-img">
+                        <img src="{{ forum.imageUrl|image_url }}" alt="{{ forum.title }}" class="hs-img">
                     {% else %}
                         <div class="hs-placeholder">💼</div>
                     {% endif %}
@@ -178,7 +284,7 @@
                 {% for post in creatorPosts %}
                 <a href="{{ path('app_post_detail', {id: post.id}) }}" class="creator-card">
                     {% if post.imageUrl %}
-                        <img src="/{{ post.imageUrl }}" alt="{{ post.title }}" class="creator-post-img">
+                        <img src="{{ post.imageUrl|image_url }}" alt="{{ post.title }}" class="creator-post-img">
                     {% else %}
                         <div class="creator-post-placeholder">📝</div>
                     {% endif %}
@@ -212,6 +318,31 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .welcome-section { text-align: center; padding: 36px 20px; background: linear-gradient(135deg, #237f4e 0%, #1a5f3a 100%); border-radius: 16px; margin-bottom: 20px; }
 .welcome-section h1 { color: white; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
 .welcome-section p { color: rgba(255,255,255,0.9); font-size: 15px; }
+
+/* Quick Access Navigation */
+.quick-access-nav { display: flex; gap: 12px; margin-bottom: 24px; justify-content: center; flex-wrap: wrap; }
+.qa-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 20px; background: white; border: 2px solid #237f4e; border-radius: 12px; text-decoration: none; color: #237f4e; font-weight: 600; font-size: 13px; transition: all 0.3s; cursor: pointer; }
+.qa-btn:hover { background: #237f4e; color: white; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(35,127,78,0.2); }
+.qa-btn-create { border-color: #f59e0b; color: #f59e0b; background: #fffbeb; }
+.qa-btn-create:hover { background: #f59e0b; color: white; }
+.qa-icon { font-size: 24px; }
+.qa-label { letter-spacing: 0.5px; }
+
+/* My Forums Section */
+.my-forums-section { background: linear-gradient(135deg, #f0fdf4 0%, #e8f5ee 100%); border: 2px solid #b7dfca; border-radius: 16px; padding: 24px; margin-bottom: 32px; }
+.my-forums-header { margin-bottom: 20px; }
+.my-forums-title { font-size: 22px; font-weight: 800; color: #237f4e; font-family: Georgia, serif; }
+.my-forums-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.my-forums-subsection { }
+.subsection-title { font-size: 14px; font-weight: 700; color: #1a5f3a; margin-bottom: 12px; letter-spacing: 0.5px; }
+.my-forums-list { display: flex; flex-direction: column; gap: 10px; }
+.my-forum-card { display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border: 1px solid #b7dfca; border-radius: 10px; text-decoration: none; color: inherit; transition: all 0.2s; }
+.my-forum-card:hover { background: #dcfce7; border-color: #237f4e; transform: translateX(4px); }
+.my-forum-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.my-forum-placeholder { width: 60px; height: 60px; background: #e8f5ee; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.my-forum-body { flex: 1; min-width: 0; }
+.my-forum-title { font-size: 13px; font-weight: 700; color: #1a1a1b; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.my-forum-meta { font-size: 11px; color: #888; }
 
 /* Search */
 .search-bar { background: white; padding: 14px 18px; border-radius: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 36px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; }
@@ -315,8 +446,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .creator-name { font-size: 13px; font-weight: 700; color: #1a1a1b; }
 .creator-role { font-size: 11px; color: #237f4e; font-style: italic; }
 
-@media (max-width: 1024px) { .main-grid { grid-template-columns: repeat(2, 1fr); } .new-now-grid { grid-template-columns: 1fr; } .nn-stack { border-left: none; padding-left: 0; border-top: 1px solid #e0e0e0; padding-top: 16px; } }
-@media (max-width: 640px) { .main-grid { grid-template-columns: 1fr; } .popular-grid { grid-template-columns: 1fr 1fr; } .creator-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { .main-grid { grid-template-columns: repeat(2, 1fr); } .new-now-grid { grid-template-columns: 1fr; } .nn-stack { border-left: none; padding-left: 0; border-top: 1px solid #e0e0e0; padding-top: 16px; } .my-forums-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .main-grid { grid-template-columns: 1fr; } .popular-grid { grid-template-columns: 1fr 1fr; } .creator-grid { grid-template-columns: 1fr; } .my-forums-grid { grid-template-columns: 1fr; } }
 </style>
 
 <script>
@@ -352,5 +483,16 @@ document.getElementById('forumSearchInput').addEventListener('keydown', function
     if (e.key === 'Enter') document.getElementById('forumSuggestions').style.display = 'none';
 });
 </script>
+
+{# ── Pagination ── #}
+{% if pages > 1 %}
+    {{ include('_pagination.html.twig', {
+        page: page, 
+        pages: pages, 
+        route: 'app_forum_home',
+        routeParams: {q: search, sort: sort}
+    }) }}
+{% endif %}
+
 {% endblock %}
 
