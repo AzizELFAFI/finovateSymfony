@@ -17,6 +17,12 @@ security:
         forum_admin:
             pattern: ^/forum/admin
             security: false
+        public:
+            pattern: ^/(login|logout|signup|inscription|mot-de-passe-oublie|reinitialiser-mot-de-passe|access-denied|connect|oauth)
+            security: false
+        api_public:
+            pattern: ^/api/(login|register|ai/signup-field|ai/signup-all|notifications|login-face-2fa|login-face-only)
+            security: false
         user:
             pattern: ^/(user|investissement|forum)
             stateless: true
@@ -57,6 +63,9 @@ security:
         - { path: ^/connect/google, roles: PUBLIC_ACCESS }
         - { path: ^/oauth/success, roles: PUBLIC_ACCESS }
         - { path: ^/connect/google/complete-profile, roles: PUBLIC_ACCESS }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/logout, roles: PUBLIC_ACCESS }
+        - { path: ^/signup, roles: PUBLIC_ACCESS }
         - { path: ^/mot-de-passe-oublie, roles: PUBLIC_ACCESS }
         - { path: ^/reinitialiser-mot-de-passe, roles: PUBLIC_ACCESS }
         - { path: ^/access-denied, roles: PUBLIC_ACCESS }
@@ -74,6 +83,8 @@ security:
         - { path: ^/api/ai/signup-field, roles: PUBLIC_ACCESS }
         - { path: ^/api/ai/signup-all, roles: PUBLIC_ACCESS }
         - { path: ^/api/notifications, roles: PUBLIC_ACCESS }
+        - { path: ^/api/proxy/unsplash, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/proxy/exchange, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

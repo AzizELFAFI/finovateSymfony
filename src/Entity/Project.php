@@ -51,6 +51,9 @@ class Project
     #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?User $owner = null;
 
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $funding_completed_at = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -196,6 +199,18 @@ class Project
     public function setOwner(?User $owner): static
     {
         $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getFundingCompletedAt(): ?\DateTimeImmutable
+    {
+        return $this->funding_completed_at;
+    }
+
+    public function setFundingCompletedAt(?\DateTimeImmutable $funding_completed_at): static
+    {
+        $this->funding_completed_at = $funding_completed_at;
 
         return $this;
     }
