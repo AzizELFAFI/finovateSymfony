@@ -61,8 +61,9 @@ https://templatemo.com/tm-545-finance-business
                 <a class="nav-link" href="{{ path('front_about') }}">À propos</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{{ path('front_ads') }}">Annonces</a>
+                <a class="nav-link" href="{{ app.user ? path('front_products') : path('front_products_public') }}">Produits</a>
               </li>
+
               <li class="nav-item active">
                 <a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a>
               </li>

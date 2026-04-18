@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate - Mes Favoris</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  <style>
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 22px;
+    }
+
+    .product-image { height: 200px; object-fit: cover; }
+    .price-badge { font-size: 1.1rem; font-weight: 800; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ app.user ? path('front_products') : path('front_products_public') }}">Produits</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
+
+            {% if app.user %}
+              <li class="nav-item active"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_login') }}">Connexion</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Mes Favoris</h1>
+          <span>Les produits que vous avez ajoutés à vos favoris</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="page-shell">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 mb-4">
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}">Dashboard</a>
+            <a href="{{ path('user_transactions') }}">Transactions</a>
+            <a href="{{ path('user_goals') }}">Goals</a>
+            <a href="{{ path('user_bills') }}">Factures</a>
+            <a href="{{ path('investissement_index') }}">Investissement</a>
+            <a href="{{ path('front_products') }}">Produits</a>
+            <a href="{{ path('front_product_favorites') }}" class="active">Mes Favoris</a>
+            <a href="{{ path('front_ads') }}">Annonces</a>
+            <a href="{{ path('user_buy_points') }}">Acheter des points</a>
+            <a href="{{ path('user_topup') }}">Alimenter carte</a>
+            <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
+        </div>
+
+        <div class="col-lg-9">
+          <div class="card-shell mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h4 style="font-weight:900;margin:0">Mes Produits Favoris</h4>
+                <div class="meta">Retrouvez tous vos produits préférés</div>
+              </div>
+              <a href="{{ path('front_products') }}" class="btn btn-outline-primary" style="border-radius:12px;font-weight:800">
+                <i class="fa fa-arrow-left mr-1"></i> Retour aux produits
+              </a>
+            </div>
+          </div>
+
+          {% if products is empty %}
+            <div class="card-shell">
+              <div class="alert alert-info text-center mb-0" role="alert">
+                <i class="fa fa-heart-o mr-1"></i>
+                Aucun produit dans vos favoris. Parcourez nos produits et ajoutez-les à vos favoris !
+              </div>
+              <div class="text-center mt-3">
+                <a href="{{ path('front_products') }}" class="btn btn-success" style="border-radius:12px;font-weight:800">
+                  <i class="fa fa-shopping-cart mr-1"></i> Voir les produits
+                </a>
+              </div>
+            </div>
+          {% else %}
+            <div class="row">
+              {% for item in products %}
+              {% set product = item.product %}
+              <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm" style="border-radius:16px;border:1px solid rgba(15,118,110,0.12);box-shadow:0 12px 26px rgba(0,0,0,0.06);position:relative">
+                  <!-- Remove Favorite Button -->
+                  <button class="btn btn-link remove-favorite-btn" data-product-id="{{ product.id }}" style="position:absolute;top:8px;right:8px;z-index:10;padding:6px;font-size:20px;color:#ef4444;opacity:1;transition:all 0.2s" title="Retirer des favoris">
+                    <i class="fa fa-heart"></i>
+                  </button>
+                  {% if product.image %}
+                    <img src="{{ asset(product.image) }}" class="card-img-top product-image" alt="{{ product.name }}" style="border-top-left-radius:16px;border-top-right-radius:16px">
+                  {% else %}
+                    <div class="card-img-top product-image bg-light d-flex align-items-center justify-content-center" style="border-top-left-radius:16px;border-top-right-radius:16px">
+                      <i class="fa fa-image fa-2x text-muted"></i>
+                    </div>
+                  {% endif %}
+                  <div class="card-body" style="display:flex;flex-direction:column">
+                    <h5 class="card-title" style="font-weight:900">{{ product.name }}</h5>
+                    <p class="card-text text-muted" style="font-weight:600;flex:1">{{ product.description ? product.description : 'Pas de description' }}</p>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <span class="badge bg-warning text-dark price-badge">{{ product.pricePoints }} pts</span>
+                      <span class="badge {{ product.stock > 0 ? 'bg-success' : 'bg-danger' }}" style="font-weight:800">
+                        {{ product.stock > 0 ? 'En stock' : 'Rupture' }}
+                      </span>
+                    </div>
+
+                    <a href="{{ path('front_product_detail', {'id': product.id}) }}" class="btn btn-success btn-sm w-100" style="border-radius:12px;font-weight:800">
+                      <i class="fa fa-eye mr-1"></i> Détails
+                    </a>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script>
+    var token = null;
+    try {
+      token = localStorage.getItem('finovate_token') || sessionStorage.getItem('finovate_token');
+    } catch (e) {}
+
+    document.querySelectorAll('.remove-favorite-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var productId = btn.dataset.productId;
+        var card = btn.closest('.col-md-6');
+        
+        fetch('/api/product/' + productId + '/favorite', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          }
+        })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.success && !data.isFavorite) {
+              card.style.transition = 'opacity 0.3s, transform 0.3s';
+              card.style.opacity = '0';
+              card.style.transform = 'scale(0.9)';
+              setTimeout(function() {
+                card.remove();
+                // Check if empty
+                if (!document.querySelector('.col-md-6 .card')) {
+                  location.reload();
+                }
+              }, 300);
+            }
+          });
+      });
+    });
+  </script>
+</body>
+
+</html>

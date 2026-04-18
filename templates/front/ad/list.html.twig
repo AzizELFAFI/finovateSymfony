@@ -9,10 +9,96 @@
   <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
   <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
   <style>
-    .card { transition: transform 0.3s; border: none; }
-    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-    .ad-image { height: 250px; object-fit: cover; }
-    .reward-badge { font-size: 1.5rem; font-weight: bold; }
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 22px;
+    }
+
+    .ad-card {
+      border-radius: 16px;
+      border: 1px solid rgba(15,118,110,0.12);
+      box-shadow: 0 12px 26px rgba(0,0,0,0.06);
+      overflow: hidden;
+      background: #fff;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ad-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 34px rgba(0,0,0,0.08);
+    }
+
+    .ad-media {
+      height: 250px;
+      background: rgba(15, 118, 110, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ad-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .ad-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .ad-media .ad-placeholder {
+      display: none;
+      color: rgba(0, 0, 0, 0.35);
+    }
+
+    .reward-badge { font-size: 1.1rem; font-weight: 800; }
+    .meta { color: rgba(0, 0, 0, 0.55); font-weight: 600; font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -32,7 +118,7 @@
             <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
             
             {% if app.user %}
-              <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item active"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
               <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
               <li class="nav-item" style="margin-left: 8px;">
                 <a class="nav-link" href="{{ path('app_forum_alerts') }}" style="position:relative;display:inline-flex;align-items:center" title="Alertes et notifications">
@@ -59,73 +145,218 @@
     </nav>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="py-5">
+  <div class="page-heading header-text">
     <div class="container">
-      <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-          <h1 class="display-4">Annonces Publicitaires</h1>
-          <p class="lead text-muted">Gagnez des points en cliquant sur nos annonces</p>
-        </div>
-        <div class="col-md-6">
-          <form action="{{ path('front_ads') }}" method="get" class="d-flex gap-2">
-            <input type="text" name="search" class="form-control" placeholder="Rechercher une annonce..." value="{{ search }}">
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-search"></i> Rechercher
-            </button>
-            {% if search %}
-              <a href="{{ path('front_ads') }}" class="btn btn-outline-secondary">Réinitialiser</a>
-            {% endif %}
-          </form>
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Annonces</h1>
+          <span>Gagnez des points en cliquant sur nos annonces</span>
         </div>
       </div>
+    </div>
+  </div>
 
-      {% if ads is empty %}
-        <div class="alert alert-info text-center py-5">
-          <i class="fas fa-bullhorn fa-3x mb-3"></i>
-          <h4>Aucune annonce disponible</h4>
-          <p>Revenez bientôt pour découvrir nos nouvelles campagnes publicitaires!</p>
+  <div class="page-shell">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 mb-4">
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}">Dashboard</a>
+            <a href="{{ path('user_transactions') }}">Transactions</a>
+            <a href="{{ path('user_goals') }}">Goals</a>
+            <a href="{{ path('user_bills') }}">Factures</a>
+            <a href="{{ path('investissement_index') }}">Investissement</a>
+            <a href="{{ path('front_products') }}">Produits</a>
+            <a href="{{ path('front_ads') }}" class="active">Annonces</a>
+            <a href="{{ path('user_buy_points') }}">Acheter des points</a>
+            <a href="{{ path('user_topup') }}">Alimenter carte</a>
+            <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
         </div>
-      {% else %}
-        <div class="row g-4">
-          {% for ad in ads %}
-          <div class="col-md-6 col-lg-4">
-            <div class="card h-100 shadow-sm">
-              {% if ad.imagePath %}
-                <img src="{{ ad.imagePath }}" class="card-img-top ad-image" alt="{{ ad.title }}">
-              {% else %}
-                <div class="card-img-top ad-image bg-light d-flex align-items-center justify-content-center">
-                  <i class="fas fa-image fa-3x text-muted"></i>
-                </div>
+
+        <div class="col-lg-9">
+          {# AI Recommendations Section #}
+          {% if recommendedAds is defined and recommendedAds|length > 0 %}
+          <div class="card-shell mb-4" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.08)); border-color: rgba(139, 92, 246, 0.3);">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h4 style="font-weight:900;margin:0;color:#7c3aed">
+                  <i class="fa fa-robot mr-2"></i> Recommandé par IA
+                </h4>
+                <div class="meta" style="color:#7c3aed">Analyse personnalisée via Groq AI</div>
+              </div>
+              {% if aiAnalysis is defined and aiAnalysis %}
+              <div class="text-end">
+                <span class="badge bg-primary" style="font-size:0.75rem">
+                  <i class="fa fa-user mr-1"></i> {{ aiAnalysis.age }} ans
+                </span>
+                {% if aiAnalysis.interests|length > 0 %}
+                <span class="badge bg-secondary ms-1" style="font-size:0.7rem">
+                  {{ aiAnalysis.interests|slice(0, 2)|join(', ') }}
+                </span>
+                {% endif %}
+              </div>
               {% endif %}
-              <div class="card-body">
-                <h5 class="card-title">{{ ad.title }}</h5>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <div class="d-flex gap-2">
-                    <span class="badge bg-success reward-badge">{{ ad.rewardPoints }} pts</span>
-                      <span class="badge bg-secondary">{{ ad.duration }} s</span>
-                <p class="card-text text-muted small">
-                  <i class="fas fa-gift"></i> Gagnez {{ ad.rewardPoints }} points en cliquant!
-                </p>
-                
-                <a href="{{ path('front_ad_detail', {'id': ad.id}) }}" class="btn btn-primary btn-sm w-100">
-                  <i class="fas fa-eye"></i> Voir l'annonce
+            </div>
+            
+            <div class="row">
+              {% for rec in recommendedAds %}
+              <div class="col-md-4 mb-3">
+                <div class="ad-card" style="border-color: rgba(139, 92, 246, 0.25);">
+                  <div class="ad-media" style="height:180px;">
+                    {% if rec.ad.imagePath %}
+                      <img src="{{ rec.ad.imagePath }}" alt="{{ rec.ad.title }}" onerror="this.style.display='none';">
+                    {% else %}
+                      <div class="ad-placeholder" style="display:block">
+                        <i class="fa fa-image fa-2x"></i>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div class="p-3">
+                    <div style="font-weight:800;color:#0f172a;font-size:0.95rem">{{ rec.ad.title }}</div>
+                    <div class="mt-2">
+                      <span class="badge bg-success" style="font-size:0.8rem">{{ rec.ad.rewardPoints }} pts</span>
+                      <span class="badge bg-primary ms-1" style="font-size:0.7rem">
+                        <i class="fa fa-star mr-1"></i>{{ rec.score }}%
+                      </span>
+                    </div>
+                    {% if rec.reason %}
+                    <div class="mt-2" style="font-size:0.75rem;color:#7c3aed">
+                      <i class="fa fa-lightbulb mr-1"></i> {{ rec.reason }}
+                    </div>
+                    {% endif %}
+                    <a href="{{ path('front_ad_detail', {'id': rec.ad.id}) }}" class="btn btn-primary btn-sm w-100 mt-2" style="border-radius:10px;font-weight:700">
+                      <i class="fa fa-eye mr-1"></i> Voir
+                    </a>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            
+            <div class="text-center mt-2">
+              <a href="{{ path('front_ads', {'ai': '0'}) }}" class="btn btn-outline-secondary btn-sm" style="border-radius:10px;font-size:0.8rem">
+                <i class="fa fa-list mr-1"></i> Voir toutes les annonces
+              </a>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="card-shell mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:12px">
+              <div>
+                <h4 style="font-weight:900;margin:0">
+                  {% if recommendedAds is defined and recommendedAds|length > 0 %}Toutes les annonces{% else %}Annonces{% endif %}
+                </h4>
+                <div class="meta">Cliquez et gagnez des points</div>
+              </div>
+              <div class="d-flex flex-wrap" style="gap:10px;align-items:center">
+                {# AI Toggle #}
+                {% if app.user %}
+                <a href="{{ path('front_ads', app.request.query.all|merge({'ai': useAI ? '0' : '1'})) }}" class="btn btn-{{ useAI ? 'primary' : 'outline-secondary' }} btn-sm" style="border-radius:12px;font-weight:700">
+                  <i class="fa fa-robot mr-1"></i> IA {{ useAI ? 'ON' : 'OFF' }}
                 </a>
+                {% endif %}
+                <!-- Tri -->
+                <div class="dropdown">
+                  <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" style="border-radius:12px;font-weight:700">
+                    <i class="fa fa-sort mr-1"></i> Trier
+                  </button>
+                  <div class="dropdown-menu">
+                    <a class="dropdown-item {{ sortBy == 'title' and order == 'ASC' ? 'active' : '' }}" href="{{ path('front_ads', app.request.query.all|merge({sortBy: 'title', order: 'ASC', page: 1})) }}">
+                      <i class="fa fa-sort-alpha-asc mr-1"></i> Titre A-Z
+                    </a>
+                    <a class="dropdown-item {{ sortBy == 'title' and order == 'DESC' ? 'active' : '' }}" href="{{ path('front_ads', app.request.query.all|merge({sortBy: 'title', order: 'DESC', page: 1})) }}">
+                      <i class="fa fa-sort-alpha-desc mr-1"></i> Titre Z-A
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item {{ sortBy == 'rewardPoints' and order == 'DESC' ? 'active' : '' }}" href="{{ path('front_ads', app.request.query.all|merge({sortBy: 'rewardPoints', order: 'DESC', page: 1})) }}">
+                      <i class="fa fa-sort-numeric-desc mr-1"></i> Récompense élevée
+                    </a>
+                    <a class="dropdown-item {{ sortBy == 'rewardPoints' and order == 'ASC' ? 'active' : '' }}" href="{{ path('front_ads', app.request.query.all|merge({sortBy: 'rewardPoints', order: 'ASC', page: 1})) }}">
+                      <i class="fa fa-sort-numeric-asc mr-1"></i> Récompense faible
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item {{ sortBy == 'duration' and order == 'ASC' ? 'active' : '' }}" href="{{ path('front_ads', app.request.query.all|merge({sortBy: 'duration', order: 'ASC', page: 1})) }}">
+                      <i class="fa fa-clock mr-1"></i> Durée courte
+                    </a>
+                    <a class="dropdown-item {{ sortBy == 'duration' and order == 'DESC' ? 'active' : '' }}" href="{{ path('front_ads', app.request.query.all|merge({sortBy: 'duration', order: 'DESC', page: 1})) }}">
+                      <i class="fa fa-clock-o mr-1"></i> Durée longue
+                    </a>
+                  </div>
+                </div>
+                <!-- Recherche -->
+                <form action="{{ path('front_ads') }}" method="get" class="d-flex" style="gap:10px">
+                  <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ search }}" autocomplete="off" style="min-width:180px">
+                  <button type="submit" class="btn btn-outline-success" style="border-radius:12px;font-weight:800;white-space:nowrap">
+                    <i class="fa fa-search"></i>
+                  </button>
+                  {% if search %}
+                    <a href="{{ path('front_ads') }}" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:700;white-space:nowrap">
+                      <i class="fa fa-times"></i>
+                    </a>
+                  {% endif %}
+                </form>
               </div>
             </div>
           </div>
-          {% endfor %}
+
+          {% if pagination is empty %}
+            <div class="card-shell">
+              <div class="alert alert-info text-center mb-0" role="alert">
+                <i class="fa fa-bullhorn mr-1"></i>
+                Aucune annonce disponible. Revenez bientôt pour découvrir nos nouvelles campagnes.
+              </div>
+            </div>
+          {% else %}
+            <div class="row">
+              {% for ad in pagination %}
+              <div class="col-md-6 col-lg-4 mb-4">
+                <div class="ad-card">
+                  <div class="ad-media">
+                    {% if ad.imagePath %}
+                      <img src="{{ ad.imagePath }}" alt="{{ ad.title }}" onerror="this.style.display='none'; this.parentElement.querySelector('.ad-placeholder').style.display='block';">
+                      <div class="ad-placeholder" aria-hidden="true">
+                        <i class="fa fa-image fa-2x"></i>
+                      </div>
+                    {% else %}
+                      <div class="ad-placeholder" style="display:block" aria-hidden="true">
+                        <i class="fa fa-image fa-2x"></i>
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  <div class="p-3 ad-content">
+                    <div style="font-weight:900;color:#0f172a;line-height:1.2">{{ ad.title }}</div>
+                    <div class="meta mt-2" style="display:flex;gap:8px;flex-wrap:wrap">
+                      <span class="badge bg-success reward-badge">{{ ad.rewardPoints }} pts</span>
+                      <span class="badge bg-secondary" style="font-weight:800">{{ ad.duration }} s</span>
+                    </div>
+                    <div class="meta mt-2" style="flex:1">
+                      <i class="fa fa-gift mr-1"></i> Gagnez {{ ad.rewardPoints }} points en cliquant.
+                    </div>
+                    <a href="{{ path('front_ad_detail', {'id': ad.id}) }}" class="btn btn-success btn-sm w-100 mt-auto" style="border-radius:12px;font-weight:800">
+                      <i class="fa fa-eye mr-1"></i> Voir l'annonce
+                    </a>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            <div class="navigation d-flex justify-content-center mt-4">
+              {{ knp_pagination_render(pagination) }}
+            </div>
+          {% endif %}
         </div>
-      {% endif %}
+      </div>
     </div>
-  </main>
+  </div>
 
   <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
   <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-</body>
-</html>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

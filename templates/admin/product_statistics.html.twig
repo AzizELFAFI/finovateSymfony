@@ -1,0 +1,351 @@
+{% extends 'backoffice/base.html.twig' %}
+{% block title %}Statistiques Produits - Admin{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Produits Statistiques</h1>
+        </div>
+    </div>
+
+    {# Overview Cards #}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ totalProducts }}</h4>
+                            <p class="mb-0">Total Produits</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-box fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ inStockProducts }}</h4>
+                            <p class="mb-0">En Stock</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ outOfStockProducts }}</h4>
+                            <p class="mb-0">Rupture de Stock</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ totalStockValue|number_format(0, ',', ' ') }}</h4>
+                            <p class="mb-0">Valeur Stock (pts)</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-coins fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Additional Stats Cards #}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ avgPrice }}</h4>
+                            <p class="mb-0">Prix Moyen (pts)</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ totalFavorites }}</h4>
+                            <p class="mb-0">Total Favoris</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-heart fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Produits en Alerte Stock</h6>
+                    <h2 class="text-danger mb-0">{{ lowStockProducts|length }}</h2>
+                    <small class="text-muted">Produits avec stock &lt; 10</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {# Stock Distribution Pie Chart #}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie mr-2"></i>Distribution du Stock</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="stockDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Price Distribution Pie Chart #}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar mr-2"></i>Distribution des Prix</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="priceDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        {# Top Products by Value #}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-trophy mr-2 text-warning"></i>Top Produits par Valeur</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Stock</th>
+                                    <th>Prix</th>
+                                    <th>Valeur Totale</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in topProductsByValue %}
+                                <tr>
+                                    <td>{{ product.name }}</td>
+                                    <td><span class="badge bg-info">{{ product.stock }}</span></td>
+                                    <td><span class="badge bg-warning text-dark">{{ product.pricePoints }} pts</span></td>
+                                    <td><span class="badge bg-success">{{ product.totalValue|number_format(0, ',', ' ') }} pts</span></td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="text-center text-muted">Aucun produit</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Most Favorited Products #}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-heart mr-2 text-danger"></i>Produits les Plus Favoris</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Favoris</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in mostFavorited %}
+                                <tr>
+                                    <td>{{ product.name }}</td>
+                                    <td><span class="badge bg-danger"><i class="fas fa-heart mr-1"></i>{{ product.favoriteCount }}</span></td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="2" class="text-center text-muted">Aucun favori</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        {# Low Stock Alert #}
+        <div class="col-md-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5><i class="fas fa-exclamation-triangle mr-2"></i>Alerte Stock Faible</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Stock Restant</th>
+                                    <th>Prix</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in lowStockProducts %}
+                                <tr>
+                                    <td>{{ product.name }}</td>
+                                    <td><span class="badge bg-warning text-dark">{{ product.stock }}</span></td>
+                                    <td>{{ product.pricePoints }} pts</td>
+                                    <td><span class="badge bg-danger">Stock Critique</span></td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="text-center text-success">Aucun produit en stock critique</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+.card-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Stock Distribution Doughnut Chart
+const stockDistCtx = document.getElementById('stockDistributionChart').getContext('2d');
+new Chart(stockDistCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for label, count in stockDistribution %}'{{ label }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for label, count in stockDistribution %}{{ count }}{% if not loop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: [
+                '#dc3545',
+                '#ffc107',
+                '#17a2b8',
+                '#28a745'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.label + ': ' + context.raw + ' produits';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Price Distribution Bar Chart
+const priceDistCtx = document.getElementById('priceDistributionChart').getContext('2d');
+new Chart(priceDistCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for label, count in priceRanges %}'{{ label }} pts'{% if not loop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Nombre de produits',
+            data: [{% for label, count in priceRanges %}{{ count }}{% if not loop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.7)',
+                'rgba(23, 162, 184, 0.7)',
+                'rgba(255, 193, 7, 0.7)',
+                'rgba(220, 53, 69, 0.7)'
+            ],
+            borderColor: [
+                '#28a745',
+                '#17a2b8',
+                '#ffc107',
+                '#dc3545'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

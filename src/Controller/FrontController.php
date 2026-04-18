@@ -21,6 +21,13 @@ use App\Service\PdfService;
 use App\Service\QRCodeService;
 use App\Service\StripeService;
 use App\Service\TwilioService;
+use App\Service\ProductPurchaseService;
+use App\Service\ProductRatingService;
+use App\Service\AdRatingService;
+use App\Service\ProductFavoriteService;
+use App\Service\CartService;
+use App\Service\AIRecommendationService;
+use Knp\Component\Pager\PaginatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -491,19 +498,19 @@ final class FrontController extends AbstractController
 
     // ==================== PRODUCTS ====================
 
-    #[Route('/user/products', name: 'front_products', methods: ['GET'])]
-    public function productsList(Request $request, EntityManagerInterface $em): Response
+    #[Route('/products', name: 'front_products_public', methods: ['GET'])]
+    public function productsPublic(Request $request, EntityManagerInterface $em, PaginatorInterface $paginator): Response
     {
         $search = $request->query->get('search');
-        $sort = (string) $request->query->get('sort', 'name');
-        $dir = strtoupper((string) $request->query->get('dir', 'ASC'));
+        $sortBy = (string) $request->query->get('sortBy', 'name');
+        $order = strtoupper((string) $request->query->get('order', 'ASC'));
 
         $allowedSorts = ['name', 'pricePoints', 'stock'];
-        if (!in_array($sort, $allowedSorts, true)) {
-            $sort = 'name';
+        if (!in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'name';
         }
-        if (!in_array($dir, ['ASC', 'DESC'], true)) {
-            $dir = 'ASC';
+        if (!in_array($order, ['ASC', 'DESC'], true)) {
+            $order = 'ASC';
         }
 
         $queryBuilder = $em->getRepository(Product::class)->createQueryBuilder('p');
@@ -514,22 +521,108 @@ final class FrontController extends AbstractController
                 ->setParameter('search', '%' . $search . '%');
         }
 
-        $queryBuilder->orderBy('p.' . $sort, $dir)
+        $queryBuilder->orderBy('p.' . $sortBy, $order)
             ->addOrderBy('p.id', 'DESC');
 
-        $products = $queryBuilder->getQuery()->getResult();
+        $pagination = $paginator->paginate(
+            $queryBuilder,
+            $request->query->getInt('page', 1),
+            3,
+            ['sortable' => false]
+        );
 
         return $this->render('front/product/list.html.twig', [
-            'products' => $products,
+            'pagination' => $pagination,
             'search' => $search,
-            'sort' => $sort,
-            'dir' => $dir
+            'sortBy' => $sortBy,
+            'order' => $order,
+            'is_public' => true,
+        ]);
+    }
+
+    #[Route('/user/products', name: 'front_products', methods: ['GET'])]
+    public function productsList(Request $request, EntityManagerInterface $em, PaginatorInterface $paginator): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_products_public');
+        }
+
+        $search = $request->query->get('search');
+        $sortBy = (string) $request->query->get('sortBy', 'name');
+        $order = strtoupper((string) $request->query->get('order', 'ASC'));
+
+        $allowedSorts = ['name', 'pricePoints', 'stock'];
+        if (!in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'name';
+        }
+        if (!in_array($order, ['ASC', 'DESC'], true)) {
+            $order = 'ASC';
+        }
+
+        $queryBuilder = $em->getRepository(Product::class)->createQueryBuilder('p');
+
+        if ($search) {
+            $queryBuilder->where('p.name LIKE :search')
+                ->orWhere('p.description LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $queryBuilder->orderBy('p.' . $sortBy, $order)
+            ->addOrderBy('p.id', 'DESC');
+
+        $pagination = $paginator->paginate(
+            $queryBuilder,
+            $request->query->getInt('page', 1),
+            3,
+            ['sortable' => false]
+        );
+
+        return $this->render('front/product/list.html.twig', [
+            'pagination' => $pagination,
+            'search' => $search,
+            'sortBy' => $sortBy,
+            'order' => $order,
+            'is_public' => false,
+        ]);
+    }
+
+    #[Route('/user/products/favorites', name: 'front_product_favorites', methods: ['GET'])]
+    public function productFavorites(
+        EntityManagerInterface $em,
+        ProductFavoriteService $favoriteService
+    ): Response {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_login');
+        }
+
+        $favorites = $favoriteService->getUserFavorites($user->getId());
+        $products = [];
+
+        foreach ($favorites as $favorite) {
+            $product = $em->getRepository(Product::class)->find($favorite->getProductId());
+            if ($product) {
+                $products[] = [
+                    'product' => $product,
+                    'favorite' => $favorite,
+                ];
+            }
+        }
+
+        return $this->render('front/product/favorites.html.twig', [
+            'products' => $products,
         ]);
     }
 
     #[Route('/user/products/{id}', name: 'front_product_detail', methods: ['GET'])]
     public function productDetail(int $id, EntityManagerInterface $em): Response
     {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_products_public');
+        }
+
         $product = $em->getRepository(Product::class)->find($id);
         if (!$product instanceof Product) {
             throw $this->createNotFoundException('Produit non trouvé');
@@ -543,9 +636,33 @@ final class FrontController extends AbstractController
     // ==================== ADS ====================
 
     #[Route('/user/ads', name: 'front_ads', methods: ['GET'])]
-    public function adsList(Request $request, EntityManagerInterface $em): Response
+    public function adsList(Request $request, EntityManagerInterface $em, PaginatorInterface $paginator, AIRecommendationService $aiService): Response
     {
+        $user = $this->getUser();
         $search = $request->query->get('search');
+        $sortBy = (string) $request->query->get('sortBy', 'title');
+        $order = strtoupper((string) $request->query->get('order', 'ASC'));
+        $useAI = $request->query->get('ai', '1') === '1';
+
+        $allowedSorts = ['title', 'rewardPoints', 'duration'];
+        if (!in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'title';
+        }
+        if (!in_array($order, ['ASC', 'DESC'], true)) {
+            $order = 'ASC';
+        }
+
+        // Get AI recommendations if enabled and user is logged in
+        $recommendedAds = [];
+        $aiAnalysis = null;
+        if ($useAI && $user instanceof User) {
+            try {
+                $recommendedAds = $aiService->getRecommendedAds($user, 3);
+                $aiAnalysis = $aiService->getUserAnalysis($user);
+            } catch (\Throwable $e) {
+                // AI failed, continue without recommendations
+            }
+        }
 
         $queryBuilder = $em->getRepository(Ad::class)->createQueryBuilder('a');
 
@@ -554,13 +671,24 @@ final class FrontController extends AbstractController
                 ->setParameter('search', '%' . $search . '%');
         }
 
-        $queryBuilder->orderBy('a.id', 'DESC');
+        $queryBuilder->orderBy('a.' . $sortBy, $order)
+            ->addOrderBy('a.id', 'DESC');
 
-        $ads = $queryBuilder->getQuery()->getResult();
+        $pagination = $paginator->paginate(
+            $queryBuilder,
+            $request->query->getInt('page', 1),
+            3,
+            ['sortable' => false]
+        );
 
         return $this->render('front/ad/list.html.twig', [
-            'ads' => $ads,
-            'search' => $search
+            'pagination' => $pagination,
+            'search' => $search,
+            'sortBy' => $sortBy,
+            'order' => $order,
+            'recommendedAds' => $recommendedAds,
+            'aiAnalysis' => $aiAnalysis,
+            'useAI' => $useAI,
         ]);
     }
 
@@ -690,6 +818,70 @@ final class FrontController extends AbstractController
         }
     }
 
+    #[Route('/user/buy-points', name: 'user_buy_points', methods: ['GET'])]
+    public function buyPointsPage(): Response
+    {
+        return $this->render('front/buy-points.html.twig');
+    }
+
+    #[Route('/api/stripe/create-points-payment-intent', name: 'api_stripe_create_points_payment_intent', methods: ['POST'])]
+    public function createPointsPaymentIntent(Request $request, StripeService $stripeService): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $data = json_decode($request->getContent() ?: '', true);
+        $points = (int) ($data['points'] ?? 0);
+        $amount = (float) ($data['amount'] ?? 0);
+
+        // Validate points and amount
+        $validPackages = [
+            100 => 3.00,
+            250 => 7.00,
+            500 => 12.00,
+            1000 => 22.00,
+            2500 => 50.00,
+            5000 => 90.00,
+        ];
+
+        if (!isset($validPackages[$points]) || $validPackages[$points] !== $amount) {
+            return $this->json(['message' => 'Package de points invalide.'], 400);
+        }
+
+        try {
+            $result = $stripeService->createPointsPaymentIntent($points, $amount);
+            $result['publishable_key'] = $stripeService->getPublishableKey();
+            return $this->json($result);
+        } catch (\Throwable $e) {
+            return $this->json(['message' => 'Erreur lors de la création du paiement: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/stripe/confirm-points-payment', name: 'api_stripe_confirm_points_payment', methods: ['POST'])]
+    public function confirmPointsPayment(Request $request, StripeService $stripeService): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $data = json_decode($request->getContent() ?: '', true);
+        $paymentIntentId = (string) ($data['payment_intent_id'] ?? '');
+
+        if (empty($paymentIntentId)) {
+            return $this->json(['message' => 'ID de paiement manquant.'], 400);
+        }
+
+        try {
+            $result = $stripeService->confirmPaymentAndCreditPoints($paymentIntentId, $user);
+            return $this->json($result, $result['success'] ? 200 : 400);
+        } catch (\Throwable $e) {
+            return $this->json(['message' => 'Erreur lors de la confirmation: ' . $e->getMessage()], 500);
+        }
+    }
+
     #[Route('/api/transactions/qr-code', name: 'api_transactions_qrcode', methods: ['POST'])]
     public function generateTransactionQrCode(
         Request $request, 
@@ -738,5 +930,271 @@ final class FrontController extends AbstractController
                 'X-Transaction-Count' => (string) count($transactions),
             ]
         );
+    }
+
+    #[Route('/api/product/{id}/purchase', name: 'api_product_purchase', methods: ['POST'])]
+    public function purchaseProduct(
+        int $id,
+        Request $request,
+        EntityManagerInterface $em,
+        ProductPurchaseService $purchaseService
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product) {
+            return $this->json(['message' => 'Produit non trouvé.'], 404);
+        }
+
+        $result = $purchaseService->purchaseProduct($user, $product);
+        
+        return $this->json($result, $result['success'] ? 200 : 400);
+    }
+
+    #[Route('/api/product/{id}/rating', name: 'api_product_rating', methods: ['POST'])]
+    public function rateProduct(
+        int $id,
+        Request $request,
+        EntityManagerInterface $em,
+        ProductRatingService $ratingService
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product) {
+            return $this->json(['message' => 'Produit non trouvé.'], 404);
+        }
+
+        $data = json_decode($request->getContent() ?: '', true);
+        $rating = (int) ($data['rating'] ?? 0);
+
+        $result = $ratingService->rateProduct($id, $user->getId(), $rating);
+        
+        return $this->json($result, $result['success'] ? 200 : 400);
+    }
+
+    #[Route('/api/product/{id}/rating', name: 'api_product_get_rating', methods: ['GET'])]
+    public function getProductRating(
+        int $id,
+        EntityManagerInterface $em,
+        ProductRatingService $ratingService
+    ): JsonResponse {
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product) {
+            return $this->json(['message' => 'Produit non trouvé.'], 404);
+        }
+
+        $user = $this->getUser();
+        $userRating = null;
+        if ($user instanceof User) {
+            $userRating = $ratingService->getUserRating($id, $user->getId());
+        }
+
+        $stats = $ratingService->getProductRatingStats($id);
+
+        return $this->json([
+            'average' => $stats['average'],
+            'total' => $stats['total'],
+            'userRating' => $userRating,
+        ]);
+    }
+
+    #[Route('/api/ad/{id}/rating', name: 'api_ad_rating', methods: ['POST'])]
+    public function rateAd(
+        int $id,
+        Request $request,
+        EntityManagerInterface $em,
+        AdRatingService $ratingService
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $ad = $em->getRepository(Ad::class)->find($id);
+        if (!$ad) {
+            return $this->json(['message' => 'Annonce non trouvée.'], 404);
+        }
+
+        $data = json_decode($request->getContent() ?: '', true);
+        $rating = (int) ($data['rating'] ?? 0);
+
+        $result = $ratingService->rateAd($id, $user->getId(), $rating);
+        
+        return $this->json($result, $result['success'] ? 200 : 400);
+    }
+
+    #[Route('/api/ad/{id}/rating', name: 'api_ad_get_rating', methods: ['GET'])]
+    public function getAdRating(
+        int $id,
+        EntityManagerInterface $em,
+        AdRatingService $ratingService
+    ): JsonResponse {
+        $ad = $em->getRepository(Ad::class)->find($id);
+        if (!$ad) {
+            return $this->json(['message' => 'Annonce non trouvée.'], 404);
+        }
+
+        $user = $this->getUser();
+        $userRating = null;
+        if ($user instanceof User) {
+            $userRating = $ratingService->getUserRating($id, $user->getId());
+        }
+
+        $stats = $ratingService->getAdRatingStats($id);
+
+        return $this->json([
+            'average' => $stats['average'],
+            'total' => $stats['total'],
+            'userRating' => $userRating,
+        ]);
+    }
+
+    // ==================== PRODUCT FAVORITES ====================
+
+    #[Route('/api/product/{id}/favorite', name: 'api_product_favorite', methods: ['POST'])]
+    public function toggleProductFavorite(
+        int $id,
+        EntityManagerInterface $em,
+        ProductFavoriteService $favoriteService
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['message' => 'Non authentifié.'], 401);
+        }
+
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product) {
+            return $this->json(['message' => 'Produit non trouvé.'], 404);
+        }
+
+        $result = $favoriteService->toggleFavorite($id, $user->getId());
+        
+        return $this->json($result);
+    }
+
+    #[Route('/api/product/{id}/favorite', name: 'api_product_get_favorite', methods: ['GET'])]
+    public function getProductFavorite(
+        int $id,
+        EntityManagerInterface $em,
+        ProductFavoriteService $favoriteService
+    ): JsonResponse {
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product) {
+            return $this->json(['message' => 'Produit non trouvé.'], 404);
+        }
+
+        $user = $this->getUser();
+        $isFavorite = false;
+        if ($user instanceof User) {
+            $isFavorite = $favoriteService->isFavorite($id, $user->getId());
+        }
+
+        return $this->json([
+            'isFavorite' => $isFavorite,
+            'count' => $favoriteService->getProductFavoriteCount($id),
+        ]);
+    }
+
+    // ==================== CART ====================
+
+    #[Route('/api/cart', name: 'api_cart_get', methods: ['GET'])]
+    public function getCart(CartService $cartService): JsonResponse
+    {
+        $items = $cartService->getCartItems();
+        $data = [];
+
+        foreach ($items as $item) {
+            $product = $item['product'];
+            $data[] = [
+                'productId' => $product->getId(),
+                'name' => $product->getName(),
+                'pricePoints' => $product->getPricePoints(),
+                'quantity' => $item['quantity'],
+                'subtotal' => $item['subtotal'],
+                'image' => $product->getImage(),
+            ];
+        }
+
+        return $this->json([
+            'items' => $data,
+            'totalPoints' => $cartService->getTotalPoints(),
+            'totalItems' => $cartService->getTotalItems(),
+        ]);
+    }
+
+    #[Route('/api/cart/add/{id}', name: 'api_cart_add', methods: ['POST'])]
+    public function addToCart(int $id, Request $request, CartService $cartService): JsonResponse
+    {
+        $quantity = (int) $request->request->get('quantity', 1);
+        $result = $cartService->add($id, $quantity);
+
+        return $this->json($result);
+    }
+
+    #[Route('/api/cart/remove/{id}', name: 'api_cart_remove', methods: ['POST'])]
+    public function removeFromCart(int $id, CartService $cartService): JsonResponse
+    {
+        $result = $cartService->remove($id);
+        return $this->json($result);
+    }
+
+    #[Route('/api/cart/update/{id}', name: 'api_cart_update', methods: ['POST'])]
+    public function updateCart(int $id, Request $request, CartService $cartService): JsonResponse
+    {
+        $quantity = (int) $request->request->get('quantity', 1);
+        $result = $cartService->update($id, $quantity);
+        return $this->json($result);
+    }
+
+    #[Route('/api/cart/clear', name: 'api_cart_clear', methods: ['POST'])]
+    public function clearCart(CartService $cartService): JsonResponse
+    {
+        $cartService->clear();
+        return $this->json(['success' => true, 'message' => 'Panier vidé.']);
+    }
+
+    #[Route('/user/cart', name: 'front_cart', methods: ['GET'])]
+    public function viewCart(CartService $cartService): Response
+    {
+        return $this->render('front/cart/index.html.twig', [
+            'items' => $cartService->getCartItems(),
+            'totalPoints' => $cartService->getTotalPoints(),
+            'totalItems' => $cartService->getTotalItems(),
+        ]);
+    }
+
+    #[Route('/user/cart/checkout', name: 'front_cart_checkout', methods: ['POST'])]
+    public function checkoutCart(CartService $cartService): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['success' => false, 'message' => 'Non authentifié.'], 401);
+        }
+
+        $result = $cartService->checkout($user);
+
+        // If checkout successful, return PDF directly
+        if ($result['success'] && isset($result['pdf'])) {
+            $orderNumber = 'FNV-' . strtoupper(uniqid());
+            $filename = 'ticket-' . $orderNumber . '.pdf';
+
+            return new \Symfony\Component\HttpFoundation\Response(
+                $result['pdf'],
+                200,
+                [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                ]
+            );
+        }
+
+        return $this->json($result);
     }
 }

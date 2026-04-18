@@ -34,7 +34,15 @@
       <li><a class="nav-link" href="{{ path('backoffice_dashboard') }}"><i class="ti ti-home"></i><span class="nav-text">Vue d'ensemble</span></a></li>
       <li><a class="nav-link" href="{{ path('backoffice_users') }}"><i class="ti ti-users"></i><span class="nav-text">Gestion Utilisateurs</span></a></li>
       <li><a class="nav-link active" href="{{ path('backoffice_projects') }}"><i class="ti ti-briefcase"></i><span class="nav-text">Gestion Projets</span></a></li>
-      <li><a class="nav-link" href="{{ path('backoffice_products') }}"><i class="ti ti-shopping-cart"></i><span class="nav-text">Produits</span></a></li>
+      <li class="nav-folder">
+        <button class="nav-link nav-folder-btn w-100 text-start border-0 bg-transparent d-flex align-items-center" onclick="toggleForumFolder(this)">
+          <i class="ti ti-shopping-cart"></i><span class="nav-text flex-grow-1">Produits</span><i class="ti ti-chevron-down folder-chevron ms-auto"></i>
+        </button>
+        <ul class="nav flex-column nav-folder-children ps-3">
+          <li><a class="nav-link" href="{{ path('backoffice_products') }}"><i class="ti ti-list"></i><span class="nav-text">Liste des produits</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_products_statistics') }}"><i class="ti ti-chart-bar"></i><span class="nav-text">Statistiques</span></a></li>
+        </ul>
+      </li>
       <li><a class="nav-link" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
       <li class="nav-folder">
         <button class="nav-link nav-folder-btn w-100 text-start border-0 bg-transparent d-flex align-items-center" onclick="toggleForumFolder(this)">

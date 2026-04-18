@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate - Acheter des points</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  <style>
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 28px;
+    }
+
+    .points-header {
+      background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
+      border-radius: 20px;
+      padding: 32px;
+      color: white;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .points-header h2 {
+      font-weight: 900;
+      margin: 0 0 8px 0;
+      font-size: 1.5rem;
+    }
+
+    .points-header .current-points {
+      font-size: 2.5rem;
+      font-weight: 900;
+      margin: 16px 0;
+    }
+
+    .points-packages {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .points-packages {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 576px) {
+      .points-packages {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .package-card {
+      border-radius: 16px;
+      border: 2px solid rgba(15, 118, 110, 0.2);
+      background: white;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .package-card:hover {
+      border-color: #0f766e;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(15, 118, 110, 0.15);
+    }
+
+    .package-card.selected {
+      border-color: #0f766e;
+      background: rgba(15, 118, 110, 0.08);
+    }
+
+    .package-card .points-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #0f766e;
+      margin-bottom: 8px;
+    }
+
+    .package-card .points-label {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+
+    .package-card .price {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #111827;
+      background: rgba(15, 118, 110, 0.08);
+      padding: 8px 16px;
+      border-radius: 20px;
+      display: inline-block;
+    }
+
+    .package-card .best-value {
+      position: absolute;
+      top: 8px;
+      right: -30px;
+      background: #f59e0b;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 4px 32px;
+      transform: rotate(45deg);
+    }
+
+    .pay-btn {
+      width: 100%;
+      padding: 18px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
+      color: white;
+      font-weight: 800;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 8px 24px rgba(15, 118, 110, 0.3);
+    }
+
+    .pay-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(15, 118, 110, 0.4);
+    }
+
+    .pay-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .payment-element-container {
+      margin-bottom: 24px;
+      padding: 20px;
+      border-radius: 14px;
+      border: 1px solid rgba(15, 118, 110, 0.15);
+      background: #f9fafb;
+    }
+
+    .success-message {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+
+    .success-message h3 {
+      font-weight: 900;
+      color: #0f766e;
+      margin-bottom: 10px;
+    }
+
+    .success-message p {
+      color: #6b7280;
+    }
+
+    .info-box {
+      background: rgba(15, 118, 110, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      border-left: 4px solid #0f766e;
+    }
+
+    .info-box h6 {
+      font-weight: 800;
+      color: #0f766e;
+      margin-bottom: 8px;
+    }
+
+    .info-box p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #374151;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ app.user ? path('front_products') : path('front_products_public') }}">Produits</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
+            
+            {% if app.user %}
+              <li class="nav-item active"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('app_forum_alerts') }}" style="position:relative;display:inline-flex;align-items:center" title="Alertes et notifications">
+                  &#128276;
+                  <span id="notif-badge" style="display:none;position:absolute;top:-8px;right:-8px;background:#ef4444;color:white;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:bold;display:flex;align-items:center;justify-content:center"></span>
+                </a>
+              </li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('forum_policy') }}" style="display:inline-flex;align-items:center" title="Règles de la communauté">
+                  &#128220;
+                </a>
+              </li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('app_forum_blocked_users') }}" style="display:inline-flex;align-items:center" title="Utilisateurs bloqués">
+                  &#128683;
+                </a>
+              </li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_login') }}">Connexion</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Acheter des points</h1>
+          <span>Obtenez des points pour accéder aux produits exclusifs</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-shell">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 mb-4">
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}" id="nav-dashboard-side">Dashboard</a>
+            <a href="{{ path('user_transactions') }}" id="nav-transactions">Transactions</a>
+            <a href="{{ path('user_goals') }}" id="nav-goals">Goals</a>
+            <a href="{{ path('user_bills') }}" id="nav-bills">Factures</a>
+            <a href="{{ path('investissement_index') }}" id="nav-investissement">Investissement</a>
+            <a href="{{ path('front_products') }}">Produits</a>
+            <a href="{{ path('front_ads') }}">Annonces</a>
+            <a href="{{ path('user_topup') }}" id="nav-topup">Alimenter carte</a>
+            <a href="{{ path('user_buy_points') }}" id="nav-buy-points" class="active">Acheter des points</a>
+            <a href="#" id="nav-edit-profile">Modifier le profil</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
+        </div>
+
+        <div class="col-lg-9">
+          <div class="card-shell">
+            <div id="buy-points-form">
+              <div class="points-header">
+                <h2>&#11088; Acheter des points</h2>
+                <p>Choisissez un package de points pour débloquer des produits exclusifs</p>
+                <div class="current-points" id="current-points-display">
+                  {{ app.user ? app.user.points : 0 }} points
+                </div>
+                <p style="font-size: 0.9rem; opacity: 0.9;">Votre solde actuel</p>
+              </div>
+
+              <div class="info-box">
+                <h6>&#128161; Comment ça marche ?</h6>
+                <p>Les points vous permettent d'acheter des produits dans notre boutique. Regardez des publicités pour gagner des points gratuits, ou achetez-en directement ici.</p>
+              </div>
+
+              <h5 style="font-weight: 800; margin-bottom: 16px; color: #0f766e;">Choisissez votre package</h5>
+              <div class="points-packages">
+                <div class="package-card" data-points="100" data-amount="3.00">
+                  <div class="points-value">100</div>
+                  <div class="points-label">points</div>
+                  <div class="price">3,00 TND</div>
+                </div>
+                <div class="package-card" data-points="250" data-amount="7.00">
+                  <div class="points-value">250</div>
+                  <div class="points-label">points</div>
+                  <div class="price">7,00 TND</div>
+                </div>
+                <div class="package-card" data-points="500" data-amount="12.00">
+                  <div class="points-value">500</div>
+                  <div class="points-label">points</div>
+                  <div class="price">12,00 TND</div>
+                </div>
+                <div class="package-card" data-points="1000" data-amount="22.00">
+                  <div class="best-value">Populaire</div>
+                  <div class="points-value">1000</div>
+                  <div class="points-label">points</div>
+                  <div class="price">22,00 TND</div>
+                </div>
+                <div class="package-card" data-points="2500" data-amount="50.00">
+                  <div class="points-value">2500</div>
+                  <div class="points-label">points</div>
+                  <div class="price">50,00 TND</div>
+                </div>
+                <div class="package-card" data-points="5000" data-amount="90.00">
+                  <div class="best-value">Meilleur prix</div>
+                  <div class="points-value">5000</div>
+                  <div class="points-label">points</div>
+                  <div class="price">90,00 TND</div>
+                </div>
+              </div>
+
+              <div id="payment-section" style="display: none;">
+                <h5 style="font-weight: 800; margin-bottom: 12px; color: #0f766e;">Paiement sécurisé</h5>
+                <div class="payment-element-container">
+                  <div id="payment-element"></div>
+                </div>
+                <button type="button" id="submit-payment" class="pay-btn">
+                  <span id="btn-text">Payer <span id="amount-display">0,00</span> TND pour <span id="points-display">0</span> points</span>
+                  <span id="btn-spinner" class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
+                </button>
+                <p style="text-align: center; margin-top: 12px; font-size: 0.85rem; color: #6b7280;">
+                  &#128274; Paiement sécurisé par Stripe
+                </p>
+              </div>
+
+              <div id="error-message" class="alert alert-danger" style="display: none; margin-top: 16px;"></div>
+            </div>
+
+            <div id="success-container" style="display: none;">
+              <div class="success-message">
+                <div class="success-icon">
+                  <svg viewBox="0 0 24 24" fill="none" style="width: 40px; height: 40px; color: #10b981;">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <h3>Achat réussi !</h3>
+                <p id="success-details">Vos points ont été crédités.</p>
+                <a href="{{ path('front_products') }}" class="btn btn-success mt-3" style="border-radius: 12px; padding: 12px 28px; font-weight: 700;">
+                  Voir les produits
+                </a>
+                <a href="{{ path('user_dashboard') }}" class="btn btn-outline-secondary mt-3 ml-2" style="border-radius: 12px; padding: 12px 28px; font-weight: 700;">
+                  Retour au dashboard
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <script>
+    var token = null;
+    try {
+      token = localStorage.getItem('finovate_token') || sessionStorage.getItem('finovate_token');
+    } catch (e) {}
+
+    if (!token) {
+      window.location.href = '{{ path('front_login') }}';
+    }
+
+    var selectedPoints = 0;
+    var selectedAmount = 0;
+    var stripe = null;
+    var elements = null;
+    var paymentElement = null;
+
+    var packageCards = document.querySelectorAll('.package-card');
+    var paymentSection = document.getElementById('payment-section');
+    var amountDisplay = document.getElementById('amount-display');
+    var pointsDisplay = document.getElementById('points-display');
+    var submitBtn = document.getElementById('submit-payment');
+    var btnText = document.getElementById('btn-text');
+    var btnSpinner = document.getElementById('btn-spinner');
+    var errorMessage = document.getElementById('error-message');
+    var buyPointsForm = document.getElementById('buy-points-form');
+    var successContainer = document.getElementById('success-container');
+    var successDetails = document.getElementById('success-details');
+
+    packageCards.forEach(function(card) {
+      card.addEventListener('click', function() {
+        packageCards.forEach(function(c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
+
+        selectedPoints = parseInt(card.dataset.points);
+        selectedAmount = parseFloat(card.dataset.amount);
+        
+        amountDisplay.textContent = selectedAmount.toFixed(2).replace('.', ',');
+        pointsDisplay.textContent = selectedPoints;
+        
+        initPayment(selectedPoints, selectedAmount);
+      });
+    });
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorMessage.style.display = '';
+    }
+
+    function hideError() {
+      errorMessage.style.display = 'none';
+    }
+
+    function resetPayButton() {
+      submitBtn.disabled = false;
+      btnText.style.display = '';
+      btnSpinner.style.display = 'none';
+    }
+
+    function initPayment(points, amount) {
+      hideError();
+      resetPayButton();
+      paymentSection.style.display = '';
+
+      fetch('/api/stripe/create-points-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ points: points, amount: amount })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.message && !data.client_secret) {
+            showError(data.message);
+            paymentSection.style.display = 'none';
+            resetPayButton();
+            return;
+          }
+
+          if (!stripe) {
+            stripe = Stripe(data.publishable_key);
+          }
+
+          elements = stripe.elements({
+            clientSecret: data.client_secret,
+            appearance: {
+              theme: 'stripe',
+              variables: {
+                colorPrimary: '#0f766e',
+                colorBackground: '#ffffff',
+                colorText: '#1f2937',
+                borderRadius: '12px',
+                fontFamily: 'system-ui, sans-serif'
+              }
+            }
+          });
+
+          if (paymentElement) {
+            document.getElementById('payment-element').innerHTML = '';
+          }
+
+          paymentElement = elements.create('payment', {
+            layout: 'tabs'
+          });
+          paymentElement.mount('#payment-element');
+        })
+        .catch(function(err) {
+          showError('Erreur lors de l\'initialisation du paiement.');
+          resetPayButton();
+        });
+    }
+
+    submitBtn.addEventListener('click', function() {
+      if (!stripe || !elements) {
+        showError('Veuillez d\'abord sélectionner un package de points.');
+        return;
+      }
+
+      hideError();
+      submitBtn.disabled = true;
+      btnText.style.display = 'none';
+      btnSpinner.style.display = '';
+
+      stripe.confirmPayment({
+        elements: elements,
+        confirmParams: {
+          return_url: window.location.href,
+        },
+        redirect: 'if_required'
+      }).then(function(result) {
+        if (result.error) {
+          showError(result.error.message || 'Une erreur est survenue lors du paiement.');
+          submitBtn.disabled = false;
+          btnText.style.display = '';
+          btnSpinner.style.display = 'none';
+        } else if (result.paymentIntent) {
+          confirmPayment(result.paymentIntent.id);
+        }
+      });
+    });
+
+    function confirmPayment(paymentIntentId) {
+      fetch('/api/stripe/confirm-points-payment', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ payment_intent_id: paymentIntentId })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success) {
+            buyPointsForm.style.display = 'none';
+            successContainer.style.display = '';
+            successDetails.textContent = 'Vous avez reçu ' + data.points + ' points. Montant débité: ' + data.amount_debited.toFixed(2) + ' TND. Nouveau solde: ' + data.new_balance.toFixed(2) + ' TND.';
+          } else {
+            showError(data.message || 'Erreur lors de la confirmation.');
+            submitBtn.disabled = false;
+            btnText.style.display = '';
+            btnSpinner.style.display = 'none';
+          }
+        })
+        .catch(function() {
+          showError('Erreur réseau lors de la confirmation.');
+          submitBtn.disabled = false;
+          btnText.style.display = '';
+          btnSpinner.style.display = 'none';
+        });
+    }
+  </script>
+</body>
+
+</html>

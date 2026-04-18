@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate - Mon Panier</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  <style>
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 22px;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid rgba(15, 118, 110, 0.1);
+      transition: background 0.2s;
+    }
+
+    .cart-item:hover {
+      background: rgba(15, 118, 110, 0.03);
+    }
+
+    .cart-item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .cart-item-image {
+      width: 80px;
+      height: 80px;
+      background: rgba(15, 118, 110, 0.06);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quantity-input {
+      width: 60px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ app.user ? path('front_products') : path('front_products_public') }}">Produits</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
+
+            {% if app.user %}
+              <li class="nav-item active"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_login') }}">Connexion</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Mon Panier</h1>
+          <span>Consultez et validez vos achats</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="page-shell">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 mb-4">
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}">Dashboard</a>
+            <a href="{{ path('user_transactions') }}">Transactions</a>
+            <a href="{{ path('user_goals') }}">Goals</a>
+            <a href="{{ path('user_bills') }}">Factures</a>
+            <a href="{{ path('investissement_index') }}">Investissement</a>
+            <a href="{{ path('front_products') }}">Produits</a>
+            <a href="{{ path('front_product_favorites') }}">Mes Favoris</a>
+            <a href="{{ path('front_cart') }}" class="active">Mon Panier</a>
+            <a href="{{ path('front_ads') }}">Annonces</a>
+            <a href="{{ path('user_buy_points') }}">Acheter des points</a>
+            <a href="{{ path('user_topup') }}">Alimenter carte</a>
+            <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
+        </div>
+
+        <div class="col-lg-9">
+          <div class="card-shell mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h4 style="font-weight:900;margin:0">Mon Panier</h4>
+                <div class="meta" id="cart-count">{{ totalItems }} article(s)</div>
+              </div>
+              <div class="d-flex" style="gap:10px">
+                <a href="{{ path('front_products') }}" class="btn btn-outline-primary" style="border-radius:12px;font-weight:800">
+                  <i class="fa fa-arrow-left mr-1"></i> Continuer
+                </a>
+                {% if items is not empty %}
+                <button id="clear-cart-btn" class="btn btn-outline-danger" style="border-radius:12px;font-weight:800">
+                  <i class="fa fa-trash mr-1"></i> Vider
+                </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          {% if items is empty %}
+            <div class="card-shell">
+              <div class="alert alert-info text-center mb-0" role="alert">
+                <i class="fa fa-shopping-cart mr-1"></i>
+                Votre panier est vide. Parcourez nos produits et ajoutez-les à votre panier !
+              </div>
+              <div class="text-center mt-3">
+                <a href="{{ path('front_products') }}" class="btn btn-success" style="border-radius:12px;font-weight:800">
+                  <i class="fa fa-shopping-bag mr-1"></i> Voir les produits
+                </a>
+              </div>
+            </div>
+          {% else %}
+            <div class="card-shell">
+              <div id="cart-items">
+                {% for item in items %}
+                <div class="cart-item" data-product-id="{{ item.product.id }}">
+                  {% if item.product.image %}
+                    <img src="{{ asset(item.product.image) }}" alt="{{ item.product.name }}">
+                  {% else %}
+                    <div class="cart-item-image">
+                      <i class="fa fa-image text-muted"></i>
+                    </div>
+                  {% endif %}
+
+                  <div style="flex:1;margin-left:16px">
+                    <div style="font-weight:800;font-size:16px">{{ item.product.name }}</div>
+                    <div class="meta">{{ item.product.pricePoints }} pts / unité</div>
+                  </div>
+
+                  <div class="d-flex align-items-center" style="gap:12px">
+                    <div class="d-flex align-items-center" style="gap:6px">
+                      <button class="btn btn-sm btn-outline-secondary qty-btn" data-action="decrease" data-product-id="{{ item.product.id }}" style="border-radius:8px">-</button>
+                      <input type="number" class="quantity-input qty-input" data-product-id="{{ item.product.id }}" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}">
+                      <button class="btn btn-sm btn-outline-secondary qty-btn" data-action="increase" data-product-id="{{ item.product.id }}" style="border-radius:8px">+</button>
+                    </div>
+                    <div style="min-width:100px;text-align:right">
+                      <span class="badge bg-warning text-dark" style="font-size:14px;font-weight:800">{{ item.subtotal }} pts</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger remove-btn" data-product-id="{{ item.product.id }}" style="border-radius:8px">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <!-- Total -->
+              <div class="mt-4 pt-3" style="border-top:2px solid rgba(15,118,110,0.15)">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <div style="font-weight:800;font-size:18px">Total</div>
+                    <div class="meta">Points à débiter</div>
+                  </div>
+                  <div>
+                    <span id="cart-total" class="badge bg-success" style="font-size:20px;font-weight:900;padding:10px 20px;border-radius:12px">
+                      {{ totalPoints }} pts
+                    </span>
+                  </div>
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end" style="gap:10px">
+                  <a href="{{ path('front_products') }}" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:800">
+                    <i class="fa fa-arrow-left mr-1"></i> Continuer les achats
+                  </a>
+                  <button id="checkout-btn" class="btn btn-success" style="border-radius:12px;font-weight:800">
+                    <i class="fa fa-check mr-1"></i> Valider la commande
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+  <div class="modal fade" id="cartModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content" style="border-radius:16px;overflow:hidden">
+        <div class="modal-header" style="background:rgba(15,118,110,0.06)">
+          <h5 class="modal-title" id="cartModalTitle" style="font-weight:900;margin:0">Confirmation</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="cartModalBody" style="font-weight:600;color:#374151"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" id="cartModalCancel" data-dismiss="modal" style="border-radius:12px;font-weight:800">Annuler</button>
+          <button type="button" class="btn btn-success" id="cartModalConfirm" style="border-radius:12px;font-weight:900">Confirmer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var cartModalConfirmEl = document.getElementById('cartModalConfirm');
+    var cartModalCancelEl = document.getElementById('cartModalCancel');
+    var cartModalTitleEl = document.getElementById('cartModalTitle');
+    var cartModalBodyEl = document.getElementById('cartModalBody');
+    var cartModalOriginalConfirmHtml = cartModalConfirmEl ? cartModalConfirmEl.innerHTML : '';
+
+    function openCartModal(options) {
+      var title = (options && options.title) ? options.title : 'Confirmation';
+      var body = (options && options.body) ? options.body : '';
+      var confirmText = (options && options.confirmText) ? options.confirmText : 'Confirmer';
+      var confirmClass = (options && options.confirmClass) ? options.confirmClass : 'btn-success';
+      var showCancel = (options && options.showCancel !== undefined) ? options.showCancel : true;
+      var onConfirm = (options && options.onConfirm) ? options.onConfirm : null;
+
+      cartModalTitleEl.textContent = title;
+      cartModalBodyEl.textContent = body;
+
+      cartModalConfirmEl.className = 'btn ' + confirmClass;
+      cartModalConfirmEl.style.borderRadius = '12px';
+      cartModalConfirmEl.style.fontWeight = '900';
+      cartModalConfirmEl.innerHTML = confirmText;
+      cartModalConfirmEl.disabled = false;
+
+      if (cartModalCancelEl) {
+        cartModalCancelEl.style.display = showCancel ? '' : 'none';
+      }
+
+      cartModalConfirmEl.onclick = null;
+      if (onConfirm) {
+        cartModalConfirmEl.onclick = function() {
+          onConfirm();
+        };
+      } else {
+        cartModalConfirmEl.onclick = function() {
+          $('#cartModal').modal('hide');
+        };
+      }
+
+      $('#cartModal').modal('show');
+    }
+
+    function setCartModalLoading(isLoading, text) {
+      if (!cartModalConfirmEl) return;
+      if (isLoading) {
+        cartModalConfirmEl.disabled = true;
+        cartModalConfirmEl.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i> ' + (text || 'Traitement...');
+      } else {
+        cartModalConfirmEl.disabled = false;
+        cartModalConfirmEl.innerHTML = cartModalOriginalConfirmHtml;
+      }
+    }
+
+    // Update quantity
+    document.querySelectorAll('.qty-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var productId = btn.dataset.productId;
+        var action = btn.dataset.action;
+        var input = document.querySelector('.qty-input[data-product-id="' + productId + '"]');
+        var qty = parseInt(input.value);
+
+        if (action === 'increase') {
+          qty++;
+        } else if (action === 'decrease' && qty > 1) {
+          qty--;
+        }
+
+        updateQuantity(productId, qty);
+      });
+    });
+
+    document.querySelectorAll('.qty-input').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var productId = input.dataset.productId;
+        var qty = parseInt(input.value);
+        if (qty < 1) qty = 1;
+        updateQuantity(productId, qty);
+      });
+    });
+
+    function updateQuantity(productId, qty) {
+      fetch('/api/cart/update/' + productId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'quantity=' + qty
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+
+    // Remove item
+    document.querySelectorAll('.remove-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var productId = btn.dataset.productId;
+        var item = btn.closest('.cart-item');
+
+        fetch('/api/cart/remove/' + productId, { method: 'POST' })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.success) {
+              item.style.transition = 'opacity 0.3s, transform 0.3s';
+              item.style.opacity = '0';
+              item.style.transform = 'translateX(20px)';
+              setTimeout(function() {
+                item.remove();
+                if (data.cartCount === 0) {
+                  location.reload();
+                } else {
+                  location.reload();
+                }
+              }, 300);
+            }
+          });
+      });
+    });
+
+    // Clear cart
+    var clearBtn = document.getElementById('clear-cart-btn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function() {
+        openCartModal({
+          title: 'Vider le panier',
+          body: 'Voulez-vous vraiment vider le panier ?',
+          confirmText: 'Vider',
+          confirmClass: 'btn-outline-danger',
+          showCancel: true,
+          onConfirm: function() {
+            setCartModalLoading(true, 'Suppression...');
+            fetch('/api/cart/clear', { method: 'POST' })
+              .then(function(res) { return res.json(); })
+              .then(function(data) {
+                if (data.success) {
+                  location.reload();
+                  return;
+                }
+                setCartModalLoading(false);
+                openCartModal({
+                  title: 'Erreur',
+                  body: data.message || 'Une erreur est survenue.',
+                  confirmText: 'OK',
+                  confirmClass: 'btn-primary',
+                  showCancel: false
+                });
+              })
+              .catch(function() {
+                setCartModalLoading(false);
+                openCartModal({
+                  title: 'Erreur',
+                  body: 'Erreur de connexion.',
+                  confirmText: 'OK',
+                  confirmClass: 'btn-primary',
+                  showCancel: false
+                });
+              });
+          }
+        });
+      });
+    }
+
+    // Checkout
+    var checkoutBtn = document.getElementById('checkout-btn');
+    if (checkoutBtn) {
+      checkoutBtn.addEventListener('click', function() {
+        openCartModal({
+          title: 'Valider la commande',
+          body: 'Confirmer la commande de {{ totalPoints }} points ?',
+          confirmText: 'Valider',
+          confirmClass: 'btn-success',
+          showCancel: true,
+          onConfirm: function() {
+            setCartModalLoading(true, 'Traitement...');
+            fetch('/user/cart/checkout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            })
+              .then(function(res) {
+                // Check if response is PDF (success) or JSON (error)
+                var contentType = res.headers.get('Content-Type');
+                if (contentType && contentType.includes('application/pdf')) {
+                  return res.blob().then(function(blob) {
+                    // Download PDF
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'ticket-commande.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    // Show success modal
+                    openCartModal({
+                      title: 'Commande validée',
+                      body: 'Votre ticket PDF a été téléchargé. Vos points ont été débités.',
+                      confirmText: 'OK',
+                      confirmClass: 'btn-success',
+                      showCancel: false,
+                      onConfirm: function() {
+                        location.reload();
+                      }
+                    });
+                  });
+                }
+                return res.json().then(function(data) {
+                  openCartModal({
+                    title: 'Erreur',
+                    body: data.message || 'Une erreur est survenue.',
+                    confirmText: 'OK',
+                    confirmClass: 'btn-primary',
+                    showCancel: false
+                  });
+                });
+              })
+              .catch(function() {
+                openCartModal({
+                  title: 'Erreur',
+                  body: 'Erreur de connexion.',
+                  confirmText: 'OK',
+                  confirmClass: 'btn-primary',
+                  showCancel: false
+                });
+              });
+          }
+        });
+      });
+    }
+  </script>
+</body>
+
+</html>

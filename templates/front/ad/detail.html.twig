@@ -8,9 +8,85 @@
   <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
   <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
   <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ asset('bundles/starrating/css/rating.css') }}" />
   <style>
-    .ad-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 0; }
-    .reward-section { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 15px; }
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 22px;
+    }
+
+    .ad-hero {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.06);
+      padding: 18px;
+    }
+
+    .ad-media {
+      width: 100%;
+      height: 360px;
+      border-radius: 14px;
+      background: rgba(15, 118, 110, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .ad-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .ad-media .ad-placeholder {
+      display: none;
+      color: rgba(0, 0, 0, 0.35);
+    }
+
+    .meta { color: rgba(0, 0, 0, 0.55); font-weight: 600; font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -30,7 +106,7 @@
             <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
             
             {% if app.user %}
-              <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item active"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
               <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
               <li class="nav-item" style="margin-left: 8px;">
                 <a class="nav-link" href="{{ path('app_forum_alerts') }}" style="position:relative;display:inline-flex;align-items:center" title="Alertes et notifications">
@@ -57,90 +133,253 @@
     </nav>
   </header>
 
-  <!-- BREADCRUMB -->
-  <div class="ad-header">
+  <div class="page-heading header-text">
     <div class="container">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb breadcrumb-light">
-          <li class="breadcrumb-item"><a href="{{ path('front_home') }}" class="text-white">Accueil</a></li>
-          <li class="breadcrumb-item"><a href="{{ path('front_ads') }}" class="text-white">Annonces</a></li>
-          <li class="breadcrumb-item active text-white">{{ ad.title }}</li>
-        </ol>
-      </nav>
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Annonces</h1>
+          <span>Détails de l'annonce</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- MAIN CONTENT -->
-  <main class="py-5">
+  <div class="page-shell">
     <div class="container">
       <div class="row">
-        <!-- AD IMAGE -->
-        <div class="col-md-6 mb-4">
-          {% if ad.imagePath %}
-            <img src="{{ ad.imagePath }}" alt="{{ ad.title }}" class="img-fluid rounded-3 shadow-sm">
-          {% else %}
-            <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 500px;">
-              <i class="fas fa-image fa-5x text-muted"></i>
-            </div>
-          {% endif %}
+        <div class="col-lg-3 mb-4">
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}">Dashboard</a>
+            <a href="{{ path('user_transactions') }}">Transactions</a>
+            <a href="{{ path('user_goals') }}">Goals</a>
+            <a href="{{ path('user_bills') }}">Factures</a>
+            <a href="{{ path('investissement_index') }}">Investissement</a>
+            <a href="{{ path('front_products') }}">Produits</a>
+            <a href="{{ path('front_ads') }}" class="active">Annonces</a>
+            <a href="{{ path('user_buy_points') }}">Acheter des points</a>
+            <a href="{{ path('user_topup') }}">Alimenter carte</a>
+            <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
         </div>
 
-        <!-- AD INFO -->
-        <div class="col-md-6">
-          <h1 class="display-5 mb-3">{{ ad.title }}</h1>
-          
-          <div class="reward-section text-white mb-4">
-            <div class="row align-items-center">
-              <div class="col-md-8">
-                <h4 class="mb-1">Cliquez et gagnez des points!</h4>
-                <p class="mb-0">Valable pendant {{ ad.duration }} secondes</p>
+        <div class="col-lg-9">
+          <div class="card-shell mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:12px">
+              <div>
+                <h4 style="font-weight:900;margin:0">{{ ad.title }}</h4>
+                <div class="meta">Cliquez et gagnez des points</div>
               </div>
-              <div class="col-md-4 text-center">
-                <div class="display-2 fw-bold">{{ ad.rewardPoints }}</div>
-                <p class="mb-0">points</p>
-              </div>
+              <a href="{{ path('front_ads') }}" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:700;white-space:nowrap">
+                <i class="fa fa-arrow-left mr-1"></i> Retour
+              </a>
             </div>
           </div>
 
-          <div class="mb-4">
-            <h4 class="text-muted mb-3">À propos de cette annonce</h4>
-            <ul class="list-unstyled">
-              <li class="mb-2">
-                <i class="fas fa-hourglass-end text-primary"></i>
-                <strong>Durée:</strong> {{ ad.duration }} secondes
-              </li>
-              <li class="mb-2">
-                <i class="fas fa-gift text-success"></i>
-                <strong>Récompense:</strong> {{ ad.rewardPoints }} points
-              </li>
-              <li class="mb-2">
-                <i class="fas fa-mouse text-info"></i>
-                <strong>Action:</strong> 1 clic = {{ ad.rewardPoints }} points
-              </li>
-            </ul>
-          </div>
+          <div class="ad-hero">
+            <div class="row">
+              <div class="col-md-6 mb-4 mb-md-0">
+                <div class="ad-media">
+                  {% if ad.imagePath %}
+                    <img src="{{ ad.imagePath }}" alt="{{ ad.title }}" onerror="this.style.display='none'; this.parentElement.querySelector('.ad-placeholder').style.display='block';">
+                    <div class="ad-placeholder" aria-hidden="true">
+                      <i class="fa fa-image fa-3x"></i>
+                    </div>
+                  {% else %}
+                    <div class="ad-placeholder" style="display:block" aria-hidden="true">
+                      <i class="fa fa-image fa-3x"></i>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
 
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
-            <strong>Important:</strong> Vous pouvez cliquer une seule fois par jour sur cette annonce pour gagner les points.
-          </div>
+              <div class="col-md-6">
+                <div class="card-shell mb-3" style="background:#fff">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:10px">
+                    <div>
+                      <div class="meta" style="font-weight:800;color:#0f766e">Récompense</div>
+                      <div style="font-weight:900;font-size:1.6rem;color:#0f172a">{{ ad.rewardPoints }} pts</div>
+                    </div>
+                    <div>
+                      <div class="meta" style="font-weight:800;color:#0f766e">Durée</div>
+                      <div style="font-weight:900;font-size:1.6rem;color:#0f172a">{{ ad.duration }} s</div>
+                    </div>
+                  </div>
+                  <div class="meta mt-2">
+                    <i class="fa fa-mouse-pointer mr-1"></i> 1 clic = {{ ad.rewardPoints }} points
+                  </div>
+                </div>
 
-          <div class="d-flex gap-2">
-            <form action="{{ path('front_ad_click', {'id': ad.id}) }}" method="POST" style="display: contents;">
-              <input type="hidden" name="_token" value="{{ csrf_token('ad_click_' ~ ad.id) }}">
-              <button type="submit" class="btn btn-success btn-lg flex-grow-1">
-                <i class="fas fa-mouse"></i> Cliquer et gagner {{ ad.rewardPoints }} points
-              </button>
-            </form>
-            <a href="{{ path('front_ads') }}" class="btn btn-outline-secondary btn-lg">
-              <i class="fas fa-arrow-left"></i> Retour
-            </a>
+                <div class="alert alert-info" role="alert" style="border-radius:12px;font-weight:600">
+                  <i class="fa fa-info-circle mr-1"></i>
+                  <strong>Important:</strong> Vous pouvez cliquer une seule fois par jour sur cette annonce pour gagner les points.
+                </div>
+
+                <!-- Rating Section -->
+                <div class="mb-3">
+                  <div class="meta" style="font-weight:800;color:#0f766e">Évaluation</div>
+                  <div id="rating-container" class="mt-2" style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <div id="rating-display">
+                        <span class="text-muted">Chargement...</span>
+                      </div>
+                      <div id="rating-stats" class="text-muted" style="font-size:13px;font-weight:600"></div>
+                    </div>
+                    <div id="rating-input-container" style="display:none">
+                      <div class="meta mb-2" style="font-size:12px">Votre note:</div>
+                      <div class="star-rating-interactive" id="star-rating-interactive"></div>
+                    </div>
+                    <div id="rating-message" class="mt-2" style="font-size:13px;display:none"></div>
+                  </div>
+                </div>
+
+                <div class="d-flex flex-wrap" style="gap:10px">
+                  <form action="{{ path('front_ad_click', {'id': ad.id}) }}" method="POST" class="mb-0" style="flex:1;min-width:240px">
+                    <input type="hidden" name="_token" value="{{ csrf_token('ad_click_' ~ ad.id) }}">
+                    <button type="submit" class="btn btn-success btn-lg btn-block" style="border-radius:12px;font-weight:800">
+                      <i class="fa fa-mouse-pointer mr-1"></i> Cliquer et gagner {{ ad.rewardPoints }} points
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </main>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ asset('bundles/starrating/js/rating.js') }}"></script>
+  <script>
+    var token = null;
+    try {
+      token = localStorage.getItem('finovate_token') || sessionStorage.getItem('finovate_token');
+    } catch (e) {}
+
+    // Rating system
+    var adId = {{ ad.id }};
+    var ratingDisplay = document.getElementById('rating-display');
+    var ratingStats = document.getElementById('rating-stats');
+    var ratingInputContainer = document.getElementById('rating-input-container');
+    var ratingInteractive = document.getElementById('star-rating-interactive');
+    var ratingMessage = document.getElementById('rating-message');
+    var userRating = null;
+
+    // Load rating data
+    fetch('/api/ad/' + adId + '/rating', {
+      method: 'GET',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+    })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        // Display average rating
+        if (data.average !== null) {
+          var stars = '';
+          for (var i = 1; i <= 5; i++) {
+            if (i <= Math.round(data.average)) {
+              stars += '<i class="fa fa-star" style="color:#f59e0b;font-size:18px"></i>';
+            } else if (i - 0.5 <= data.average) {
+              stars += '<i class="fa fa-star-half-alt" style="color:#f59e0b;font-size:18px"></i>';
+            } else {
+              stars += '<i class="fa fa-star-o" style="color:#d1d5db;font-size:18px"></i>';
+            }
+          }
+          ratingDisplay.innerHTML = stars + ' <span style="font-weight:800;color:#1e293b;margin-left:6px">' + data.average + '</span>';
+          ratingStats.textContent = data.total + ' avis';
+        } else {
+          ratingDisplay.innerHTML = '<span class="text-muted">Aucune évaluation</span>';
+          ratingStats.textContent = '';
+        }
+
+        // Show rating input if user is logged in
+        if (token) {
+          userRating = data.userRating;
+          ratingInputContainer.style.display = 'block';
+          renderInteractiveStars(userRating || 0);
+        }
+      })
+      .catch(function(err) {
+        ratingDisplay.innerHTML = '<span class="text-muted">Erreur de chargement</span>';
+      });
+
+    function renderInteractiveStars(rating) {
+      var html = '';
+      for (var i = 1; i <= 5; i++) {
+        var isActive = i <= rating;
+        html += '<i class="fa ' + (isActive ? 'fa-star' : 'fa-star-o') + '" data-rating="' + i + '" style="cursor:pointer;font-size:24px;color:' + (isActive ? '#f59e0b' : '#d1d5db') + ';margin-right:4px;transition:color 0.2s" onmouseover="highlightStars(' + i + ')" onmouseout="resetStars(' + (userRating || 0) + ')" onclick="submitRating(' + i + ')"></i>';
+      }
+      ratingInteractive.innerHTML = html;
+    }
+
+    window.highlightStars = function(n) {
+      var stars = ratingInteractive.querySelectorAll('i');
+      stars.forEach(function(star, idx) {
+        star.style.color = (idx < n) ? '#f59e0b' : '#d1d5db';
+        star.className = 'fa ' + (idx < n ? 'fa-star' : 'fa-star-o');
+      });
+    };
+
+    window.resetStars = function(n) {
+      renderInteractiveStars(n);
+    };
+
+    window.submitRating = function(rating) {
+      if (!token) {
+        window.location.href = '{{ path('front_login') }}';
+        return;
+      }
+
+      fetch('/api/ad/' + adId + '/rating', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ rating: rating })
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success) {
+            userRating = rating;
+            renderInteractiveStars(rating);
+            ratingMessage.style.display = 'block';
+            ratingMessage.className = 'mt-2 text-success';
+            ratingMessage.innerHTML = '<i class="fa fa-check-circle mr-1"></i>' + data.message;
+
+            // Update display
+            if (data.average !== null) {
+              var stars = '';
+              for (var i = 1; i <= 5; i++) {
+                if (i <= Math.round(data.average)) {
+                  stars += '<i class="fa fa-star" style="color:#f59e0b;font-size:18px"></i>';
+                } else if (i - 0.5 <= data.average) {
+                  stars += '<i class="fa fa-star-half-alt" style="color:#f59e0b;font-size:18px"></i>';
+                } else {
+                  stars += '<i class="fa fa-star-o" style="color:#d1d5db;font-size:18px"></i>';
+                }
+              }
+              ratingDisplay.innerHTML = stars + ' <span style="font-weight:800;color:#1e293b;margin-left:6px">' + data.average + '</span>';
+              ratingStats.textContent = data.total + ' avis';
+            }
+
+            setTimeout(function() {
+              ratingMessage.style.display = 'none';
+            }, 3000);
+          } else {
+            ratingMessage.style.display = 'block';
+            ratingMessage.className = 'mt-2 text-danger';
+            ratingMessage.innerHTML = '<i class="fa fa-exclamation-circle mr-1"></i>' + data.message;
+          }
+        })
+        .catch(function(err) {
+          ratingMessage.style.display = 'block';
+          ratingMessage.className = 'mt-2 text-danger';
+          ratingMessage.innerHTML = '<i class="fa fa-exclamation-circle mr-1"></i> Erreur réseau';
+        });
+    };
+  </script>
 </body>
 </html>

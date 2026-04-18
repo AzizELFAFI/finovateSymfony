@@ -1,104 +1,446 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Finovate - Marché des Produits</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('backoffice/assets/images/favicon_io/apple-touch-icon.png') }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('backoffice/assets/images/favicon_io/favicon-32x32.png') }}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('backoffice/assets/images/favicon_io/favicon-16x16.png') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate - Produits</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
   <style>
-    body { padding-top: 80px; }
-    .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .card { transition: transform 0.3s; border: none; }
-    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 22px;
+    }
+
     .product-image { height: 200px; object-fit: cover; }
-    .price-badge { font-size: 1.5rem; font-weight: bold; }
+    .price-badge { font-size: 1.1rem; font-weight: 800; }
   </style>
 </head>
+
 <body>
-  <!-- NAVIGATION -->
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand fw-bold" href="{{ path('front_home') }}">Finovate</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link active" href="{{ path('front_products') }}">Produits</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ path('front_ads') }}">Annonces</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ path('user_topup') }}">Alimenter carte</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ path('user_dashboard') }}">Dashboard</a></li>
-        </ul>
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ app.user ? path('front_products') : path('front_products_public') }}">Produits</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
+
+            {% if app.user %}
+              <li class="nav-item active"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('front_cart') }}" style="position:relative;display:inline-flex;align-items:center" title="Mon panier">
+                  <i class="fa fa-shopping-cart"></i>
+                  <span id="cart-badge" style="display:none;position:absolute;top:-8px;right:-8px;background:#ef4444;color:white;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:bold;display:flex;align-items:center;justify-content:center">0</span>
+                </a>
+              </li>
+              <li class="nav-item" style="margin-left: 8px;">
+                <a class="nav-link" href="{{ path('app_forum_blocked_users') }}" style="display:inline-flex;align-items:center" title="Utilisateurs bloqués">
+                  🚫
+                </a>
+              </li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_login') }}">Connexion</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Produits</h1>
+          <span>Découvrez nos produits et échangez vos points</span>
+        </div>
       </div>
     </div>
-  </nav>
+  </div>
 
   <!-- MAIN CONTENT -->
-  <main class="py-5">
+  <div class="page-shell">
     <div class="container">
-      <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-          <h1 class="display-4">Marché des Produits</h1>
-          <p class="lead text-muted">Découvrez nos produits exclusifs et échangez vos points</p>
-        </div>
-        <div class="col-md-6">
-          <form action="{{ path('front_products') }}" method="get" class="d-flex gap-2">
-            <input type="text" name="search" class="form-control" placeholder="Rechercher un produit..." value="{{ search }}">
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-search"></i> Rechercher
-            </button>
-            {% if search %}
-              <a href="{{ path('front_products') }}" class="btn btn-outline-secondary">Réinitialiser</a>
-            {% endif %}
-          </form>
-        </div>
-      </div>
+      <div class="row">
+        <div class="col-lg-3 mb-4">
+          {% if is_public is defined and is_public %}
+          <div class="sidebar">
+            <div class="title">Navigation</div>
+            <a href="{{ path('front_home') }}">Accueil</a>
+            <a href="{{ path('front_about') }}">À propos</a>
+            <a href="{{ path('front_products_public') }}" class="active">Produits</a>
+            <a href="{{ path('front_ads') }}">Annonces</a>
+            <a href="{{ path('app_forum_home') }}">Forums</a>
+            <hr style="border-color:rgba(15,118,110,0.2)">
+            <a href="{{ path('front_login') }}" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.26);color:#0f766e">
+              <i class="fa fa-sign-in mr-1"></i> Connexion
+            </a>
+            <a href="{{ path('front_signup') }}" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.18);color:#0f766e">
+              <i class="fa fa-user-plus mr-1"></i> Inscription
+            </a>
+          </div>
+          {% else %}
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}">Dashboard</a>
+            <a href="{{ path('user_transactions') }}">Transactions</a>
 
-      {% if products is empty %}
-        <div class="alert alert-info text-center py-5">
-          <i class="fas fa-box-open fa-3x mb-3"></i>
-          <h4>Aucun produit trouvé</h4>
-          <p>Revenez bientôt pour découvrir nos nouveaux produits!</p>
+            <a href="{{ path('user_goals') }}">Goals</a>
+            <a href="{{ path('user_bills') }}">Factures</a>
+            <a href="{{ path('investissement_index') }}">Investissement</a>
+            <a href="{{ path('front_products') }}" class="active">Produits</a>
+            <a href="{{ path('front_ads') }}">Annonces</a>
+            <a href="{{ path('user_buy_points') }}">Acheter des points</a>
+            <a href="{{ path('user_topup') }}">Alimenter carte</a>
+            <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
+          {% endif %}
         </div>
-      {% else %}
-        <div class="row g-4">
-          {% for product in products %}
-          <div class="col-md-6 col-lg-4">
-            <div class="card h-100 shadow-sm">
-              {% if product.image %}
-                <img src="{{ asset(product.image) }}" class="card-img-top product-image" alt="{{ product.name }}">
-              {% else %}
-                <div class="card-img-top product-image bg-light d-flex align-items-center justify-content-center">
-                  <i class="fas fa-image fa-3x text-muted"></i>
-                </div>
-              {% endif %}
-              <div class="card-body">
-                <h5 class="card-title">{{ product.name }}</h5>
-                <p class="card-text text-muted">{{ product.description ? product.description : 'Pas de description' }}</p>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <span class="badge bg-warning text-dark price-badge">{{ product.pricePoints }} pts</span>
-                  <span class="badge {{ product.stock > 0 ? 'bg-success' : 'bg-danger' }}">
-                    {{ product.stock > 0 ? 'En stock' : 'Rupture' }}
-                  </span>
-                </div>
-                
-                <a href="{{ path('front_product_detail', {'id': product.id}) }}" class="btn btn-primary btn-sm w-100">
-                  <i class="fas fa-eye"></i> Détails
+
+        <div class="col-lg-9">
+          {% if is_public is defined and is_public %}
+          <div class="alert alert-info mb-4" style="border-radius:12px;font-weight:700">
+            <i class="fa fa-info-circle mr-2"></i>
+            <a href="{{ path('front_login') }}" class="alert-link">Connectez-vous</a> pour acheter des produits avec vos points !
+          </div>
+          {% endif %}
+
+          <div class="card-shell mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:12px">
+              <div>
+                <h4 style="font-weight:900;margin:0">Marché des Produits</h4>
+                <div class="meta">Découvrez nos produits exclusifs et échangez vos points</div>
+              </div>
+              <div class="d-flex flex-wrap" style="gap:10px;align-items:center">
+                <!-- Favoris -->
+                {% if is_public is not defined or not is_public %}
+                <a href="{{ path('front_product_favorites') }}" class="btn btn-outline-danger" style="border-radius:12px;font-weight:700">
+                  <i class="fa fa-heart mr-1"></i> Favoris
                 </a>
+                {% endif %}
+                <!-- Tri -->
+                <div class="dropdown">
+                  <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" style="border-radius:12px;font-weight:700">
+                    <i class="fa fa-sort mr-1"></i> Trier
+                  </button>
+                  <div class="dropdown-menu">
+                    <a class="dropdown-item {{ sortBy == 'name' and order == 'ASC' ? 'active' : '' }}" href="{{ path(is_public is defined and is_public ? 'front_products_public' : 'front_products', app.request.query.all|merge({sortBy: 'name', order: 'ASC', page: 1})) }}">
+                      <i class="fa fa-sort-alpha-asc mr-1"></i> Nom A-Z
+                    </a>
+                    <a class="dropdown-item {{ sortBy == 'name' and order == 'DESC' ? 'active' : '' }}" href="{{ path(is_public is defined and is_public ? 'front_products_public' : 'front_products', app.request.query.all|merge({sortBy: 'name', order: 'DESC', page: 1})) }}">
+                      <i class="fa fa-sort-alpha-desc mr-1"></i> Nom Z-A
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item {{ sortBy == 'pricePoints' and order == 'ASC' ? 'active' : '' }}" href="{{ path(is_public is defined and is_public ? 'front_products_public' : 'front_products', app.request.query.all|merge({sortBy: 'pricePoints', order: 'ASC', page: 1})) }}">
+                      <i class="fa fa-sort-numeric-asc mr-1"></i> Prix croissant
+                    </a>
+                    <a class="dropdown-item {{ sortBy == 'pricePoints' and order == 'DESC' ? 'active' : '' }}" href="{{ path(is_public is defined and is_public ? 'front_products_public' : 'front_products', app.request.query.all|merge({sortBy: 'pricePoints', order: 'DESC', page: 1})) }}">
+                      <i class="fa fa-sort-numeric-desc mr-1"></i> Prix décroissant
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item {{ sortBy == 'stock' and order == 'DESC' ? 'active' : '' }}" href="{{ path(is_public is defined and is_public ? 'front_products_public' : 'front_products', app.request.query.all|merge({sortBy: 'stock', order: 'DESC', page: 1})) }}">
+                      <i class="fa fa-cubes mr-1"></i> Stock élevé
+                    </a>
+                    <a class="dropdown-item {{ sortBy == 'stock' and order == 'ASC' ? 'active' : '' }}" href="{{ path(is_public is defined and is_public ? 'front_products_public' : 'front_products', app.request.query.all|merge({sortBy: 'stock', order: 'ASC', page: 1})) }}">
+                      <i class="fa fa-cube mr-1"></i> Stock faible
+                    </a>
+                  </div>
+                </div>
+                <!-- Recherche -->
+                <form action="{{ path(is_public is defined and is_public ? 'front_products_public' : 'front_products') }}" method="get" class="d-flex" style="gap:10px">
+                  <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ search }}" autocomplete="off" style="min-width:180px">
+                  <button type="submit" class="btn btn-outline-success" style="border-radius:12px;font-weight:800;white-space:nowrap">
+                    <i class="fa fa-search"></i>
+                  </button>
+                  {% if search %}
+                    <a href="{{ path(is_public is defined and is_public ? 'front_products_public' : 'front_products') }}" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:700;white-space:nowrap">
+                      <i class="fa fa-times"></i>
+                    </a>
+                  {% endif %}
+                </form>
               </div>
             </div>
           </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    </div>
-  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+          {% if pagination is empty %}
+            <div class="card-shell">
+              <div class="alert alert-info text-center mb-0" role="alert">
+                <i class="fa fa-box-open mr-1"></i>
+                Aucun produit trouvé. Revenez bientôt pour découvrir nos nouveaux produits.
+              </div>
+            </div>
+          {% else %}
+            <div class="row">
+              {% for product in pagination %}
+              <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm" style="border-radius:16px;border:1px solid rgba(15,118,110,0.12);box-shadow:0 12px 26px rgba(0,0,0,0.06);position:relative">
+                  <!-- Favorite Button -->
+                  {% if is_public is not defined or not is_public %}
+                  <button class="btn btn-link favorite-btn" data-product-id="{{ product.id }}" style="position:absolute;top:8px;right:8px;z-index:10;padding:6px;font-size:20px;color:#ef4444;opacity:0.7;transition:all 0.2s" title="Ajouter aux favoris">
+                    <i class="fa fa-heart-o"></i>
+                  </button>
+                  {% endif %}
+                  {% if product.image %}
+                    <img src="{{ asset(product.image) }}" class="card-img-top product-image" alt="{{ product.name }}" style="border-top-left-radius:16px;border-top-right-radius:16px">
+                  {% else %}
+                    <div class="card-img-top product-image bg-light d-flex align-items-center justify-content-center" style="border-top-left-radius:16px;border-top-right-radius:16px">
+                      <i class="fa fa-image fa-2x text-muted"></i>
+                  </div>
+                  {% endif %}
+                  <div class="card-body" style="display:flex;flex-direction:column">
+                    <h5 class="card-title" style="font-weight:900">{{ product.name }}</h5>
+                    <p class="card-text text-muted" style="font-weight:600;flex:1">{{ product.description ? product.description : 'Pas de description' }}</p>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <span class="badge bg-warning text-dark price-badge">{{ product.pricePoints }} pts</span>
+                      <span class="badge {{ product.stock > 0 ? 'bg-success' : 'bg-danger' }}" style="font-weight:800">
+                        {{ product.stock > 0 ? 'En stock' : 'Rupture' }}
+                      </span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                      {% if is_public is defined and is_public %}
+                        <a href="{{ path('front_login') }}" class="btn btn-primary flex-fill" style="border-radius:12px;font-weight:800">
+                          <i class="fa fa-sign-in mr-1"></i> Connecter pour acheter
+                        </a>
+                      {% else %}
+                      <button class="btn btn-outline-primary flex-fill add-to-cart-btn" data-product-id="{{ product.id }}" style="border-radius:12px;font-weight:800" {{ product.stock <= 0 ? 'disabled' : '' }}>
+                        <i class="fa fa-cart-plus mr-1"></i> Panier
+                      </button>
+                      {% endif %}
+                      <a href="{{ path('front_product_detail', {'id': product.id}) }}" class="btn btn-success" style="border-radius:12px;font-weight:800">
+                        <i class="fa fa-eye"></i>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            <div class="navigation d-flex justify-content-center mt-4">
+              {{ knp_pagination_render(pagination) }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Panier -->
+  {% if is_public is not defined or not is_public %}
+  <div class="modal fade" id="cartModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content" style="border-radius:16px;overflow:hidden">
+        <div class="modal-header" style="background:rgba(15,118,110,0.06)">
+          <h5 class="modal-title" id="cartModalTitle" style="font-weight:900;margin:0">Panier</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="cartModalBody" style="font-weight:600;color:#374151"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" id="cartModalCancel" data-dismiss="modal" style="border-radius:12px;font-weight:800">Continuer mes achats</button>
+          <a href="{{ path('front_cart') }}" class="btn btn-success" id="cartModalView" style="border-radius:12px;font-weight:900">Voir le panier</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  {% if is_public is not defined or not is_public %}
+  <script>
+    var token = null;
+    try {
+      token = localStorage.getItem('finovate_token') || sessionStorage.getItem('finovate_token');
+    } catch (e) {}
+
+    // Load cart count
+    fetch('/api/cart')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        var badge = document.getElementById('cart-badge');
+        if (badge && data.totalItems > 0) {
+          badge.textContent = data.totalItems;
+          badge.style.display = 'flex';
+        }
+      });
+
+    // Load favorite states
+    document.querySelectorAll('.favorite-btn').forEach(function(btn) {
+      var productId = btn.dataset.productId;
+      fetch('/api/product/' + productId + '/favorite', {
+        method: 'GET',
+        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+      })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.isFavorite) {
+            btn.querySelector('i').className = 'fa fa-heart';
+            btn.style.opacity = '1';
+          }
+        });
+    });
+
+    // Toggle favorite
+    document.querySelectorAll('.favorite-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (!token) {
+          window.location.href = '{{ path('front_login') }}';
+          return;
+        }
+        var productId = btn.dataset.productId;
+        fetch('/api/product/' + productId + '/favorite', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          }
+        })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.success) {
+              var icon = btn.querySelector('i');
+              if (data.isFavorite) {
+                icon.className = 'fa fa-heart';
+                btn.style.opacity = '1';
+              } else {
+                icon.className = 'fa fa-heart-o';
+                btn.style.opacity = '0.7';
+              }
+            }
+          });
+      });
+    });
+
+    // Add to cart
+    document.querySelectorAll('.add-to-cart-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var productId = btn.dataset.productId;
+        var originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+
+        fetch('/api/cart/add/' + productId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'quantity=1'
+        })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            btn.disabled = false;
+            if (data.success) {
+              btn.innerHTML = '<i class="fa fa-check mr-1"></i> Ajouté!';
+              btn.classList.remove('btn-outline-primary');
+              btn.classList.add('btn-success');
+              // Update badge
+              var badge = document.getElementById('cart-badge');
+              if (badge) {
+                badge.textContent = data.cartCount;
+                badge.style.display = 'flex';
+              }
+
+              // Show success modal
+              var cartModalTitle = document.getElementById('cartModalTitle');
+              var cartModalBody = document.getElementById('cartModalBody');
+              var cartModalCancel = document.getElementById('cartModalCancel');
+              var cartModalView = document.getElementById('cartModalView');
+              cartModalTitle.textContent = 'Produit ajouté';
+              cartModalBody.innerHTML = '<i class="fa fa-check-circle text-success mr-2"></i> Le produit a été ajouté à votre panier.<br><br><strong>Total articles:</strong> ' + data.cartCount;
+              cartModalCancel.style.display = '';
+              cartModalCancel.textContent = 'Continuer mes achats';
+              cartModalView.textContent = 'Voir le panier';
+              cartModalView.setAttribute('href', '{{ path('front_cart') }}');
+              cartModalView.removeAttribute('data-dismiss');
+              $('#cartModal').modal('show');
+
+              setTimeout(function() {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+              }, 1500);
+            } else {
+              btn.innerHTML = originalHtml;
+              // Show error modal
+              var cartModalTitle = document.getElementById('cartModalTitle');
+              var cartModalBody = document.getElementById('cartModalBody');
+              var cartModalCancel = document.getElementById('cartModalCancel');
+              var cartModalView = document.getElementById('cartModalView');
+              cartModalTitle.textContent = 'Erreur';
+              cartModalBody.textContent = data.message;
+              cartModalCancel.style.display = 'none';
+              cartModalView.textContent = 'OK';
+              cartModalView.setAttribute('data-dismiss', 'modal');
+              cartModalView.removeAttribute('href');
+              $('#cartModal').modal('show');
+            }
+          });
+      });
+    });
+  </script>
+  {% endif %}
 </body>
+
 </html>

@@ -207,7 +207,7 @@
           <ul class="navbar-nav ml-auto">
             <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ path('front_ads') }}">Annonces</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ app.user ? path('front_products') : path('front_products_public') }}">Produits</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
             
             {% if app.user %}
@@ -262,6 +262,7 @@
             <a href="{{ path('investissement_index') }}" id="nav-investissement">Investissement</a>
             <a href="{{ path('front_products') }}">Produits</a>
             <a href="{{ path('front_ads') }}">Annonces</a>
+            <a href="{{ path('user_buy_points') }}">Acheter des points</a>
             <a href="{{ path('user_topup') }}" id="nav-topup" class="active">Alimenter carte</a>
             <a href="#" id="nav-edit-profile">Modifier le profil</a>
             <a href="{{ path('front_logout') }}">Déconnexion</a>

@@ -73,6 +73,81 @@ class StripeService
     }
 
     /**
+     * Create a PaymentIntent for points purchase
+     */
+    public function createPointsPaymentIntent(int $points, float $amount): array
+    {
+        // Use EUR for Stripe (TND not supported), amount in cents
+        $amountInCents = (int) ($amount * 100);
+
+        $paymentIntent = $this->stripe->paymentIntents->create([
+            'amount' => $amountInCents,
+            'currency' => 'eur',
+            'automatic_payment_methods' => [
+                'enabled' => true,
+            ],
+            'metadata' => [
+                'type' => 'points_purchase',
+                'points' => $points,
+            ],
+        ]);
+
+        return [
+            'client_secret' => $paymentIntent->client_secret,
+            'payment_intent_id' => $paymentIntent->id,
+            'amount' => $amount,
+            'points' => $points,
+        ];
+    }
+
+    /**
+     * Confirm a payment and credit user points
+     */
+    public function confirmPaymentAndCreditPoints(string $paymentIntentId, User $user): array
+    {
+        $paymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId);
+
+        if ($paymentIntent->status !== 'succeeded') {
+            return [
+                'success' => false,
+                'message' => 'Le paiement n\'a pas été complété.',
+            ];
+        }
+
+        // Get points and amount from metadata
+        $points = (int) ($paymentIntent->metadata['points'] ?? 0);
+        $amount = ((float) $paymentIntent->amount) / 100; // Amount in EUR from Stripe
+        
+        if ($points <= 0) {
+            return [
+                'success' => false,
+                'message' => 'Erreur: nombre de points invalide.',
+            ];
+        }
+
+        // Debit user balance (solde) - amount is treated as TND for display consistency
+        $currentBalance = (float) str_replace(',', '.', (string) $user->getSolde());
+        $newBalance = $currentBalance - $amount;
+        $user->setSolde((string) $newBalance);
+
+        // Credit user points
+        $currentPoints = $user->getPoints();
+        $newPoints = $currentPoints + $points;
+        $user->setPoints($newPoints);
+
+        $this->em->flush();
+
+        return [
+            'success' => true,
+            'message' => 'Vos points ont été crédités avec succès.',
+            'points' => $points,
+            'new_points' => $newPoints,
+            'amount_debited' => $amount,
+            'new_balance' => $newBalance,
+        ];
+    }
+
+    /**
      * Get Stripe publishable key for frontend
      */
     public function getPublishableKey(): string

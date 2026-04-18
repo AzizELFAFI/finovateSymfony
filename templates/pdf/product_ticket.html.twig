@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket d'achat - Finovate</title>
+    <style>
+        @page {
+            margin: 20mm;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            font-size: 12pt;
+        }
+        .container {
+            max-width: 100%;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #0f766e;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        .logo {
+            font-size: 28pt;
+            font-weight: bold;
+            color: #0f766e;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #6b7280;
+            font-size: 11pt;
+        }
+        .order-number {
+            background: #0f766e;
+            color: white;
+            padding: 8px 20px;
+            display: inline-block;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .product-box {
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1), rgba(16, 185, 129, 0.1));
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px solid #0f766e;
+        }
+        .product-name {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #0f766e;
+            margin-bottom: 15px;
+        }
+        .product-details {
+            display: flex;
+            justify-content: space-between;
+        }
+        .detail-item {
+            text-align: center;
+        }
+        .detail-label {
+            font-size: 9pt;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .detail-value {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #111;
+            margin-top: 5px;
+        }
+        .info-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            width: 48%;
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0f766e;
+        }
+        .info-title {
+            font-size: 10pt;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #111;
+        }
+        .total-section {
+            background: #0f766e;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .total-label {
+            font-size: 10pt;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.9;
+        }
+        .total-value {
+            font-size: 28pt;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .summary-box {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #e5e7eb;
+        }
+        .footer p {
+            color: #9ca3af;
+            font-size: 9pt;
+            margin: 5px 0;
+        }
+        .thank-you {
+            font-size: 16pt;
+            color: #0f766e;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .barcode {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .barcode-text {
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+            letter-spacing: 3px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">FINOVATE</div>
+            <div class="subtitle">Votre banque digitale</div>
+            <div class="order-number">{{ orderNumber }}</div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-title">Client</div>
+                <div class="info-value">{{ user.firstname }} {{ user.lastname }}</div>
+                <div style="color: #6b7280; font-size: 10pt; margin-top: 5px;">{{ user.email }}</div>
+            </div>
+            <div class="info-box">
+                <div class="info-title">Date d'achat</div>
+                <div class="info-value">{{ purchaseDate|date('d/m/Y') }}</div>
+                <div style="color: #6b7280; font-size: 10pt; margin-top: 5px;">{{ purchaseDate|date('H:i') }}</div>
+            </div>
+        </div>
+
+        <div class="product-box">
+            <div class="product-name">{{ productName }}</div>
+            <div class="product-details">
+                <div class="detail-item">
+                    <div class="detail-label">Prix unitaire</div>
+                    <div class="detail-value">{{ pricePoints }} pts</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Quantité</div>
+                    <div class="detail-value">×{{ quantity }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Total</div>
+                    <div class="detail-value">{{ totalPoints }} pts</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="total-section">
+            <div class="total-label">Total de la transaction</div>
+            <div class="total-value">{{ totalPoints }} points</div>
+        </div>
+
+        <div class="summary-box">
+            <div class="summary-row">
+                <span>Produit acheté</span>
+                <span><strong>{{ productName }}</strong></span>
+            </div>
+            <div class="summary-row">
+                <span>Points utilisés</span>
+                <span><strong>{{ totalPoints }} pts</strong></span>
+            </div>
+            <div class="summary-row">
+                <span>Nouveau solde de points</span>
+                <span><strong style="color: #0f766e;">{{ newPoints }} pts</strong></span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="thank-you">Merci pour votre achat !</div>
+            <p>Ce ticket constitue votre preuve d'achat. Conservez-le précieusement.</p>
+            <p>En cas de problème, contactez notre support à support@finovate.com</p>
+            <p>© {{ "now"|date('Y') }} FINOVATE - Tous droits réservés</p>
+        </div>
+
+        <div class="barcode">
+            <div class="barcode-text">{{ orderNumber }}</div>
+        </div>
+    </div>
+</body>
+</html>
