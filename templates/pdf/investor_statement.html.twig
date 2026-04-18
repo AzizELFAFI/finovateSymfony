@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #111; }
+    h1 { font-size: 18px; color: #0f766e; margin: 0 0 8px 0; }
+    h2 { font-size: 13px; color: #0f766e; margin: 16px 0 8px 0; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+    .muted { color: #666; font-size: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+    th { background: #f0faf8; font-weight: bold; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .summary { margin: 12px 0; padding: 10px; background: #f8faf9; border: 1px solid #0f766e33; border-radius: 4px; }
+    .win { color: #047857; font-weight: bold; }
+    .loss { color: #b91c1c; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Finovate — Relevé investisseur</h1>
+  <p class="muted">Généré le {{ generatedAt|date('d/m/Y à H:i') }} — {{ user.email }}</p>
+
+  <div class="summary">
+    <strong>Synthèse</strong><br>
+    Total investi : <strong>{{ totalInvested|number_format(2, ',', ' ') }}</strong> TND<br>
+    Cumul parts de revenus : <strong>{{ totalEarned|number_format(2, ',', ' ') }}</strong> TND<br>
+    Résultat net : <span class="{{ netGlobal >= 0 ? 'win' : 'loss' }}">{{ netGlobal|number_format(2, ',', ' ') }} TND</span>
+  </div>
+
+  <h2>Revenus jour par jour</h2>
+  {% if dailyRows is empty %}
+    <p class="muted">Aucune ligne de revenu.</p>
+  {% else %}
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th class="num">Part du jour (TND)</th>
+          <th class="num">Cumul (TND)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in dailyRows %}
+          <tr>
+            <td>{{ r.date_label }}</td>
+            <td class="num">{{ r.daily|number_format(2, ',', ' ') }}</td>
+            <td class="num">{{ r.cum|number_format(2, ',', ' ') }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <h2>Détail par projet (investissements acceptés)</h2>
+  {% if positions is empty %}
+    <p class="muted">Aucune position.</p>
+  {% else %}
+    <table>
+      <thead>
+        <tr>
+          <th>Projet</th>
+          <th class="num">Montant investi (TND)</th>
+          <th class="num">% sur revenus</th>
+          <th class="num">Parts cumulées (TND)</th>
+          <th class="num">Solde net (TND)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in positions %}
+          <tr>
+            <td>{{ p.title }}</td>
+            <td class="num">{{ p.invested|number_format(2, ',', ' ') }}</td>
+            <td class="num">{{ p.pct }} %</td>
+            <td class="num">{{ p.earned|number_format(2, ',', ' ') }}</td>
+            <td class="num">{{ p.net|number_format(2, ',', ' ') }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <p class="muted" style="margin-top: 26px;line-height:1.45;">
+    Ce document est produit automatiquement à partir des données saisies dans Finovate (investissements acceptés, parts de revenus enregistrées).
+    Il est fourni à titre informatif et interne ; il ne constitue pas une attestation comptable, fiscale ou juridique.
+    Tous les montants sont en dinars tunisiens (TND). En cas de divergence, les enregistrements dans l’application font foi.
+  </p>
+</body>
+</html>

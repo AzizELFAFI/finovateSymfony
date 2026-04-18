@@ -1,0 +1,507 @@
+{# Finovate investissement UI — scoped to inv-page + manage modal. Palette: teal #0f766e, emerald accents. #}
+<style>
+  /* ─── Page shell (investissement index only) ─── */
+  .inv-page .inv-toolstrip h4 {
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+  .inv-page .inv-toolstrip .meta {
+    font-size: 0.875rem;
+  }
+  .inv-page .inv-toolstrip .btn {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .inv-page .inv-toolstrip .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.15);
+  }
+  .inv-page .project-card {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .inv-page .project-card:hover {
+    box-shadow: 0 16px 40px rgba(15, 118, 110, 0.1), 0 8px 16px rgba(0, 0, 0, 0.06);
+    border-color: rgba(15, 118, 110, 0.22);
+  }
+
+  /* ─── Modal: Gérer mes projets ─── */
+  #manageMyProjectsModal .modal-content {
+    border-radius: 18px;
+    border: none;
+    overflow: hidden;
+    box-shadow: 0 24px 56px rgba(15, 118, 110, 0.14), 0 12px 28px rgba(0, 0, 0, 0.08);
+  }
+  #manageMyProjectsModal .modal-header {
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.07) 0%, rgba(255, 255, 255, 1) 55%);
+    border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+    padding: 1.15rem 1.4rem;
+  }
+  #manageMyProjectsModal .modal-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #0f766e;
+    letter-spacing: -0.02em;
+  }
+  #manageMyProjectsModal .modal-body {
+    padding: 1.25rem 1.35rem 1.5rem;
+    background: linear-gradient(180deg, rgba(248, 250, 249, 0.6) 0%, #fff 120px);
+  }
+
+  #manageMyProjectsModal .inv-manage-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  #manageMyProjectsModal .inv-manage-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid rgba(15, 118, 110, 0.12);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(15, 118, 110, 0.04);
+    padding: 1.1rem 1.15rem 1.2rem;
+    transition: box-shadow 0.2s ease;
+  }
+  #manageMyProjectsModal .inv-manage-card:hover {
+    box-shadow: 0 12px 36px rgba(15, 118, 110, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  #manageMyProjectsModal .inv-manage-card__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+  }
+  #manageMyProjectsModal .inv-manage-card__identity {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    flex: 1;
+    min-width: 200px;
+  }
+  #manageMyProjectsModal .inv-thumb-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(15, 118, 110, 0.08);
+    border: 1px solid rgba(15, 118, 110, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(15, 118, 110, 0.45);
+    font-size: 1.35rem;
+  }
+  #manageMyProjectsModal .inv-thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  #manageMyProjectsModal .inv-manage-card__title {
+    margin: 0 0 0.35rem 0;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #0f172a;
+    line-height: 1.25;
+  }
+  #manageMyProjectsModal .inv-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  #manageMyProjectsModal .inv-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  #manageMyProjectsModal .inv-pill--cat {
+    background: rgba(15, 118, 110, 0.09);
+    color: #0f766e;
+  }
+  #manageMyProjectsModal .inv-pill--ok {
+    background: rgba(16, 185, 129, 0.18);
+    color: #047857;
+  }
+  #manageMyProjectsModal .inv-pill--wait {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+  }
+
+  #manageMyProjectsModal .inv-manage-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    justify-content: flex-end;
+  }
+  #manageMyProjectsModal .inv-manage-card__actions .btn {
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    padding: 0.38rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  #manageMyProjectsModal .inv-manage-card__actions .btn-outline-danger {
+    border-width: 1.5px;
+  }
+
+  /* Pending requests */
+  #manageMyProjectsModal .inv-pending-wrap {
+    margin-bottom: 0.85rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: 12px;
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px dashed rgba(15, 118, 110, 0.22);
+  }
+  #manageMyProjectsModal .inv-pending-wrap .inv-section-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #0f766e;
+    margin-bottom: 0.65rem;
+  }
+  #manageMyProjectsModal .inv-pending-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    margin-bottom: 0.5rem;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid rgba(15, 118, 110, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  #manageMyProjectsModal .inv-pending-row:last-child { margin-bottom: 0; }
+
+  /* Funding block */
+  #manageMyProjectsModal .inv-block {
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.65rem;
+    border: 1px solid rgba(15, 118, 110, 0.1);
+    background: rgba(255, 255, 255, 0.85);
+  }
+  #manageMyProjectsModal .inv-block:last-child { margin-bottom: 0; }
+  #manageMyProjectsModal .inv-block--fund {
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.04) 0%, rgba(255, 255, 255, 0.95) 100%);
+  }
+  #manageMyProjectsModal .inv-block--rev {
+    background: rgba(248, 250, 249, 0.95);
+  }
+
+  #manageMyProjectsModal .inv-block__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+  }
+  #manageMyProjectsModal .inv-block__head-left {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #0f766e;
+  }
+  #manageMyProjectsModal .inv-block__head-left i {
+    opacity: 0.85;
+    font-size: 0.95rem;
+  }
+  #manageMyProjectsModal .inv-fund-pct {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #374151;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #manageMyProjectsModal .inv-progress-track {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(15, 118, 110, 0.1);
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+  #manageMyProjectsModal .inv-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #10b981 0%, #0f766e 100%);
+    transition: width 0.35s ease;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+  }
+  #manageMyProjectsModal .inv-fund-nums {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.58);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Revenue section */
+  #manageMyProjectsModal .inv-rev-intro {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: rgba(0, 0, 0, 0.55);
+    margin-bottom: 0.65rem;
+  }
+  #manageMyProjectsModal .inv-callout {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    margin-bottom: 0.65rem;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    background: rgba(255, 251, 235, 0.95);
+  }
+  #manageMyProjectsModal .inv-callout i {
+    color: #d97706;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+  }
+  #manageMyProjectsModal .inv-callout p {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #92400e;
+    line-height: 1.4;
+  }
+
+  #manageMyProjectsModal .inv-rev-locked {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid rgba(107, 114, 128, 0.2);
+    background: rgba(249, 250, 251, 0.95);
+  }
+  #manageMyProjectsModal .inv-rev-locked i.fa-lock {
+    color: #9ca3af;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+    font-size: 1.1rem;
+  }
+  #manageMyProjectsModal .inv-rev-locked p {
+    margin: 0;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.58);
+    line-height: 1.45;
+  }
+
+  #manageMyProjectsModal .inv-rev-scheduled {
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    border: 1px dashed rgba(59, 130, 246, 0.35);
+    background: rgba(239, 246, 255, 0.7);
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #1e40af;
+    line-height: 1.45;
+  }
+
+  #manageMyProjectsModal .inv-rev-form-box {
+    padding-top: 0.15rem;
+  }
+  #manageMyProjectsModal .inv-date-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 8px;
+    background: rgba(15, 118, 110, 0.1);
+    color: #0f766e;
+    font-weight: 800;
+    font-size: 0.88rem;
+    margin-bottom: 0.65rem;
+    font-variant-numeric: tabular-nums;
+  }
+  #manageMyProjectsModal .inv-rev-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.65rem;
+  }
+  #manageMyProjectsModal .inv-rev-form-row .form-control {
+    border-radius: 10px;
+    border: 1px solid rgba(15, 118, 110, 0.22);
+    font-weight: 600;
+    min-width: 160px;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  #manageMyProjectsModal .inv-rev-form-row .form-control:focus {
+    border-color: #0f766e;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+  }
+  #manageMyProjectsModal .inv-btn-submit-day {
+    border-radius: 10px;
+    font-weight: 800;
+    padding: 0.48rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  }
+
+  /* Mes demandes / Mes investissements shared polish */
+  .inv-subpage .demande-card,
+  .inv-subpage .pos-card {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .inv-subpage .demande-card:hover,
+  .inv-subpage .pos-card:hover {
+    box-shadow: 0 14px 36px rgba(15, 118, 110, 0.1), 0 6px 14px rgba(0, 0, 0, 0.05);
+    border-color: rgba(15, 118, 110, 0.18);
+  }
+  .inv-subpage .card-shell h4,
+  .inv-subpage .card-shell h5 {
+    letter-spacing: -0.02em;
+  }
+
+  /* ─── Liste projets : blocs financement / change / IA ─── */
+  .inv-page .inv-page-lede {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: rgba(17, 24, 39, 0.72);
+    margin: 0 0 10px 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(15, 118, 110, 0.06);
+    border: 1px solid rgba(15, 118, 110, 0.12);
+  }
+  .inv-page .inv-card-finance {
+    margin-top: 6px;
+  }
+  .inv-page .inv-card-fund-line {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #374151;
+    font-variant-numeric: tabular-nums;
+  }
+  .inv-page .inv-card-pct-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    background: rgba(15, 118, 110, 0.12);
+    color: #0f766e;
+    vertical-align: middle;
+  }
+  .inv-page .inv-card-fx-box {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(248, 250, 249, 0.95);
+    border: 1px solid rgba(15, 118, 110, 0.1);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    font-weight: 600;
+    color: #4b5563;
+  }
+  .inv-page .inv-card-fx-box strong {
+    color: #111827;
+    font-weight: 800;
+  }
+  .inv-page .inv-card-fx-box.inv-card-fx-box--muted {
+    background: rgba(249, 250, 251, 0.9);
+    border-style: dashed;
+    color: #6b7280;
+  }
+  .inv-page .inv-card-ia-wrap {
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(15, 118, 110, 0.08);
+  }
+  .inv-page .inv-ia-head {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(15, 118, 110, 0.85);
+    margin-bottom: 8px;
+  }
+  .inv-page .inv-ia-list.pro-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+  }
+  .inv-page .inv-ia-list.pro-list li {
+    position: relative;
+    padding-left: 14px;
+    margin-bottom: 6px;
+  }
+  .inv-page .inv-ia-list.pro-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #0f766e;
+  }
+  .inv-page .inv-ia-foot {
+    margin-top: 8px;
+    font-size: 0.68rem;
+    color: #9ca3af;
+    line-height: 1.35;
+  }
+
+  /* ─── Modal investissement ─── */
+  #investModal .inv-modal-disclaimer {
+    font-size: 0.78rem;
+    color: #6b7280;
+    line-height: 1.45;
+    margin-bottom: 0;
+  }
+  #investModal #invest-revenue-hint-wrap.inv-pro-hint {
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.07) 0%, rgba(255, 255, 255, 0.95) 100%);
+    border: 1px solid rgba(15, 118, 110, 0.18);
+  }
+  #investModal .inv-hint-foot {
+    font-size: 0.68rem;
+    color: #9ca3af;
+    margin-top: 10px;
+    margin-bottom: 0;
+    line-height: 1.35;
+  }
+
+  /* ─── Mes investissements : encadré change ─── */
+  .inv-subpage .inv-fx-banner {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(248, 250, 249, 0.95);
+    border: 1px solid rgba(15, 118, 110, 0.12);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    font-weight: 600;
+    color: #374151;
+  }
+  .inv-subpage .inv-fx-banner small {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #9ca3af;
+  }
+</style>

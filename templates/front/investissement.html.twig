@@ -10,6 +10,11 @@
   <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
   <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
   <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" crossorigin=""/>
+  <style>
+    .maplibregl-canvas { cursor: crosshair !important; }
+  </style>
+  {% include 'front/partials/investissement_ui_enhancements.html.twig' %}
 
   <style>
     .page-shell { padding: 36px 0; }
@@ -137,25 +142,10 @@
       display: block;
     }
 
-    .manage-project-row {
-      border: 1px solid rgba(15, 118, 110, 0.14);
-      border-radius: 14px;
-      padding: 12px 14px;
-      margin-bottom: 10px;
-      background: #fff;
-    }
-
-    .manage-project-row .thumb-xs {
-      width: 56px;
-      height: 56px;
-      border-radius: 10px;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
   </style>
 </head>
 
-<body>
+<body class="inv-page">
 
   <header>
     <nav class="navbar navbar-expand-lg">
@@ -206,7 +196,7 @@
       <div class="row">
         <div class="col-md-12">
           <h1>Investissement</h1>
-          <span>Découvrez les projets et participez au financement</span>
+          <span>Finance participative — soutenez des projets et partagez les revenus selon les règles définies avec le porteur</span>
         </div>
       </div>
     </div>
@@ -233,7 +223,7 @@
         </div>   
 
         <div class="col-lg-9">
-          <div class="card-shell mb-4">
+          <div class="card-shell mb-4 inv-toolstrip">
             {% for label, messages in app.flashes %}
               {% for message in messages %}
                 <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
@@ -243,9 +233,13 @@
             <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:12px">
               <div>
                 <h4 style="font-weight:900;margin:0">Projets disponibles</h4>
-                <div class="meta">Montants collectés et objectifs de financement</div>
+                <div class="meta">Campagnes ouvertes : montants en dinars tunisiens (TND)</div>
               </div>
               <div class="d-flex flex-wrap" style="gap:10px;justify-content:flex-end">
+                <a href="{{ path('investissement_mes_investissements') }}" class="btn btn-outline-success"
+                  style="border-radius:12px;font-weight:800;white-space:nowrap">
+                  <i class="fa fa-line-chart mr-1"></i> Mes investissements
+                </a>
                 <a href="{{ path('investissement_mes_demandes') }}" class="btn btn-outline-success"
                   style="border-radius:12px;font-weight:800;white-space:nowrap">
                   <i class="fa fa-list-alt mr-1"></i> Mes demandes
@@ -261,6 +255,11 @@
               </div>
             </div>
           </div>
+
+          <p class="inv-page-lede mb-4">
+            Les équivalents <strong>EUR</strong> et <strong>USD</strong> sont indicatifs (taux du marché à l’instant T).
+            La <strong>synthèse IA</strong> fournit une lecture rapide&nbsp;; elle ne constitue ni une recommandation d’investissement ni un conseil juridique ou financier.
+          </p>
 
           <div class="card-shell mb-4">
             <form method="get" action="{{ path('investissement_index') }}" id="invest-filter-form" class="mb-0">
@@ -319,7 +318,7 @@
 
               {% set st = project.status|default('')|upper %}
               <div class="col-md-6 mb-4">
-                <div class="project-card">
+                <div class="project-card inv-project-card" data-project-id="{{ project.id }}">
                   {% if project.imagePath %}
                     <div class="project-thumb">
                       <img src="{{ asset(project.imagePath) }}" alt="">
@@ -352,13 +351,32 @@
 
                   <div style="height:14px"></div>
 
-                  <div class="meta">{{ c|number_format(2, ',', ' ') }} / {{ g|number_format(2, ',', ' ') }} (objectif)</div>
-                  <div style="height:8px"></div>
+                  <div class="inv-card-finance">
+                    <div class="inv-card-fund-line">
+                      Collecte&nbsp;: {{ c|number_format(2, ',', ' ') }} / {{ g|number_format(2, ',', ' ') }} TND
+                      <span class="inv-card-pct-badge">{{ percent|number_format(1, ',', ' ') }}&nbsp;% financé</span>
+                    </div>
+                    <div class="inv-card-fx inv-card-fx-box" data-tnd-goal="{{ g }}" data-tnd-current="{{ c }}">
+                      <span class="inv-card-fx-text">Conversion EUR/USD en cours…</span>
+                    </div>
+                  </div>
+                  <div style="height:10px"></div>
                   <div class="progress">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ percent }}%" aria-valuenow="{{ percent|round }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ percent }}%"
+                      aria-valuenow="{{ percent|round }}" aria-valuemin="0" aria-valuemax="100"
+                      aria-label="Financements à {{ percent|number_format(1) }} pour cent"></div>
                   </div>
 
-                  <div style="height:16px"></div>
+                  <div class="inv-card-ia-wrap">
+                    <div class="inv-ia-head">Lecture projet (IA)</div>
+                    <div class="inv-card-ia mb-0" data-project-id="{{ project.id }}">
+                      <button type="button" class="btn btn-sm btn-outline-secondary btn-block inv-ia-load" style="border-radius:10px;font-weight:700;font-size:0.82rem">
+                        Afficher une synthèse risques / points clés
+                      </button>
+                      <ul class="inv-ia-list pro-list small mb-0 mt-2" style="display:none;color:#374151;font-weight:600;line-height:1.45"></ul>
+                      <p class="inv-ia-foot mb-0" style="display:none">Synthèse générée automatiquement — à croiser avec la fiche projet et vos critères.</p>
+                    </div>
+                  </div>
 
                   {% set is_owner = project.owner and project.owner.id == app.user.id %}
                   {% if is_owner %}
@@ -368,7 +386,8 @@
                       style="border-radius:12px;font-weight:800"
                       data-toggle="modal" data-target="#investModal"
                       data-project-id="{{ project.id }}"
-                      data-project-title="{{ project.title|e('html_attr') }}">
+                      data-project-title="{{ project.title|e('html_attr') }}"
+                      data-project-goal="{{ g }}">
                       Investir
                     </button>
                   {% endif %}
@@ -427,6 +446,7 @@
                 <label for="{{ createForm.goalAmount.vars.id }}">{{ createForm.goalAmount.vars.label }}</label>
                 {{ form_widget(createForm.goalAmount, {'attr': {'class': 'form-control'}}) }}
                 <div class="small-error">{{ form_errors(createForm.goalAmount) }}</div>
+                <div id="create-goal-fx-equiv" class="small mt-1 mb-0" style="font-weight:700;color:#0f766e;min-height:20px"></div>
               </div>
               <div class="form-group col-md-6">
                 <label for="{{ createForm.deadline.vars.id }}">{{ createForm.deadline.vars.label }}</label>
@@ -441,11 +461,71 @@
               <div class="small-error">{{ form_errors(createForm.category) }}</div>
             </div>
 
-            <div class="form-group mb-0">
-              <label for="{{ createForm.image.vars.id }}">{{ createForm.image.vars.label }}</label>
-              {{ form_widget(createForm.image, {'attr': {'class': 'form-control-file'}}) }}
+            {# ── Unsplash image picker ── #}
+            <div class="form-group">
+              <label>Image du projet</label>
+              <div class="d-flex flex-wrap align-items-center mb-2" style="gap:8px">
+                <input type="text" id="unsplash-query" class="form-control" placeholder="Rechercher une image (ex: immobilier, énergie…)" style="flex:1;border-radius:10px">
+                <button type="button" id="unsplash-search-btn" class="btn btn-outline-success btn-sm" style="border-radius:10px;font-weight:700;white-space:nowrap">
+                  <i class="fa fa-search"></i> Chercher
+                </button>
+              </div>
+              <div id="unsplash-results" class="d-flex flex-wrap mb-2" style="gap:8px;min-height:0"></div>
+              <div id="unsplash-selected-wrap" style="display:none;margin-bottom:8px">
+                <img id="unsplash-selected-preview" src="" alt="" style="max-height:120px;border-radius:10px;border:2px solid #0f766e;object-fit:cover">
+                <div id="unsplash-selected-credit" class="meta mt-1" style="font-size:0.78rem"></div>
+                <input type="hidden" name="unsplash_image_url" id="unsplash-image-url-input" value="">
+              </div>
+              <div class="meta mb-1" style="font-weight:600">— ou téléversez votre propre image —</div>
+              {{ form_widget(createForm.image, {'attr': {'class': 'form-control-file', 'id': 'create-image-file'}}) }}
               <small class="form-text text-muted">JPEG, PNG ou WebP — 5 Mo max.</small>
               <div class="small-error">{{ form_errors(createForm.image) }}</div>
+            </div>
+
+            {# ── Exchange rate converter ── #}
+            <div class="form-group">
+              <label>Convertisseur de devises <span class="meta" style="font-weight:500">(optionnel)</span></label>
+              <div class="d-flex flex-wrap align-items-center" style="gap:8px">
+                <select id="exchange-currency" class="form-control" style="max-width:120px;border-radius:10px;font-weight:600">
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="TND" selected>TND</option>
+                  <option value="MAD">MAD</option>
+                  <option value="DZD">DZD</option>
+                  <option value="SAR">SAR</option>
+                  <option value="AED">AED</option>
+                  <option value="CAD">CAD</option>
+                  <option value="CHF">CHF</option>
+                  <option value="JPY">JPY</option>
+                  <option value="CNY">CNY</option>
+                </select>
+                <button type="button" id="exchange-btn" class="btn btn-outline-success btn-sm" style="border-radius:10px;font-weight:700;white-space:nowrap">
+                  <i class="fa fa-refresh"></i> Convertir
+                </button>
+                <span id="exchange-result" class="meta" style="font-weight:700;color:#0f766e"></span>
+              </div>
+              <small class="form-text text-muted">Affiche l'équivalent de l'objectif dans la devise choisie.</small>
+            </div>
+
+            {# ── OpenStreetMap location picker ── #}
+            <div class="form-group mb-0">
+              <label>Localisation du projet <span class="meta" style="font-weight:500">(optionnel — cliquez sur la carte)</span></label>
+              <div class="d-flex flex-wrap align-items-center mb-2" style="gap:8px">
+                <input type="text" id="osm-search-input" class="form-control" placeholder="Rechercher une ville ou adresse…" style="flex:1;border-radius:10px">
+                <button type="button" id="osm-search-btn" class="btn btn-outline-success btn-sm" style="border-radius:10px;font-weight:700;white-space:nowrap">
+                  <i class="fa fa-search"></i> Rechercher
+                </button>
+                <button type="button" id="osm-locate-me-btn" class="btn btn-outline-secondary btn-sm" style="border-radius:10px;font-weight:700;white-space:nowrap" title="Ma position">
+                  <i class="fa fa-crosshairs"></i>
+                </button>
+              </div>
+              <div id="osm-map" style="height:280px;border-radius:14px;border:2px solid rgba(15,118,110,0.2);overflow:hidden;cursor:crosshair"></div>
+              <div id="osm-location-label" class="meta mt-1" style="font-weight:600;color:#0f766e;min-height:18px">
+                <i class="fa fa-map-marker" style="margin-right:4px"></i><span id="osm-label-text">Cliquez sur la carte pour choisir un emplacement</span>
+              </div>
+              <input type="hidden" name="latitude"  id="project-latitude"  value="">
+              <input type="hidden" name="longitude" id="project-longitude" value="">
             </div>
           </div>
           <div class="modal-footer" style="border-top: 1px solid rgba(15,118,110,0.1);">
@@ -459,9 +539,9 @@
 
   <div class="modal fade" id="manageMyProjectsModal" tabindex="-1" role="dialog" aria-labelledby="manageMyProjectsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
-      <div class="modal-content" style="border-radius: 18px; border: 1px solid rgba(15, 118, 110, 0.14); box-shadow: 0 15px 35px rgba(0,0,0,0.12);">
-        <div class="modal-header" style="border-bottom: 1px solid rgba(15,118,110,0.1);">
-          <h5 class="modal-title" id="manageMyProjectsModalLabel" style="font-weight: 800; color: #0f766e;">Gérer mes projets</h5>
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title mb-0" id="manageMyProjectsModalLabel">Gérer mes projets</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -470,52 +550,133 @@
           <div id="manage-projects-list"{% if openEditProjectPanel %} style="display:none"{% endif %}>
             {% if myProjects is empty %}
               <p class="text-muted mb-0" style="font-weight:600">Vous n’avez pas encore de projet. Utilisez <strong>Ajouter un projet</strong> pour en créer un.</p>
-            {% endif %}
+            {% else %}
+            <div class="inv-manage-stack">
             {% for p in myProjects %}
-              <div class="manage-project-row d-flex align-items-center flex-wrap" style="gap:10px">
-                {% if p.imagePath %}
-                  <img class="thumb-xs" src="{{ asset(p.imagePath) }}" alt="">
-                {% endif %}
-                <div style="flex:1;min-width:160px">
-                  <div style="font-weight:900">{{ p.title }}</div>
-                  <div class="meta">{{ p.category ?? 'Sans catégorie' }}</div>
-                </div>
-                <div class="d-flex flex-wrap" style="gap:8px">
-                  <button type="button" class="btn btn-success btn-sm js-open-edit-project" style="border-radius:10px;font-weight:800"
-                    data-project-id="{{ p.id }}">Modifier</button>
-                  <form method="post" action="{{ path('investissement_project_delete', { id: p.id }) }}" class="d-inline"
-                    onsubmit="return confirm('Supprimer ce projet et ses investissements ?');">
-                    <input type="hidden" name="_token" value="{{ csrf_token('delete_project_' ~ p.id) }}">
-                    <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius:10px;font-weight:800">Supprimer</button>
-                  </form>
-                </div>
-              </div>
+              {% set g = p.goalAmount|default('0')|replace({',': '.'}) + 0 %}
+              {% set cu = p.currentAmount|default('0')|replace({',': '.'}) + 0 %}
+              {% set pctFund = (g > 0) ? ((cu / g) * 100) : 0 %}
+              {% if pctFund > 100 %}{% set pctFund = 100 %}{% endif %}
+              {% set dr = dailyRevenueUi[p.id]|default({}) %}
               {% set pend = pendingByProject[p.id] ?? [] %}
-              {% if pend is not empty %}
-                <div class="mt-2 pt-2" style="border-top:1px dashed rgba(15,118,110,0.2);">
-                  <div class="meta mb-2" style="font-weight:800;color:#0f766e">Demandes d’investissement en attente</div>
-                  {% for inv in pend %}
-                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-2 p-2" style="background:rgba(16,185,129,0.06);border-radius:10px;gap:8px">
-                      <div style="min-width:200px">
-                        <strong>{{ inv.user.email }}</strong>
-                        <div class="meta">{{ inv.amount }} — demandé le {{ inv.investmentDate|date('d/m/Y H:i') }}</div>
-                      </div>
-                      <div class="d-flex flex-wrap" style="gap:6px">
-                        <form method="post" action="{{ path('investissement_demande_accepter', { id: inv.id }) }}" class="d-inline">
-                          <input type="hidden" name="_token" value="{{ csrf_token('invest_demande_owner_' ~ inv.id) }}">
-                          <button type="submit" class="btn btn-success btn-sm" style="border-radius:8px;font-weight:800">Accepter</button>
-                        </form>
-                        <form method="post" action="{{ path('investissement_demande_refuser', { id: inv.id }) }}" class="d-inline"
-                          onsubmit="return confirm('Refuser cette demande ?');">
-                          <input type="hidden" name="_token" value="{{ csrf_token('invest_demande_owner_' ~ inv.id) }}">
-                          <button type="submit" class="btn btn-outline-secondary btn-sm" style="border-radius:8px;font-weight:700">Refuser</button>
-                        </form>
+
+              <article class="inv-manage-card">
+                <div class="inv-manage-card__top">
+                  <div class="inv-manage-card__identity">
+                    <div class="inv-thumb-wrap">
+                      {% if p.imagePath %}
+                        <img src="{{ asset(p.imagePath) }}" alt="">
+                      {% else %}
+                        <i class="fa fa-briefcase" aria-hidden="true"></i>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <h3 class="inv-manage-card__title">{{ p.title }}</h3>
+                      <div class="inv-pill-row">
+                        <span class="inv-pill inv-pill--cat"><i class="fa fa-tag" aria-hidden="true"></i> {{ p.category ?? 'Sans catégorie' }}</span>
+                        {% if pctFund >= 100 %}
+                          <span class="inv-pill inv-pill--ok"><i class="fa fa-check-circle" aria-hidden="true"></i> Objectif atteint</span>
+                        {% else %}
+                          <span class="inv-pill inv-pill--wait"><i class="fa fa-clock-o" aria-hidden="true"></i> En financement</span>
+                        {% endif %}
                       </div>
                     </div>
-                  {% endfor %}
+                  </div>
+                  <div class="inv-manage-card__actions">
+                    <button type="button" class="btn btn-success btn-sm js-open-edit-project" data-project-id="{{ p.id }}">
+                      <i class="fa fa-pencil" aria-hidden="true"></i> Modifier
+                    </button>
+                    <form method="post" action="{{ path('investissement_project_delete', { id: p.id }) }}" class="d-inline"
+                      onsubmit="return confirm('Supprimer ce projet et ses investissements ?');">
+                      <input type="hidden" name="_token" value="{{ csrf_token('delete_project_' ~ p.id) }}">
+                      <button type="submit" class="btn btn-outline-danger btn-sm"><i class="fa fa-trash" aria-hidden="true"></i> Supprimer</button>
+                    </form>
+                  </div>
                 </div>
-              {% endif %}
+
+                {% if pend is not empty %}
+                  <div class="inv-pending-wrap">
+                    <div class="inv-section-label">Demandes en attente</div>
+                    {% for inv in pend %}
+                      <div class="inv-pending-row">
+                        <div style="min-width:200px">
+                          <strong>{{ inv.user.email }}</strong>
+                          <div class="meta">{{ inv.amount }} — {{ inv.investmentDate|date('d/m/Y H:i') }}</div>
+                          {% if inv.revenuePercentage is not null %}
+                            <div class="meta" style="color:#0f766e;font-weight:700">Revenu souhaité : {{ inv.revenuePercentage }}%</div>
+                          {% endif %}
+                        </div>
+                        <div class="d-flex flex-wrap" style="gap:6px">
+                          <form method="post" action="{{ path('investissement_demande_accepter', { id: inv.id }) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('invest_demande_owner_' ~ inv.id) }}">
+                            <button type="submit" class="btn btn-success btn-sm" style="border-radius:8px;font-weight:800"><i class="fa fa-check" aria-hidden="true"></i> Accepter</button>
+                          </form>
+                          <form method="post" action="{{ path('investissement_demande_refuser', { id: inv.id }) }}" class="d-inline"
+                            onsubmit="return confirm('Refuser cette demande ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('invest_demande_owner_' ~ inv.id) }}">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm" style="border-radius:8px;font-weight:700">Refuser</button>
+                          </form>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                <div class="inv-block inv-block--fund">
+                  <div class="inv-block__head">
+                    <div class="inv-block__head-left"><i class="fa fa-line-chart" aria-hidden="true"></i> Financement</div>
+                    <span class="inv-fund-pct">{{ pctFund|round }}%</span>
+                  </div>
+                  <div class="inv-progress-track" aria-hidden="true">
+                    <div class="inv-progress-fill" style="width: {{ pctFund }}%"></div>
+                  </div>
+                  <div class="inv-fund-nums">{{ cu|number_format(2, ',', ' ') }} collectés · objectif {{ g|number_format(2, ',', ' ') }}</div>
+                </div>
+
+                <div class="inv-block inv-block--rev">
+                  <div class="inv-block__head">
+                    <div class="inv-block__head-left"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> Revenus quotidiens</div>
+                  </div>
+
+                  {% if dr.funded is not defined or not dr.funded %}
+                    <div class="inv-rev-locked">
+                      <i class="fa fa-lock" aria-hidden="true"></i>
+                      <p>{{ dr.message|default('Les revenus quotidiens sont débloqués lorsque la collecte atteint 100 % de l’objectif.') }}</p>
+                    </div>
+                  {% elseif dr.show_form is defined and dr.show_form %}
+                    {% if dr.message is defined and dr.message %}
+                      <div class="inv-callout">
+                        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                        <p>{{ dr.message }}</p>
+                      </div>
+                    {% endif %}
+                    <p class="inv-rev-intro">
+                      Saisie pour le <strong>{{ dr.next_label|default('—') }}</strong> — un jour calendaire à la fois (gain, zéro ou perte).
+                    </p>
+                    <div class="inv-rev-form-box">
+                      <div class="inv-date-badge"><i class="fa fa-clock-o" aria-hidden="true"></i> Jour concerné : {{ dr.next_label|default('—') }}</div>
+                      <form method="post" action="{{ path('investissement_daily_revenue', { id: p.id }) }}" class="inv-rev-form-row">
+                        <input type="hidden" name="_token" value="{{ csrf_token('daily_revenue_' ~ p.id) }}">
+                        <div class="form-group mb-0">
+                          <label class="d-block text-uppercase" style="font-size:0.68rem;font-weight:800;letter-spacing:0.06em;color:#6b7280;margin-bottom:0.35rem" for="rev-amt-{{ p.id }}">Montant</label>
+                          <input type="text" class="form-control" id="rev-amt-{{ p.id }}" name="amount" inputmode="decimal" required placeholder="ex. −120 ou 450">
+                        </div>
+                        <div class="form-group mb-0">
+                          <button type="submit" class="btn btn-success inv-btn-submit-day"><i class="fa fa-save" aria-hidden="true"></i> Enregistrer ce jour</button>
+                        </div>
+                      </form>
+                    </div>
+                  {% else %}
+                    <div class="inv-rev-scheduled">
+                      <i class="fa fa-info-circle" style="margin-right:0.35rem" aria-hidden="true"></i>
+                      {{ dr.message|default('Prochaine saisie à la date indiquée.') }}
+                    </div>
+                  {% endif %}
+                </div>
+              </article>
             {% endfor %}
+            </div>
+            {% endif %}
           </div>
 
           <div id="manage-projects-edit"{% if not openEditProjectPanel %} style="display:none"{% endif %}>
@@ -543,6 +704,7 @@
                   <label for="{{ editProjectForm.goalAmount.vars.id }}">{{ editProjectForm.goalAmount.vars.label }}</label>
                   {{ form_widget(editProjectForm.goalAmount, {'attr': {'class': 'form-control'}}) }}
                   <div class="small-error">{{ form_errors(editProjectForm.goalAmount) }}</div>
+                  <div id="edit-goal-fx-equiv" class="small mt-1 mb-0" style="font-weight:700;color:#0f766e;min-height:20px"></div>
                 </div>
                 <div class="form-group col-md-6">
                   <label for="{{ editProjectForm.deadline.vars.id }}">{{ editProjectForm.deadline.vars.label }}</label>
@@ -557,16 +719,76 @@
                 <div class="small-error">{{ form_errors(editProjectForm.category) }}</div>
               </div>
 
-              <div id="edit-project-image-preview-wrap" class="form-group mb-0" style="display:none">
+              {# ── Unsplash image picker (edit) ── #}
+              <div id="edit-project-image-preview-wrap" class="form-group" style="display:none">
                 <div class="meta mb-1">Image actuelle</div>
-                <img id="edit-project-image-preview" src="" alt="" class="rounded" style="max-height:140px;max-width:100%;object-fit:cover;border:1px solid rgba(15,118,110,0.15)">
+                <img id="edit-project-image-preview" src="" alt="" class="rounded" style="max-height:120px;max-width:100%;object-fit:cover;border:1px solid rgba(15,118,110,0.15)">
               </div>
 
               <div class="form-group">
-                <label for="{{ editProjectForm.image.vars.id }}">{{ editProjectForm.image.vars.label }}</label>
-                {{ form_widget(editProjectForm.image, {'attr': {'class': 'form-control-file'}}) }}
+                <label>Image du projet</label>
+                <div class="d-flex flex-wrap align-items-center mb-2" style="gap:8px">
+                  <input type="text" id="edit-unsplash-query" class="form-control" placeholder="Rechercher une image Unsplash…" style="flex:1;border-radius:10px">
+                  <button type="button" id="edit-unsplash-search-btn" class="btn btn-outline-success btn-sm" style="border-radius:10px;font-weight:700;white-space:nowrap">
+                    <i class="fa fa-search"></i> Chercher
+                  </button>
+                </div>
+                <div id="edit-unsplash-results" class="d-flex flex-wrap mb-2" style="gap:8px;min-height:0"></div>
+                <div id="edit-unsplash-selected-wrap" style="display:none;margin-bottom:8px">
+                  <img id="edit-unsplash-selected-preview" src="" alt="" style="max-height:100px;border-radius:10px;border:2px solid #0f766e;object-fit:cover">
+                  <div id="edit-unsplash-selected-credit" class="meta mt-1" style="font-size:0.78rem"></div>
+                  <input type="hidden" name="unsplash_image_url" id="edit-unsplash-image-url-input" value="">
+                </div>
+                <div class="meta mb-1" style="font-weight:600">— ou téléversez une nouvelle image —</div>
+                {{ form_widget(editProjectForm.image, {'attr': {'class': 'form-control-file', 'id': 'edit-image-file'}}) }}
                 <small class="form-text text-muted">{{ editProjectForm.image.vars.help }}</small>
                 <div class="small-error">{{ form_errors(editProjectForm.image) }}</div>
+              </div>
+
+              {# ── Exchange rate converter (edit) ── #}
+              <div class="form-group">
+                <label>Convertisseur de devises <span class="meta" style="font-weight:500">(optionnel)</span></label>
+                <div class="d-flex flex-wrap align-items-center" style="gap:8px">
+                  <select id="edit-exchange-currency" class="form-control" style="max-width:120px;border-radius:10px;font-weight:600">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="TND" selected>TND</option>
+                    <option value="MAD">MAD</option>
+                    <option value="DZD">DZD</option>
+                    <option value="SAR">SAR</option>
+                    <option value="AED">AED</option>
+                    <option value="CAD">CAD</option>
+                    <option value="CHF">CHF</option>
+                    <option value="JPY">JPY</option>
+                    <option value="CNY">CNY</option>
+                  </select>
+                  <button type="button" id="edit-exchange-btn" class="btn btn-outline-success btn-sm" style="border-radius:10px;font-weight:700;white-space:nowrap">
+                    <i class="fa fa-refresh"></i> Convertir
+                  </button>
+                  <span id="edit-exchange-result" class="meta" style="font-weight:700;color:#0f766e"></span>
+                </div>
+                <small class="form-text text-muted">Affiche l'équivalent de l'objectif dans la devise choisie.</small>
+              </div>
+
+              {# ── OpenStreetMap location picker (edit) ── #}
+              <div class="form-group">
+                <label>Localisation du projet <span class="meta" style="font-weight:500">(optionnel — cliquez sur la carte)</span></label>
+                <div class="d-flex flex-wrap align-items-center mb-2" style="gap:8px">
+                  <input type="text" id="edit-osm-search-input" class="form-control" placeholder="Rechercher une ville ou adresse…" style="flex:1;border-radius:10px">
+                  <button type="button" id="edit-osm-search-btn" class="btn btn-outline-success btn-sm" style="border-radius:10px;font-weight:700;white-space:nowrap">
+                    <i class="fa fa-search"></i> Rechercher
+                  </button>
+                  <button type="button" id="edit-osm-locate-me-btn" class="btn btn-outline-secondary btn-sm" style="border-radius:10px;font-weight:700;white-space:nowrap" title="Ma position">
+                    <i class="fa fa-crosshairs"></i>
+                  </button>
+                </div>
+                <div id="edit-osm-map" style="height:260px;border-radius:14px;border:2px solid rgba(15,118,110,0.2);overflow:hidden;cursor:crosshair"></div>
+                <div class="meta mt-1" style="font-weight:600;color:#0f766e;min-height:18px">
+                  <i class="fa fa-map-marker" style="margin-right:4px"></i><span id="edit-osm-label-text">Cliquez sur la carte pour choisir un emplacement</span>
+                </div>
+                <input type="hidden" name="latitude"  id="edit-project-latitude"  value="">
+                <input type="hidden" name="longitude" id="edit-project-longitude" value="">
               </div>
 
               <div class="d-flex flex-wrap mt-3" style="gap:10px">
@@ -591,11 +813,29 @@
         </div>
         <form id="invest-form" method="post" action="">
           <div class="modal-body">
-            <p class="text-muted" style="font-weight:600">Projet : <strong id="invest-modal-project-title" style="color:#111827"></strong></p>
-            <p class="small text-muted" style="font-weight:600">Le propriétaire devra accepter la demande. Aucun débit avant acceptation.</p>
+            <p class="text-muted mb-1" style="font-weight:700;color:#111827">Projet : <strong id="invest-modal-project-title"></strong></p>
+            <p class="inv-modal-disclaimer mb-3">Vous adressez une <strong>demande</strong> au porteur de projet. Il peut l’accepter ou la refuser. Aucun engagement de votre part tant que la demande n’est pas acceptée.</p>
             <div class="form-group">
-              <label for="invest-amount">Montant souhaité</label>
-              <input type="text" class="form-control" id="invest-amount" name="amount" inputmode="decimal" placeholder="0.00" required autocomplete="off">
+              <label for="invest-amount">Montant de la participation (TND)</label>
+              <input type="text" class="form-control" id="invest-amount" name="amount" inputmode="decimal" placeholder="0,00" required autocomplete="off" aria-describedby="invest-amount-help">
+              <small id="invest-amount-help" class="form-text text-muted" style="font-weight:500">Dinar tunisien — montant que vous proposez d’engager si la demande est acceptée.</small>
+            </div>
+            <div class="form-group mb-0">
+              <label for="invest-revenue-pct">Part des revenus souhaitée <span class="text-muted" style="font-weight:500;font-size:0.85rem">(optionnel)</span></label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="invest-revenue-pct" name="revenue_percentage"
+                  min="0" max="100" step="0.01" placeholder="ex. 5,00" autocomplete="off" aria-describedby="invest-rev-help">
+                <div class="input-group-append">
+                  <span class="input-group-text" style="font-weight:700;background:rgba(15,118,110,0.08);border-color:#ced4da;color:#0f766e">%</span>
+                </div>
+              </div>
+              <small id="invest-rev-help" class="form-text text-muted" style="font-weight:500">Pourcentage des revenus récurrents du projet que vous demandez en contrepartie, tel que pourra le valider le porteur.</small>
+            </div>
+            <div id="invest-revenue-hint-wrap" class="mb-0 mt-3 inv-pro-hint" style="display:none;border-radius:12px;padding:14px 16px;">
+              <div class="meta mb-2" style="font-weight:800;color:#0f766e;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.04em">Aide au paramétrage (indicatif)</div>
+              <div id="invest-revenue-hint-range" class="small mb-0" style="font-weight:700;color:#111827;line-height:1.45"></div>
+              <div id="invest-revenue-hint-explain" class="small mt-2 mb-0" style="font-weight:600;color:#4b5563;line-height:1.45"></div>
+              <p class="inv-hint-foot">Fourchette calculée selon la taille de votre participation par rapport à l’objectif du projet ; la phrase complète une lecture métier simple. Ceci ne remplace pas une discussion avec le porteur.</p>
             </div>
             <input type="hidden" name="_token" value="{{ csrf_token('investissement_invest') }}">
           </div>
@@ -609,7 +849,9 @@
   </div>
 
   <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/assets/js/auth-guard.js') }}"></script>
   <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js" crossorigin=""></script>
   <script>function toggleForums(e){e.preventDefault();var b=e.currentTarget;var s=b.nextElementSibling;var a=b.querySelector('.f-arrow');s.classList.toggle('show');a.classList.toggle('open');b.classList.toggle('active');}</script>
   <script>
     window.FINOVATE_MY_PROJECTS = {{ myProjectsDataJson|raw }};
@@ -618,6 +860,8 @@
     $(function () {
       var investPathTpl = "{{ path('investissement_invest', { id: 999999 }) }}";
       var editPathTpl = "{{ path('investissement_project_edit', { id: 999999 }) }}";
+      var revenueHintUrl = "{{ path('investissement_api_revenue_hint') }}";
+      var investApiCsrf = '{{ csrf_token('invest_api') }}';
 
       function finovateFindProject(id) {
         var list = window.FINOVATE_MY_PROJECTS || [];
@@ -659,16 +903,79 @@
         } else {
           $wrap.hide();
         }
+        // Reset Unsplash selection
+        $('#edit-unsplash-image-url-input').val('');
+        $('#edit-unsplash-selected-wrap').hide();
+        $('#edit-unsplash-results').empty();
+        $('#edit-unsplash-query').val('');
+        // Reset exchange
+        $('#edit-exchange-result').text('');
+        // Set existing coordinates on the map
+        var lat = d.latitude ? parseFloat(d.latitude) : null;
+        var lng = d.longitude ? parseFloat(d.longitude) : null;
+        $('#edit-project-latitude').val(lat || '');
+        $('#edit-project-longitude').val(lng || '');
+        window._editProjectInitCoords = (lat && lng) ? { lat: lat, lng: lng } : null;
+        setTimeout(function () {
+          $f.find('[name="edit_project_request[goalAmount]"]').trigger('input');
+        }, 0);
+      }
+
+      var investModalProjectId = null;
+      var investRevenueHintTimer = null;
+
+      function hideInvestRevenueHint() {
+        $('#invest-revenue-hint-wrap').hide();
+        $('#invest-revenue-hint-range').text('');
+        $('#invest-revenue-hint-explain').text('');
+      }
+
+      function scheduleInvestRevenueHint() {
+        clearTimeout(investRevenueHintTimer);
+        investRevenueHintTimer = setTimeout(function () {
+          var pid = investModalProjectId;
+          var amtRaw = String($('#invest-amount').val() || '').replace(',', '.').trim();
+          var amt = parseFloat(amtRaw);
+          if (!pid || !amt || amt <= 0) {
+            hideInvestRevenueHint();
+            return;
+          }
+          $.post(revenueHintUrl, {
+            project_id: pid,
+            amount: amtRaw,
+            _token: investApiCsrf
+          }).done(function (d) {
+            if (d.min === undefined || d.max === undefined) {
+              hideInvestRevenueHint();
+              return;
+            }
+            $('#invest-revenue-hint-range').html(
+              '<span style="display:block;margin-bottom:4px">Fourchette indicative sur la part des revenus : <strong>' +
+                Number(d.min).toFixed(1) + ' %</strong> à <strong>' + Number(d.max).toFixed(1) +
+                ' %</strong>.</span><span style="color:#4b5563;font-weight:600">Profil : ' +
+                (d.label || '—') + '.</span>'
+            );
+            $('#invest-revenue-hint-explain').text(d.explanation ? d.explanation : '');
+            $('#invest-revenue-hint-wrap').show();
+          }).fail(function () {
+            hideInvestRevenueHint();
+          });
+        }, 420);
       }
 
       $('#investModal').on('show.bs.modal', function (event) {
         var btn = $(event.relatedTarget);
         var id = btn.data('project-id');
         var title = btn.data('project-title');
+        investModalProjectId = id ? parseInt(String(id), 10) : null;
         $(this).find('#invest-modal-project-title').text(title);
         $(this).find('#invest-form').attr('action', investPathTpl.replace('999999', String(id)));
         $(this).find('#invest-amount').val('');
+        $(this).find('#invest-revenue-pct').val('');
+        hideInvestRevenueHint();
       });
+
+      $('#invest-amount').on('input', scheduleInvestRevenueHint);
 
       $(document).on('click', '.js-open-edit-project', function () {
         var id = $(this).data('project-id');
@@ -725,6 +1032,606 @@
         }, 450);
       });
     });
+  </script>
+
+  <script>
+  /* ── Unsplash image picker ── */
+  (function () {    var selectedUrl = '';
+
+    function renderUnsplashResults(results) {
+      var $wrap = $('#unsplash-results');
+      $wrap.empty();
+      if (!results.length) {
+        $wrap.html('<span class="meta">Aucun résultat.</span>');
+        return;
+      }
+      results.forEach(function (photo) {
+        var $img = $('<img>')
+          .attr('src', photo.thumb)
+          .attr('alt', photo.alt || '')
+          .attr('title', 'Photo par ' + photo.user + ' sur Unsplash')
+          .css({
+            width: '80px', height: '60px', objectFit: 'cover',
+            borderRadius: '8px', cursor: 'pointer',
+            border: '2px solid transparent', transition: 'border-color .15s'
+          })
+          .on('click', function () {
+            selectedUrl = photo.full;
+            $('#unsplash-image-url-input').val(photo.full);
+            $('#unsplash-selected-preview').attr('src', photo.full);
+            $('#unsplash-selected-credit').html(
+              'Photo par <a href="' + photo.link + '" target="_blank" rel="noopener">' + photo.user + '</a> sur Unsplash'
+            );
+            $('#unsplash-selected-wrap').show();
+            // Clear file input when Unsplash image is chosen
+            $('#create-image-file').val('');
+            $wrap.find('img').css('border-color', 'transparent');
+            $(this).css('border-color', '#0f766e');
+          });
+        $wrap.append($img);
+      });
+    }
+
+    $('#unsplash-search-btn').on('click', function () {
+      var q = $('#unsplash-query').val().trim();
+      if (!q) return;
+      var $btn = $(this);
+      $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+      $.get('/api/proxy/unsplash', { query: q })
+        .done(function (data) { renderUnsplashResults(data.results || []); })
+        .fail(function () { $('#unsplash-results').html('<span class="meta text-danger">Erreur Unsplash.</span>'); })
+        .always(function () { $btn.prop('disabled', false).html('<i class="fa fa-search"></i> Chercher'); });
+    });
+
+    $('#unsplash-query').on('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); $('#unsplash-search-btn').trigger('click'); }
+    });
+
+    // Auto-search when title is filled
+    var unsplashAutoTimer;
+    $(document).on('input', '#' + '{{ createForm.title.vars.id }}', function () {
+      clearTimeout(unsplashAutoTimer);
+      var val = $(this).val().trim();
+      if (val.length < 3) return;
+      unsplashAutoTimer = setTimeout(function () {
+        $('#unsplash-query').val(val);
+        $('#unsplash-search-btn').trigger('click');
+      }, 800);
+    });
+
+    // Clear Unsplash selection when file is chosen
+    $('#create-image-file').on('change', function () {
+      if ($(this).val()) {
+        selectedUrl = '';
+        $('#unsplash-image-url-input').val('');
+        $('#unsplash-selected-wrap').hide();
+        $('#unsplash-results img').css('border-color', 'transparent');
+      }
+    });
+
+    // Reset on modal close
+    $('#addProjectModal').on('hidden.bs.modal', function () {
+      selectedUrl = '';
+      $('#unsplash-image-url-input').val('');
+      $('#unsplash-selected-wrap').hide();
+      $('#unsplash-results').empty();
+      $('#unsplash-query').val('');
+    });
+  })();
+
+  /* ── Exchange rate converter ── */
+  (function () {
+    var ratesCache = {};
+
+    function convert() {
+      var goalRaw = $('#{{ createForm.goalAmount.vars.id }}').val().replace(',', '.');
+      var goal = parseFloat(goalRaw);
+      var currency = $('#exchange-currency').val();
+      var $result = $('#exchange-result');
+
+      if (!goal || goal <= 0) {
+        $result.text('Entrez d\'abord un objectif.');
+        return;
+      }
+
+      if (ratesCache[currency] !== undefined) {
+        var converted = (goal * ratesCache[currency]).toFixed(2);
+        $result.text(goal.toFixed(2) + ' TND ≈ ' + converted + ' ' + currency);
+        return;
+      }
+
+      var $btn = $('#exchange-btn');
+      $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+      $.get('/api/proxy/exchange', { base: 'TND' })
+        .done(function (data) {
+          ratesCache = data.rates || {};
+          var rate = ratesCache[currency];
+          if (rate) {
+            var converted = (goal * rate).toFixed(2);
+            $result.text(goal.toFixed(2) + ' TND ≈ ' + converted + ' ' + currency);
+          } else {
+            $result.text('Devise non disponible.');
+          }
+        })
+        .fail(function () { $result.text('Erreur de conversion.'); })
+        .always(function () { $btn.prop('disabled', false).html('<i class="fa fa-refresh"></i> Convertir'); });
+    }
+
+    $('#exchange-btn').on('click', convert);
+    $('#exchange-currency').on('change', function () { if ($('#exchange-result').text()) convert(); });
+  })();
+
+  /* ── Objectif création / édition : aperçu EUR · USD (taux indicatifs) ── */
+  (function () {
+    var invFxCache = null;
+    var deb;
+
+    function ensureFx(cb) {
+      if (invFxCache) {
+        cb(invFxCache);
+        return;
+      }
+      $.getJSON("{{ path('investissement_api_fx_preview') }}").done(function (d) {
+        if (d.ok && d.rates) {
+          invFxCache = d.rates;
+          cb(invFxCache);
+        }
+      });
+    }
+
+    function fillEquiv($out, goal) {
+      if (!goal || goal <= 0) {
+        $out.text('');
+        return;
+      }
+      ensureFx(function (r) {
+        var e = (goal * r.EUR).toFixed(2);
+        var u = (goal * r.USD).toFixed(2);
+        $out.text('À titre indicatif · objectif ≈ ' + e + ' EUR · ' + u + ' USD (taux du jour).');
+      });
+    }
+
+    $('#{{ createForm.goalAmount.vars.id }}').on('input', function () {
+      clearTimeout(deb);
+      deb = setTimeout(function () {
+        var goal = parseFloat(String($('#{{ createForm.goalAmount.vars.id }}').val()).replace(',', '.'));
+        fillEquiv($('#create-goal-fx-equiv'), goal);
+      }, 400);
+    });
+
+    $('#{{ editProjectForm.goalAmount.vars.id }}').on('input', function () {
+      clearTimeout(deb);
+      deb = setTimeout(function () {
+        var goal = parseFloat(String($('#{{ editProjectForm.goalAmount.vars.id }}').val()).replace(',', '.'));
+        fillEquiv($('#edit-goal-fx-equiv'), goal);
+      }, 400);
+    });
+
+    $('#addProjectModal').on('shown.bs.modal', function () {
+      var goal = parseFloat(String($('#{{ createForm.goalAmount.vars.id }}').val()).replace(',', '.'));
+      fillEquiv($('#create-goal-fx-equiv'), goal);
+    });
+  })();
+
+  /* ── Cartes projet : équivalents devise + points clés IA ── */
+  (function () {
+    var fxUrl = "{{ path('investissement_api_fx_preview') }}";
+    var insightsTpl = "{{ path('investissement_api_project_insights', { id: 999999 }) }}";
+
+    function refreshProjectCardsFx() {
+      $.getJSON(fxUrl).done(function (d) {
+        if (!d.ok || !d.rates) {
+          $('.inv-card-fx').addClass('inv-card-fx-box--muted');
+          $('.inv-card-fx-text').html(
+            'Équivalents EUR/USD non disponibles pour le moment <span style="opacity:.85">(service de change ou réseau)</span>. ' +
+              '<strong>Les montants TND ci-dessus font foi.</strong>'
+          );
+          return;
+        }
+        var r = d.rates;
+        $('.inv-card-fx').removeClass('inv-card-fx-box--muted');
+        $('.inv-card-fx').each(function () {
+          var $w = $(this);
+          var g = parseFloat($w.data('tnd-goal')) || 0;
+          var c = parseFloat($w.data('tnd-current')) || 0;
+          var ge = (g * r.EUR).toFixed(2);
+          var gu = (g * r.USD).toFixed(2);
+          var ce = (c * r.EUR).toFixed(2);
+          var cu = (c * r.USD).toFixed(2);
+          $w.find('.inv-card-fx-text').html(
+            'À titre indicatif · objectif ≈ <strong>' + ge + '</strong> EUR · <strong>' + gu +
+              '</strong> USD · collecté ≈ <strong>' + ce + '</strong> EUR · <strong>' + cu + '</strong> USD'
+          );
+        });
+      }).fail(function () {
+        $('.inv-card-fx').addClass('inv-card-fx-box--muted');
+        $('.inv-card-fx-text').html(
+          'Impossible de joindre le service de conversion. Vérifiez la connexion. <strong>Référence : montants en TND.</strong>'
+        );
+      });
+    }
+
+    $(refreshProjectCardsFx);
+
+    $(document).on('click', '.inv-ia-load', function (e) {
+      e.preventDefault();
+      var $block = $(this).closest('.inv-card-ia');
+      var pid = $block.data('project-id');
+      var $list = $block.find('.inv-ia-list');
+      var $foot = $block.find('.inv-ia-foot');
+      var $btn = $(this);
+      var defaultLabel = 'Afficher une synthèse risques / points clés';
+      if ($list.is(':visible') && $list.children().length) {
+        $list.slideUp(120);
+        $foot.slideUp(80);
+        $btn.text(defaultLabel);
+        return;
+      }
+      $btn.prop('disabled', true).text('Génération en cours…');
+      $.getJSON(insightsTpl.replace('999999', String(pid))).done(function (res) {
+        $list.empty();
+        (res.bullets || []).forEach(function (txt) {
+          $list.append($('<li/>').text(txt));
+        });
+        $list.slideDown(160);
+        $foot.slideDown(120);
+        $btn.prop('disabled', false).text('Masquer la synthèse');
+      }).fail(function () {
+        $foot.hide();
+        $list.empty().append($('<li/>').text('Service de synthèse momentanément indisponible. Réessayez plus tard ou vérifiez la configuration des clés IA.')).slideDown(160);
+        $btn.prop('disabled', false).text(defaultLabel);
+      });
+    });
+  })();
+
+  /* ── MapLibre GL — location picker (CREATE) ── */
+  (function () {
+    var map = null;
+    var marker = null;
+    var DEFAULT_LNG = 9.5375, DEFAULT_LAT = 33.8869, DEFAULT_ZOOM = 5;
+    var TILE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+    function buildStyle() {
+      return {
+        version: 8,
+        sources: { osm: { type: 'raster', tiles: [TILE], tileSize: 256, attribution: '© OpenStreetMap contributors' } },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
+      };
+    }
+
+    function initMap() {
+      if (map) return;
+      map = new maplibregl.Map({
+        container: 'osm-map',
+        style: buildStyle(),
+        center: [DEFAULT_LNG, DEFAULT_LAT],
+        zoom: DEFAULT_ZOOM,
+        attributionControl: false
+      });
+      map.addControl(new maplibregl.NavigationControl(), 'top-right');
+      map.addControl(new maplibregl.AttributionControl({ compact: true }));
+      map.on('click', function (e) {
+        placeMarker(e.lngLat.lng, e.lngLat.lat);
+        reverseGeocode(e.lngLat.lat, e.lngLat.lng);
+      });
+    }
+
+    function placeMarker(lng, lat) {
+      if (marker) {
+        marker.setLngLat([lng, lat]);
+      } else {
+        marker = new maplibregl.Marker({ draggable: true, color: '#0f766e' })
+          .setLngLat([lng, lat])
+          .addTo(map);
+        marker.on('dragend', function () {
+          var pos = marker.getLngLat();
+          setCoords(pos.lat, pos.lng);
+          reverseGeocode(pos.lat, pos.lng);
+        });
+      }
+      map.easeTo({ center: [lng, lat] });
+      setCoords(lat, lng);
+    }
+
+    function setCoords(lat, lng) {
+      $('#project-latitude').val(lat.toFixed(6));
+      $('#project-longitude').val(lng.toFixed(6));
+    }
+
+    function showLabel(text) {
+      $('#osm-label-text').text(text);
+    }
+
+    function reverseGeocode(lat, lng) {
+      showLabel('Chargement…');
+      $.get('https://nominatim.openstreetmap.org/reverse', {
+        lat: lat, lon: lng, format: 'json'
+      }).done(function (d) {
+        if (d && d.display_name) showLabel(d.display_name);
+      }).fail(function () {
+        showLabel(lat.toFixed(5) + ', ' + lng.toFixed(5));
+      });
+    }
+
+    // Search by text
+    $('#osm-search-btn').on('click', function () {
+      var q = $('#osm-search-input').val().trim();
+      if (!q) return;
+      var $btn = $(this);
+      $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+      $.get('https://nominatim.openstreetmap.org/search', {
+        q: q, format: 'json', limit: 1
+      }).done(function (results) {
+        if (!results.length) {
+          showLabel('Aucun résultat pour "' + q + '".');
+          return;
+        }
+        var r = results[0];
+        var lat = parseFloat(r.lat);
+        var lng = parseFloat(r.lon);
+        map.flyTo({ center: [lng, lat], zoom: 13, speed: 1.4 });
+        placeMarker(lng, lat);
+        showLabel(r.display_name);
+      }).fail(function () {
+        showLabel('Erreur de géolocalisation.');
+      }).always(function () {
+        $btn.prop('disabled', false).html('<i class="fa fa-search"></i> Rechercher');
+      });
+    });
+
+    $('#osm-search-input').on('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); $('#osm-search-btn').trigger('click'); }
+    });
+
+    // Locate me
+    $('#osm-locate-me-btn').on('click', function () {
+      if (!navigator.geolocation) { alert('Géolocalisation non supportée.'); return; }
+      var $btn = $(this);
+      $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+        map.flyTo({ center: [lng, lat], zoom: 15, speed: 1.4 });
+        placeMarker(lng, lat);
+        reverseGeocode(lat, lng);
+        $btn.prop('disabled', false).html('<i class="fa fa-crosshairs"></i>');
+      }, function () {
+        alert('Impossible d\'obtenir votre position.');
+        $btn.prop('disabled', false).html('<i class="fa fa-crosshairs"></i>');
+      });
+    });
+
+    // Init map when modal opens
+    $('#addProjectModal').on('shown.bs.modal', function () {
+      initMap();
+      setTimeout(function () { if (map) map.resize(); }, 200);
+    });
+
+    // Reset on modal close
+    $('#addProjectModal').on('hidden.bs.modal', function () {
+      $('#project-latitude').val('');
+      $('#project-longitude').val('');
+      $('#osm-label-text').text('Cliquez sur la carte pour choisir un emplacement');
+      $('#osm-search-input').val('');
+      if (marker) { marker.remove(); marker = null; }
+    });
+  })();
+
+  /* ══════════════════════════════════════════
+     EDIT PROJECT — Unsplash, Exchange, OSM
+  ══════════════════════════════════════════ */
+
+  /* ── Unsplash (edit) ── */
+  (function () {
+    function renderResults(results) {
+      var $wrap = $('#edit-unsplash-results');
+      $wrap.empty();
+      if (!results.length) { $wrap.html('<span class="meta">Aucun résultat.</span>'); return; }
+      results.forEach(function (photo) {
+        $('<img>')
+          .attr('src', photo.thumb).attr('alt', photo.alt || '')
+          .attr('title', 'Photo par ' + photo.user + ' sur Unsplash')
+          .css({ width: '72px', height: '54px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: '2px solid transparent', transition: 'border-color .15s' })
+          .on('click', function () {
+            $('#edit-unsplash-image-url-input').val(photo.full);
+            $('#edit-unsplash-selected-preview').attr('src', photo.full);
+            $('#edit-unsplash-selected-credit').html('Photo par <a href="' + photo.link + '" target="_blank" rel="noopener">' + photo.user + '</a> sur Unsplash');
+            $('#edit-unsplash-selected-wrap').show();
+            $('#edit-image-file').val('');
+            $wrap.find('img').css('border-color', 'transparent');
+            $(this).css('border-color', '#0f766e');
+          })
+          .appendTo($wrap);
+      });
+    }
+
+    $('#edit-unsplash-search-btn').on('click', function () {
+      var q = $('#edit-unsplash-query').val().trim();
+      if (!q) return;
+      var $btn = $(this);
+      $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+      $.get('/api/proxy/unsplash', { query: q })
+        .done(function (data) { renderResults(data.results || []); })
+        .fail(function () { $('#edit-unsplash-results').html('<span class="meta text-danger">Erreur Unsplash.</span>'); })
+        .always(function () { $btn.prop('disabled', false).html('<i class="fa fa-search"></i> Chercher'); });
+    });
+
+    $('#edit-unsplash-query').on('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); $('#edit-unsplash-search-btn').trigger('click'); }
+    });
+
+    $('#edit-image-file').on('change', function () {
+      if ($(this).val()) {
+        $('#edit-unsplash-image-url-input').val('');
+        $('#edit-unsplash-selected-wrap').hide();
+        $('#edit-unsplash-results img').css('border-color', 'transparent');
+      }
+    });
+  })();
+
+  /* ── Exchange rate (edit) ── */
+  (function () {
+    var ratesCache = {};
+
+    function convert() {
+      var goalRaw = $('#{{ editProjectForm.goalAmount.vars.id }}').val().replace(',', '.');
+      var goal = parseFloat(goalRaw);
+      var currency = $('#edit-exchange-currency').val();
+      var $result = $('#edit-exchange-result');
+      if (!goal || goal <= 0) { $result.text('Entrez d\'abord un objectif.'); return; }
+      if (ratesCache[currency] !== undefined) {
+        $result.text(goal.toFixed(2) + ' TND ≈ ' + (goal * ratesCache[currency]).toFixed(2) + ' ' + currency);
+        return;
+      }
+      var $btn = $('#edit-exchange-btn');
+      $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+      $.get('/api/proxy/exchange', { base: 'TND' })
+        .done(function (data) {
+          ratesCache = data.rates || {};
+          var rate = ratesCache[currency];
+          $result.text(rate ? goal.toFixed(2) + ' TND ≈ ' + (goal * rate).toFixed(2) + ' ' + currency : 'Devise non disponible.');
+        })
+        .fail(function () { $result.text('Erreur de conversion.'); })
+        .always(function () { $btn.prop('disabled', false).html('<i class="fa fa-refresh"></i> Convertir'); });
+    }
+
+    $('#edit-exchange-btn').on('click', convert);
+    $('#edit-exchange-currency').on('change', function () { if ($('#edit-exchange-result').text()) convert(); });
+  })();
+
+  /* ── MapLibre GL — location picker (EDIT) ── */
+  (function () {
+    var map = null;
+    var marker = null;
+    var DEFAULT_LNG = 9.5375, DEFAULT_LAT = 33.8869, DEFAULT_ZOOM = 5;
+    var TILE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+    function buildStyle() {
+      return {
+        version: 8,
+        sources: { osm: { type: 'raster', tiles: [TILE], tileSize: 256, attribution: '© OpenStreetMap contributors' } },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
+      };
+    }
+
+    function initMap(lat, lng, zoom) {
+      if (map) {
+        map.easeTo({ center: [lng, lat], zoom: zoom || 13 });
+        return;
+      }
+      map = new maplibregl.Map({
+        container: 'edit-osm-map',
+        style: buildStyle(),
+        center: [lng || DEFAULT_LNG, lat || DEFAULT_LAT],
+        zoom: zoom || DEFAULT_ZOOM,
+        attributionControl: false
+      });
+      map.addControl(new maplibregl.NavigationControl(), 'top-right');
+      map.addControl(new maplibregl.AttributionControl({ compact: true }));
+      map.on('click', function (e) {
+        placeMarker(e.lngLat.lng, e.lngLat.lat);
+        reverseGeocode(e.lngLat.lat, e.lngLat.lng);
+      });
+    }
+
+    function placeMarker(lng, lat) {
+      if (marker) {
+        marker.setLngLat([lng, lat]);
+      } else {
+        marker = new maplibregl.Marker({ draggable: true, color: '#0f766e' })
+          .setLngLat([lng, lat])
+          .addTo(map);
+        marker.on('dragend', function () {
+          var pos = marker.getLngLat();
+          setCoords(pos.lat, pos.lng);
+          reverseGeocode(pos.lat, pos.lng);
+        });
+      }
+      map.easeTo({ center: [lng, lat] });
+      setCoords(lat, lng);
+    }
+
+    function setCoords(lat, lng) {
+      $('#edit-project-latitude').val(lat.toFixed(6));
+      $('#edit-project-longitude').val(lng.toFixed(6));
+    }
+
+    function showLabel(text) { $('#edit-osm-label-text').text(text); }
+
+    function reverseGeocode(lat, lng) {
+      showLabel('Chargement…');
+      $.get('https://nominatim.openstreetmap.org/reverse', { lat: lat, lon: lng, format: 'json' })
+        .done(function (d) { if (d && d.display_name) showLabel(d.display_name); })
+        .fail(function () { showLabel(lat.toFixed(5) + ', ' + lng.toFixed(5)); });
+    }
+
+    $('#edit-osm-search-btn').on('click', function () {
+      var q = $('#edit-osm-search-input').val().trim();
+      if (!q) return;
+      var $btn = $(this);
+      $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+      $.get('https://nominatim.openstreetmap.org/search', { q: q, format: 'json', limit: 1 })
+        .done(function (results) {
+          if (!results.length) { showLabel('Aucun résultat.'); return; }
+          var r = results[0];
+          var lat = parseFloat(r.lat), lng = parseFloat(r.lon);
+          map.flyTo({ center: [lng, lat], zoom: 13, speed: 1.4 });
+          placeMarker(lng, lat);
+          showLabel(r.display_name);
+        })
+        .fail(function () { showLabel('Erreur de géolocalisation.'); })
+        .always(function () { $btn.prop('disabled', false).html('<i class="fa fa-search"></i> Rechercher'); });
+    });
+
+    $('#edit-osm-search-input').on('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); $('#edit-osm-search-btn').trigger('click'); }
+    });
+
+    $('#edit-osm-locate-me-btn').on('click', function () {
+      if (!navigator.geolocation) { alert('Géolocalisation non supportée.'); return; }
+      var $btn = $(this);
+      $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        var lat = pos.coords.latitude, lng = pos.coords.longitude;
+        map.flyTo({ center: [lng, lat], zoom: 15, speed: 1.4 });
+        placeMarker(lng, lat);
+        reverseGeocode(lat, lng);
+        $btn.prop('disabled', false).html('<i class="fa fa-crosshairs"></i>');
+      }, function () {
+        alert('Impossible d\'obtenir votre position.');
+        $btn.prop('disabled', false).html('<i class="fa fa-crosshairs"></i>');
+      });
+    });
+
+    $(document).on('click', '.js-open-edit-project', function () {
+      setTimeout(function () {
+        var coords = window._editProjectInitCoords;
+        if (coords) {
+          initMap(coords.lat, coords.lng, 13);
+          setTimeout(function () {
+            if (map) { map.resize(); placeMarker(coords.lng, coords.lat); reverseGeocode(coords.lat, coords.lng); }
+          }, 300);
+        } else {
+          initMap(DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM);
+          setTimeout(function () { if (map) map.resize(); }, 300);
+        }
+      }, 350);
+    });
+
+    $(document).on('click', '.js-back-manage-list', function () {
+      $('#edit-project-latitude').val('');
+      $('#edit-project-longitude').val('');
+      $('#edit-osm-label-text').text('Cliquez sur la carte pour choisir un emplacement');
+      $('#edit-osm-search-input').val('');
+      if (marker) { marker.remove(); marker = null; }
+    });
+
+    $('#manageMyProjectsModal').on('shown.bs.modal', function () {
+      if (map) setTimeout(function () { map.resize(); }, 200);
+    });
+  })();
   </script>
 </body>
 

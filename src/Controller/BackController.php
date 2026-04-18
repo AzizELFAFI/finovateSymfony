@@ -20,6 +20,7 @@ use App\Form\ProductType;
 use App\Form\AdType;
 use App\Form\UserAdClickType;
 use App\Service\FileUploadService;
+use App\Service\InvestmentRevenueService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -658,7 +659,7 @@ final class BackController extends AbstractController
     }
 
     #[Route('/projects/{projectId}/investments/{id}/accept', name: 'backoffice_project_investment_accept', requirements: ['projectId' => '\\d+', 'id' => '\\d+'], methods: ['POST'])]
-    public function acceptProjectInvestment(int $projectId, int $id, Request $request, EntityManagerInterface $em): Response
+    public function acceptProjectInvestment(int $projectId, int $id, Request $request, EntityManagerInterface $em, InvestmentRevenueService $investmentRevenueService): Response
     {
         if (!$this->isCsrfTokenValid('backoffice_project_investment_accept_' . $id, (string) $request->request->get('_token'))) {
             $this->addFlash('danger', 'Échec de validation du formulaire.');
@@ -696,6 +697,7 @@ final class BackController extends AbstractController
         $inv->setStatus('CONFIRMED');
 
         $em->flush();
+        $investmentRevenueService->onInvestmentAccepted($project);
         $this->addFlash('success', 'Demande acceptée. Le montant a été débité et ajouté au projet.');
 
         return $this->redirectToRoute('backoffice_project_show', ['id' => $projectId]);

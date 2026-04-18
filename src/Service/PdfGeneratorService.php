@@ -72,4 +72,34 @@ class PdfGeneratorService
         
         return new Dompdf($options);
     }
+
+    /**
+     * @param list<array{day: string, date_label: string, daily: float, cum: float}> $dailyRows
+     * @param list<array{title: string, invested: float, earned: float, net: float, pct: string}> $positionSummaries
+     */
+    public function generateInvestorStatementPdf(
+        User $user,
+        array $dailyRows,
+        array $positionSummaries,
+        float $totalInvested,
+        float $totalEarned,
+        float $netGlobal,
+    ): string {
+        $html = $this->twig->render('pdf/investor_statement.html.twig', [
+            'user' => $user,
+            'dailyRows' => $dailyRows,
+            'positions' => $positionSummaries,
+            'totalInvested' => $totalInvested,
+            'totalEarned' => $totalEarned,
+            'netGlobal' => $netGlobal,
+            'generatedAt' => new \DateTimeImmutable(),
+        ]);
+
+        $dompdf = $this->createDompdf();
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return $dompdf->output();
+    }
 }

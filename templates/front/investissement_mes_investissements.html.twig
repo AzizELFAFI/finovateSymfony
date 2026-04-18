@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate — Mes investissements</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+  {% include 'front/partials/investissement_ui_enhancements.html.twig' %}
+
+  <style>
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      padding: 22px;
+    }
+
+    .pos-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.06);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .meta { color: rgba(0, 0, 0, 0.55); font-weight: 600; font-size: 0.85rem; }
+
+    .stat-big { font-weight: 900; font-size: 1.35rem; color: #0f172a; }
+
+    .chart-wrap {
+      position: relative;
+      height: 380px;
+      margin-top: 12px;
+    }
+
+    .win { color: #047857 !important; }
+    .loss { color: #b91c1c !important; }
+
+    .inv-dash-table-wrap {
+      border-radius: 14px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+    }
+    .inv-dash-table {
+      margin-bottom: 0;
+      font-size: 0.9rem;
+    }
+    .inv-dash-table thead th {
+      background: linear-gradient(180deg, rgba(15, 118, 110, 0.09) 0%, rgba(15, 118, 110, 0.04) 100%);
+      color: #0f766e;
+      font-weight: 800;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid rgba(15, 118, 110, 0.15);
+      white-space: nowrap;
+    }
+    .inv-dash-table tbody td {
+      vertical-align: middle;
+      font-variant-numeric: tabular-nums;
+      border-top-color: rgba(15, 118, 110, 0.08);
+    }
+    .inv-dash-table tbody tr:hover {
+      background: rgba(16, 185, 129, 0.06);
+    }
+    .inv-num-pos { color: #047857; font-weight: 700; }
+    .inv-num-neg { color: #b91c1c; font-weight: 700; }
+    .inv-num-zero { color: #6b7280; font-weight: 600; }
+  </style>
+</head>
+
+<body class="inv-subpage">
+
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ app.user ? path('front_products') : path('front_products_public') }}">Produits</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
+            {% if app.user %}
+              <li class="nav-item active"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_login') }}">Connexion</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Mes investissements</h1>
+          <span>Parts de revenus, résultat net et évolution cumulée</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-shell">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 mb-4">
+          <div class="sidebar">
+            <div class="title">Investissement</div>
+            <a href="{{ path('investissement_index') }}">Projets</a>
+            <a href="{{ path('investissement_mes_demandes') }}">Mes demandes</a>
+            <a href="{{ path('investissement_mes_investissements') }}" class="active">Mes investissements</a>
+          </div>
+        </div>
+
+        <div class="col-lg-9">
+          {% for label, messages in app.flashes %}
+            {% for message in messages %}
+              <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+            {% endfor %}
+          {% endfor %}
+
+          <div class="card-shell mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:12px">
+              <div>
+                <h4 style="font-weight:900;margin:0">Synthèse</h4>
+                <div class="meta">Vue consolidée après acceptation des demandes par les porteurs de projet</div>
+              </div>
+              <div class="d-flex flex-wrap align-items-center" style="gap:8px">
+                <a href="{{ path('investissement_releve_pdf') }}" class="btn btn-success" style="border-radius:12px;font-weight:800"><i class="fa fa-download mr-1"></i> Relevé PDF</a>
+                <a href="{{ path('investissement_index') }}" class="btn btn-outline-success" style="border-radius:12px;font-weight:800">Voir les projets</a>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-4 mb-3 mb-md-0">
+                <div class="meta mb-1">Total investi</div>
+                <div class="stat-big">{{ totalInvested|number_format(2, ',', ' ') }} <span class="meta" style="font-size:0.85rem">TND</span></div>
+              </div>
+              <div class="col-md-4 mb-3 mb-md-0">
+                <div class="meta mb-1">Cumul des parts de revenus</div>
+                <div class="stat-big">{{ totalEarned|number_format(2, ',', ' ') }} <span class="meta" style="font-size:0.85rem">TND</span></div>
+              </div>
+              <div class="col-md-4">
+                <div class="meta mb-1">Résultat net (revenus − investi)</div>
+                <div class="stat-big {{ netGlobal >= 0 ? 'win' : 'loss' }}">{{ netGlobal|number_format(2, ',', ' ') }} <span class="meta" style="font-size:0.85rem">TND</span></div>
+              </div>
+            </div>
+            {% if fxTotals is defined and fxTotals %}
+              <div class="inv-fx-banner mt-3">
+                <strong>Équivalents devise (indicatif)</strong> · taux utilisés au chargement de la page<br>
+                Investissements&nbsp;: ≈ {{ fxTotals.invested.eur|number_format(2, ',', ' ') }} EUR · {{ fxTotals.invested.usd|number_format(2, ',', ' ') }} USD<br>
+                Parts cumulées&nbsp;: ≈ {{ fxTotals.earned.eur|number_format(2, ',', ' ') }} EUR · {{ fxTotals.earned.usd|number_format(2, ',', ' ') }} USD<br>
+                Résultat net&nbsp;: ≈ {{ fxTotals.net.eur|number_format(2, ',', ' ') }} EUR · {{ fxTotals.net.usd|number_format(2, ',', ' ') }} USD
+                <small>Les montants en TND ci-dessus prévalent · conversion issue de cours du marché, sans valeur contractuelle.</small>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="card-shell mb-4">
+            <h5 style="font-weight:900;margin:0 0 6px 0">Revenus jour par jour</h5>
+            <div class="meta mb-3">Chaque ligne correspond à votre part des revenus saisis ce jour-là (tous projets). Le cumul inclut tous les jours précédents.</div>
+            {% if dailyRows is empty %}
+              <p class="meta mb-0">Aucune donnée pour l’instant. Dès que les porteurs de projet enregistrent des revenus quotidiens, le tableau et le graphique se rempliront.</p>
+            {% else %}
+              <div class="inv-dash-table-wrap table-responsive">
+                <table class="table inv-dash-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Date</th>
+                      <th scope="col" class="text-right">Part du jour</th>
+                      <th scope="col" class="text-right">Cumul des parts</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for r in dailyRows %}
+                      <tr>
+                        <td>{{ r.date_label }}</td>
+                        <td class="text-right {% if r.daily > 0 %}inv-num-pos{% elseif r.daily < 0 %}inv-num-neg{% else %}inv-num-zero{% endif %}">{{ r.daily|number_format(2, ',', ' ') }}</td>
+                        <td class="text-right font-weight-bold" style="color:#0f172a">{{ r.cum|number_format(2, ',', ' ') }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="card-shell mb-4">
+            <h5 style="font-weight:900;margin:0 0 6px 0">Performance — cumul &amp; parts quotidiennes</h5>
+            <div class="meta mb-2">Histogrammes : votre part chaque jour. Courbe : cumul des parts (évolution du gain). Ligne grise : total investi (référence équilibre).</div>
+            {% if chartLabels is empty %}
+              <p class="meta mb-0">Graphique disponible lorsqu’au moins un revenu est enregistré.</p>
+            {% else %}
+              <div class="chart-wrap">
+                <canvas id="investorRevChart" aria-label="Graphique performance investisseur"></canvas>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="card-shell">
+            <h5 style="font-weight:900;margin:0 0 8px 0">Détail par investissement accepté</h5>
+            <div class="meta mb-3">Le pourcentage appliqué aux revenus quotidiens est celui indiqué dans votre demande (% de revenu souhaité). S’il était vide, une répartition proportionnelle au montant investi est utilisée.</div>
+
+            {% if positions is empty %}
+              <p class="meta mb-0">Vous n’avez pas encore d’investissement accepté. Consultez <a href="{{ path('investissement_mes_demandes') }}" style="font-weight:800;color:#0f766e">Mes demandes</a> ou <a href="{{ path('investissement_index') }}" style="font-weight:800;color:#0f766e">les projets</a>.</p>
+            {% endif %}
+
+            {% for row in positions %}
+              {% set sh = row.share %}
+              {% set pr = row.project %}
+              {% set inv = row.investissement %}
+              <div class="pos-card">
+                <div class="d-flex justify-content-between flex-wrap" style="gap:8px">
+                  <div>
+                    <div style="font-weight:900;font-size:1.05rem">{{ pr ? pr.title : 'Projet' }}</div>
+                    <div class="meta mt-1">Montant investi : <strong>{{ row.invested|number_format(2, ',', ' ') }}</strong> TND</div>
+                    {% if row.fx is defined %}
+                      <div class="meta mt-1" style="font-size:0.8rem">≈ {{ row.fx.invested.eur|number_format(2, ',', ' ') }} EUR · {{ row.fx.invested.usd|number_format(2, ',', ' ') }} USD</div>
+                    {% endif %}
+                  </div>
+                  <div class="text-md-right">
+                    <div class="meta">Taux sur les revenus</div>
+                    <div style="font-weight:900;font-size:1.1rem;color:#0f766e">{{ sh.percentage|replace({',': '.'}) }}%</div>
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-sm-6">
+                    <div class="meta mb-1">Cumul de vos parts sur ce projet</div>
+                    <div style="font-weight:800;font-size:1rem">{{ row.earned|number_format(2, ',', ' ') }} <span class="meta">TND</span></div>
+                  </div>
+                  <div class="col-sm-6 mt-2 mt-sm-0">
+                    <div class="meta mb-1">Net sur cette position</div>
+                    <div style="font-weight:800;font-size:1rem" class="{{ row.net >= 0 ? 'win' : 'loss' }}">{{ row.net|number_format(2, ',', ' ') }} <span class="meta">TND</span></div>
+                  </div>
+                </div>
+                {% if row.fx is defined %}
+                  <div class="meta mt-2 mb-0" style="font-size:0.8rem;line-height:1.45;font-weight:600">
+                    Parts ≈ {{ row.fx.earned.eur|number_format(2, ',', ' ') }} EUR · {{ row.fx.earned.usd|number_format(2, ',', ' ') }} USD —
+                    net ≈ {{ row.fx.net.eur|number_format(2, ',', ' ') }} EUR · {{ row.fx.net.usd|number_format(2, ',', ' ') }} USD
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ asset('front/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('front/assets/js/auth-guard.js') }}"></script>
+  <script src="{{ asset('front/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+  {% if chartLabels is not empty %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script>
+      (function () {
+        var isoLabels = {{ chartLabels|json_encode|raw }};
+        var labels = isoLabels.map(function (iso) {
+          var p = iso.split('-');
+          return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
+        });
+        var daily = {{ chartDaily|json_encode|raw }};
+        var cum = {{ chartCumulative|json_encode|raw }};
+        var invested = {{ totalInvested|json_encode|raw }};
+        var breakEven = isoLabels.map(function () { return invested; });
+        var canvas = document.getElementById('investorRevChart');
+        var netPositive = {{ (netGlobal >= 0)|json_encode|raw }};
+        var lineCol = netPositive ? 'rgb(15, 118, 110)' : 'rgb(220, 38, 38)';
+        var grad = canvas.getContext('2d').createLinearGradient(0, 0, 0, 320);
+        grad.addColorStop(0, netPositive ? 'rgba(16, 185, 129, 0.35)' : 'rgba(248, 113, 113, 0.28)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+        function barColor(v) {
+          if (v > 0) return 'rgba(16, 185, 129, 0.65)';
+          if (v < 0) return 'rgba(239, 68, 68, 0.55)';
+          return 'rgba(156, 163, 175, 0.45)';
+        }
+
+        new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                type: 'bar',
+                label: 'Part du jour',
+                data: daily,
+                yAxisID: 'y',
+                order: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+                maxBarThickness: 44,
+                backgroundColor: daily.map(barColor),
+                borderWidth: 0
+              },
+              {
+                type: 'line',
+                label: 'Cumul des parts',
+                data: cum,
+                yAxisID: 'y1',
+                order: 1,
+                borderColor: lineCol,
+                backgroundColor: grad,
+                fill: true,
+                tension: 0.42,
+                pointRadius: 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: lineCol,
+                pointBorderWidth: 2,
+                borderWidth: 2.5
+              },
+              {
+                type: 'line',
+                label: 'Total investi (réf.)',
+                data: breakEven,
+                yAxisID: 'y1',
+                order: 0,
+                borderColor: 'rgba(107, 114, 128, 0.75)',
+                borderDash: [7, 5],
+                fill: false,
+                pointRadius: 0,
+                tension: 0,
+                borderWidth: 1.5
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: 'index' },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { maxRotation: 45, minRotation: 0, font: { size: 11 } }
+              },
+              y: {
+                position: 'left',
+                title: { display: true, text: 'Part du jour', font: { size: 11, weight: '600' } },
+                grid: { color: 'rgba(15, 118, 110, 0.06)' },
+                ticks: {
+                  callback: function (v) {
+                    return Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+                  }
+                }
+              },
+              y1: {
+                position: 'right',
+                title: { display: true, text: 'Cumul', font: { size: 11, weight: '600' } },
+                grid: { drawOnChartArea: false },
+                ticks: {
+                  callback: function (v) {
+                    return Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                  }
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { usePointStyle: true, padding: 16, font: { size: 12 } }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (c) {
+                    var val = c.parsed.y !== undefined ? c.parsed.y : c.raw;
+                    var prefix = c.dataset.label + ' : ';
+                    return prefix + Number(val).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  }
+                }
+              }
+            }
+          }
+        });
+      })();
+    </script>
+  {% endif %}
+</body>
+
+</html>

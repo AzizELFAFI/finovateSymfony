@@ -10,17 +10,32 @@ use App\Form\EditProjectRequestType;
 use App\Model\CreateProjectRequest;
 use App\Model\EditProjectRequest;
 use App\Repository\InvestissementRepository;
+use App\Repository\InvestorRevenueLogRepository;
 use App\Repository\ProjectRepository;
+use App\Repository\ProjectRevenueShareRepository;
+use App\Service\DailyRevenueService;
+use App\Service\InvestmentAiService;
+use App\Service\InvestmentFxService;
+use App\Service\InvestmentRevenueService;
+use App\Service\PdfGeneratorService;
+use App\Service\RevenuePercentAdvisorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class InvestissementController extends AbstractController
 {
+    public function __construct(
+        private readonly DailyRevenueService $dailyRevenueService,
+    ) {
+    }
+
     #[Route('/investissement', name: 'investissement_index', methods: ['GET'])]
     public function index(
         ProjectRepository $projectRepository,
@@ -79,6 +94,277 @@ final class InvestissementController extends AbstractController
         ]);
     }
 
+    #[Route('/investissement/mes-investissements', name: 'investissement_mes_investissements', methods: ['GET'])]
+    public function mesInvestissements(
+        InvestissementRepository $investissementRepository,
+        ProjectRevenueShareRepository $projectRevenueShareRepository,
+        InvestorRevenueLogRepository $investorRevenueLogRepository,
+        InvestmentRevenueService $investmentRevenueService,
+        EntityManagerInterface $em,
+        InvestmentFxService $investmentFxService,
+    ): Response {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_login');
+        }
+
+        $dash = $this->buildInvestorDashboardContext(
+            $user,
+            $investissementRepository,
+            $projectRevenueShareRepository,
+            $investorRevenueLogRepository,
+            $investmentRevenueService,
+            $em,
+        );
+
+        $rates = $investmentFxService->fetchTndRates();
+        $positions = $dash['positions'];
+        if ($rates !== null) {
+            foreach ($positions as &$row) {
+                $row['fx'] = [
+                    'invested' => $investmentFxService->convertFromTnd($row['invested'], $rates),
+                    'earned' => $investmentFxService->convertFromTnd($row['earned'], $rates),
+                    'net' => $investmentFxService->convertFromTnd($row['net'], $rates),
+                ];
+            }
+            unset($row);
+        }
+
+        return $this->render('front/investissement_mes_investissements.html.twig', [
+            'positions' => $positions,
+            'totalInvested' => $dash['totalInvested'],
+            'totalEarned' => $dash['totalEarned'],
+            'netGlobal' => $dash['netGlobal'],
+            'dailyRows' => $dash['dailyRows'],
+            'chartLabels' => $dash['chartLabels'],
+            'chartDaily' => $dash['chartDaily'],
+            'chartCumulative' => $dash['chartCumulative'],
+            'fxRates' => $rates,
+            'fxTotals' => $rates !== null ? [
+                'invested' => $investmentFxService->convertFromTnd($dash['totalInvested'], $rates),
+                'earned' => $investmentFxService->convertFromTnd($dash['totalEarned'], $rates),
+                'net' => $investmentFxService->convertFromTnd($dash['netGlobal'], $rates),
+            ] : null,
+        ]);
+    }
+
+    #[Route('/investissement/api/fx-preview', name: 'investissement_api_fx_preview', methods: ['GET'])]
+    public function apiFxPreview(InvestmentFxService $investmentFxService): JsonResponse
+    {
+        $rates = $investmentFxService->fetchTndRates();
+
+        return $this->json([
+            'ok' => $rates !== null,
+            'rates' => $rates,
+        ]);
+    }
+
+    #[Route('/investissement/api/project/{id}/insights', name: 'investissement_api_project_insights', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function apiProjectInsights(
+        int $id,
+        EntityManagerInterface $em,
+        InvestmentAiService $investmentAiService,
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $project = $em->getRepository(Project::class)->find($id);
+        if (!$project instanceof Project) {
+            return $this->json(['error' => 'Not found'], 404);
+        }
+
+        $goal = (float) str_replace(',', '.', (string) ($project->getGoalAmount() ?? '0'));
+        $current = (float) str_replace(',', '.', (string) ($project->getCurrentAmount() ?? '0'));
+        $pct = $goal > 0 ? ($current / $goal) * 100.0 : 0.0;
+        $pct = min(100.0, max(0.0, $pct));
+
+        $bullets = $investmentAiService->projectRiskBullets(
+            (string) $project->getTitle(),
+            (string) ($project->getDescription() ?? ''),
+            $goal,
+            $pct
+        );
+
+        return $this->json([
+            'bullets' => $bullets,
+            'percentFunded' => round($pct, 1),
+        ]);
+    }
+
+    #[Route('/investissement/api/revenue-hint', name: 'investissement_api_revenue_hint', methods: ['POST'])]
+    public function apiRevenueHint(
+        Request $request,
+        EntityManagerInterface $em,
+        RevenuePercentAdvisorService $revenuePercentAdvisorService,
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $token = (string) $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('invest_api', $token)) {
+            return $this->json(['error' => 'Invalid CSRF'], 400);
+        }
+
+        $projectId = (int) $request->request->get('project_id');
+        $amountRaw = str_replace(',', '.', (string) $request->request->get('amount', '0'));
+        $amount = (float) $amountRaw;
+
+        $project = $em->getRepository(Project::class)->find($projectId);
+        if (!$project instanceof Project) {
+            return $this->json(['error' => 'Not found'], 404);
+        }
+
+        $goal = (float) str_replace(',', '.', (string) ($project->getGoalAmount() ?? '0'));
+        $range = $revenuePercentAdvisorService->suggestRange($amount, $goal);
+        $explanation = $revenuePercentAdvisorService->explainSuggestion(
+            $amount,
+            $goal,
+            $range['min'],
+            $range['max'],
+            $range['label']
+        );
+
+        return $this->json([
+            'min' => $range['min'],
+            'max' => $range['max'],
+            'label' => $range['label'],
+            'ratio' => $range['ratio'],
+            'explanation' => $explanation,
+        ]);
+    }
+
+    #[Route('/investissement/releve-pdf', name: 'investissement_releve_pdf', methods: ['GET'])]
+    public function relevePdf(
+        InvestissementRepository $investissementRepository,
+        ProjectRevenueShareRepository $projectRevenueShareRepository,
+        InvestorRevenueLogRepository $investorRevenueLogRepository,
+        InvestmentRevenueService $investmentRevenueService,
+        EntityManagerInterface $em,
+        PdfGeneratorService $pdfGeneratorService,
+    ): Response {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_login');
+        }
+
+        $dash = $this->buildInvestorDashboardContext(
+            $user,
+            $investissementRepository,
+            $projectRevenueShareRepository,
+            $investorRevenueLogRepository,
+            $investmentRevenueService,
+            $em,
+        );
+
+        $positionSummaries = [];
+        foreach ($dash['positions'] as $row) {
+            $share = $row['share'];
+            $proj = $row['project'];
+            $pctStr = str_replace(',', '.', (string) $share->getPercentage());
+            $positionSummaries[] = [
+                'title' => $proj !== null ? (string) $proj->getTitle() : 'Projet',
+                'invested' => $row['invested'],
+                'pct' => number_format((float) $pctStr, 2, ',', ''),
+                'earned' => $row['earned'],
+                'net' => $row['net'],
+            ];
+        }
+
+        $binary = $pdfGeneratorService->generateInvestorStatementPdf(
+            $user,
+            $dash['dailyRows'],
+            $positionSummaries,
+            $dash['totalInvested'],
+            $dash['totalEarned'],
+            $dash['netGlobal'],
+        );
+
+        $filename = 'finovate-releve-investisseur.pdf';
+        $disposition = HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT,
+            $filename
+        );
+
+        return new Response($binary, Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => $disposition,
+        ]);
+    }
+
+    /**
+     * @return array{
+     *     positions: list<array<string, mixed>>,
+     *     totalInvested: float,
+     *     totalEarned: float,
+     *     netGlobal: float,
+     *     dailyRows: list<array<string, mixed>>,
+     *     chartLabels: list<string>,
+     *     chartDaily: list<float>,
+     *     chartCumulative: list<float>
+     * }
+     */
+    private function buildInvestorDashboardContext(
+        User $user,
+        InvestissementRepository $investissementRepository,
+        ProjectRevenueShareRepository $projectRevenueShareRepository,
+        InvestorRevenueLogRepository $investorRevenueLogRepository,
+        InvestmentRevenueService $investmentRevenueService,
+        EntityManagerInterface $em,
+    ): array {
+        $shares = $projectRevenueShareRepository->findByInvestorWithDetails($user);
+        /** @var array<int, Project> $projectsToSync */
+        $projectsToSync = [];
+        foreach ($shares as $share) {
+            $proj = $share->getProject();
+            if ($proj !== null && $proj->getId() !== null) {
+                $projectsToSync[$proj->getId()] = $proj;
+            }
+        }
+        foreach ($projectsToSync as $proj) {
+            $investmentRevenueService->syncRevenueShares($proj);
+        }
+        $em->flush();
+        $shares = $projectRevenueShareRepository->findByInvestorWithDetails($user);
+
+        $positions = [];
+        foreach ($shares as $share) {
+            $inv = $share->getInvestissement();
+            $proj = $share->getProject();
+            $invested = $inv !== null ? (float) str_replace(',', '.', (string) $inv->getAmount()) : 0.0;
+            $earned = $investorRevenueLogRepository->sumAmountEarnedForShare($share);
+            $positions[] = [
+                'share' => $share,
+                'project' => $proj,
+                'investissement' => $inv,
+                'invested' => $invested,
+                'earned' => $earned,
+                'net' => $earned - $invested,
+            ];
+        }
+
+        $totalInvested = $investissementRepository->sumConfirmedInvestedForUser($user);
+        $totalEarnedStr = $investorRevenueLogRepository->sumAmountEarnedForUser($user);
+        $totalEarned = (float) str_replace(',', '.', $totalEarnedStr);
+        $netGlobal = $totalEarned - $totalInvested;
+
+        $dailyRows = $investorRevenueLogRepository->buildDailyRowsWithCumulative($user);
+
+        return [
+            'positions' => $positions,
+            'totalInvested' => $totalInvested,
+            'totalEarned' => $totalEarned,
+            'netGlobal' => $netGlobal,
+            'dailyRows' => $dailyRows,
+            'chartLabels' => array_column($dailyRows, 'day'),
+            'chartDaily' => array_column($dailyRows, 'daily'),
+            'chartCumulative' => array_column($dailyRows, 'cum'),
+        ];
+    }
+
     #[Route('/investissement/mes-projets', name: 'investissement_my_projects', methods: ['GET'])]
     public function myProjectsLegacyRedirect(): Response
     {
@@ -123,12 +409,23 @@ final class InvestissementController extends AbstractController
             $project->setCategory($category !== '' ? $category : null);
             $project->setOwner($user);
 
+            // Localisation OpenStreetMap
+            $latRaw = trim((string) $request->request->get('latitude', ''));
+            $lngRaw = trim((string) $request->request->get('longitude', ''));
+            $project->setLatitude($latRaw !== '' ? (float) $latRaw : null);
+            $project->setLongitude($lngRaw !== '' ? (float) $lngRaw : null);
+
             $em->persist($project);
             $em->flush();
 
             $uploaded = $data->getImage();
+            // Check if an Unsplash URL was provided instead of a file upload
+            $unsplashUrl = trim((string) $request->request->get('unsplash_image_url', ''));
             if ($uploaded instanceof UploadedFile) {
                 $project->setImagePath($this->storeProjectUploadedImage($uploaded, $project->getId()));
+                $em->flush();
+            } elseif ($unsplashUrl !== '' && filter_var($unsplashUrl, FILTER_VALIDATE_URL)) {
+                $project->setImagePath($unsplashUrl);
                 $em->flush();
             }
 
@@ -189,10 +486,20 @@ final class InvestissementController extends AbstractController
             $category = trim((string) ($data->getCategory() ?? ''));
             $project->setCategory($category !== '' ? $category : null);
 
+            // Localisation OpenStreetMap
+            $latRaw = trim((string) $request->request->get('latitude', ''));
+            $lngRaw = trim((string) $request->request->get('longitude', ''));
+            $project->setLatitude($latRaw !== '' ? (float) $latRaw : null);
+            $project->setLongitude($lngRaw !== '' ? (float) $lngRaw : null);
+
             $newImage = $data->getImage();
+            $unsplashUrl = trim((string) $request->request->get('unsplash_image_url', ''));
             if ($newImage instanceof UploadedFile) {
                 $this->removeProjectImageFile($project->getImagePath());
                 $project->setImagePath($this->storeProjectUploadedImage($newImage, $project->getId()));
+            } elseif ($unsplashUrl !== '' && filter_var($unsplashUrl, FILTER_VALIDATE_URL)) {
+                $this->removeProjectImageFile($project->getImagePath());
+                $project->setImagePath($unsplashUrl);
             }
 
             $em->flush();
@@ -295,12 +602,25 @@ final class InvestissementController extends AbstractController
             return $this->redirectToRoute('investissement_index');
         }
 
+        $revenuePctRaw = trim((string) $request->request->get('revenue_percentage', ''));
+        $revenuePercentage = null;
+        if ($revenuePctRaw !== '') {
+            $revenuePct = (float) str_replace(',', '.', $revenuePctRaw);
+            if ($revenuePct < 0 || $revenuePct > 100) {
+                $this->addFlash('danger', 'Le pourcentage de revenu doit être compris entre 0 et 100.');
+
+                return $this->redirectToRoute('investissement_index');
+            }
+            $revenuePercentage = $revenuePct;
+        }
+
         $investissement = new Investissement();
         $investissement->setAmount(number_format($amount, 2, '.', ''));
         $investissement->setInvestmentDate(new \DateTimeImmutable());
         $investissement->setStatus('PENDING');
         $investissement->setProject($project);
         $investissement->setUser($user);
+        $investissement->setRevenuePercentage($revenuePercentage);
 
         $em->persist($investissement);
         $em->flush();
@@ -311,7 +631,7 @@ final class InvestissementController extends AbstractController
     }
 
     #[Route('/investissement/demande/{id}/accepter', name: 'investissement_demande_accepter', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function accepterDemande(int $id, Request $request, EntityManagerInterface $em, InvestissementRepository $investissementRepository): Response
+    public function accepterDemande(int $id, Request $request, EntityManagerInterface $em, InvestissementRepository $investissementRepository, InvestmentRevenueService $investmentRevenueService): Response
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
@@ -359,6 +679,8 @@ final class InvestissementController extends AbstractController
         $inv->setStatus('CONFIRMED');
 
         $em->flush();
+
+        $investmentRevenueService->onInvestmentAccepted($project);
 
         $this->addFlash('success', 'Demande acceptée. Le montant a été débité et ajouté au projet.');
 
@@ -431,9 +753,23 @@ final class InvestissementController extends AbstractController
         }
 
         $inv->setAmount(number_format($amount, 2, '.', ''));
+
+        $revenuePctRaw = trim((string) $request->request->get('revenue_percentage', ''));
+        if ($revenuePctRaw !== '') {
+            $revenuePct = (float) str_replace(',', '.', $revenuePctRaw);
+            if ($revenuePct < 0 || $revenuePct > 100) {
+                $this->addFlash('danger', 'Le pourcentage de revenu doit être compris entre 0 et 100.');
+
+                return $this->redirectToRoute('investissement_mes_demandes');
+            }
+            $inv->setRevenuePercentage($revenuePct);
+        } else {
+            $inv->setRevenuePercentage(null);
+        }
+
         $em->flush();
 
-        $this->addFlash('success', 'Montant de la demande mis à jour.');
+        $this->addFlash('success', 'Demande mise à jour.');
 
         return $this->redirectToRoute('investissement_mes_demandes');
     }
@@ -465,6 +801,40 @@ final class InvestissementController extends AbstractController
         $this->addFlash('success', 'Demande annulée.');
 
         return $this->redirectToRoute('investissement_mes_demandes');
+    }
+
+    #[Route('/investissement/projet/{id}/revenu-quotidien', name: 'investissement_daily_revenue', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function submitDailyRevenue(int $id, Request $request, EntityManagerInterface $em): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('front_login');
+        }
+
+        if (!$this->isCsrfTokenValid('daily_revenue_' . $id, (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Échec de validation du formulaire.');
+
+            return $this->redirectToRoute('investissement_index', ['gerer' => 1]);
+        }
+
+        $project = $em->getRepository(Project::class)->find($id);
+        if (!$project instanceof Project || $project->getOwner()?->getId() !== $user->getId()) {
+            $this->addFlash('danger', 'Projet introuvable ou accès refusé.');
+
+            return $this->redirectToRoute('investissement_index', ['gerer' => 1]);
+        }
+
+        $amountRaw = trim((string) $request->request->get('amount', ''));
+        $amount = (float) str_replace(',', '.', $amountRaw);
+
+        try {
+            $this->dailyRevenueService->submitForProjectAndOwner($project, $user, $amount);
+            $this->addFlash('success', 'Revenu enregistré et réparti entre les investisseurs.');
+        } catch (\Throwable $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('investissement_index', ['gerer' => 1]);
     }
 
     private function renderInvestissementPageFromRequest(
@@ -544,13 +914,18 @@ final class InvestissementController extends AbstractController
                 'deadline' => $p->getDeadline()?->format('Y-m-d'),
                 'category' => $p->getCategory() ?? '',
                 'imagePath' => $p->getImagePath(),
+                'latitude' => $p->getLatitude(),
+                'longitude' => $p->getLongitude(),
             ];
         }
+
+        $dailyRevenueUi = $this->dailyRevenueService->buildDailyRevenueUiStates($myProjects);
 
         return $this->render('front/investissement.html.twig', [
             'projects' => $projects,
             'myProjects' => $myProjects,
             'pendingByProject' => $pendingByProject,
+            'dailyRevenueUi' => $dailyRevenueUi,
             'myProjectsDataJson' => json_encode($payload, JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP),
             'createForm' => $createForm,
             'editProjectForm' => $editProjectForm,
