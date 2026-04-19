@@ -11,6 +11,79 @@
 
   <base href="{{ asset('backoffice/') }}">
   <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+  <style>
+    #sidebar {
+      max-height: calc(100vh - 12px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .kpi-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      height: 100%;
+    }
+    .kpi-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .toolbar input, .toolbar select {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #fff;
+      outline: none;
+    }
+    .progress-wrap {
+      width: 150px;
+    }
+    .progress {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #10b981, #0f766e);
+      min-width: 4px;
+    }
+    .health-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .health-healthy { background: #dcfce7; color: #166534; }
+    .health-risk { background: #fef3c7; color: #92400e; }
+    .health-overdue { background: #fee2e2; color: #991b1b; }
+  </style>
 </head>
 
 <body>
@@ -47,6 +120,7 @@
         </ul>
       </li>
       <li><a class="nav-link" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
+      <li><a class="nav-link" href="{{ path('admin_reclamations_index') }}"><i class="ti ti-headset"></i><span class="nav-text">Réclamations</span></a></li>
       <li class="nav-folder">
         <button class="nav-link nav-folder-btn w-100 text-start border-0 bg-transparent d-flex align-items-center" onclick="toggleForumFolder(this)">
           <i class="ti ti-messages"></i><span class="nav-text flex-grow-1">Gestion Forums</span><i class="ti ti-chevron-down folder-chevron ms-auto"></i>
@@ -76,12 +150,63 @@
         {% endfor %}
       {% endfor %}
 
+      <div class="row g-3 mb-3">
+        <div class="col-xl-3 col-md-6">
+          <div class="kpi-card">
+            <div class="kpi-label">Projets Totaux</div>
+            <div class="kpi-value">{{ project_stats.total }}</div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="kpi-card">
+            <div class="kpi-label">Ouverts</div>
+            <div class="kpi-value text-success">{{ project_stats.open }}</div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="kpi-card">
+            <div class="kpi-label">En Retard</div>
+            <div class="kpi-value text-danger">{{ project_stats.overdue }}</div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="kpi-card">
+            <div class="kpi-label">Taux Financement Global</div>
+            <div class="kpi-value">{{ project_stats.funding_rate|number_format(1, '.', ' ') }}%</div>
+          </div>
+        </div>
+      </div>
+
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
           <h4 class="mb-0">Liste des projets</h4>
           <span class="badge bg-light text-dark">{{ projects|length }}</span>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body pb-0">
+          <div class="toolbar">
+            <input type="text" id="projects-search" placeholder="Recherche: titre, propriétaire, statut..." style="min-width: 280px; flex: 1;">
+            <select id="projects-status">
+              <option value="">Statut: Tous</option>
+              <option value="OPEN">OPEN</option>
+              <option value="CLOSED">CLOSED</option>
+              <option value="COMPLETED">COMPLETED</option>
+            </select>
+            <select id="projects-health">
+              <option value="">Santé: Toutes</option>
+              <option value="healthy">Healthy</option>
+              <option value="risk">At risk</option>
+              <option value="overdue">Overdue</option>
+            </select>
+            <select id="projects-sort">
+              <option value="created_desc">Tri: plus récents</option>
+              <option value="progress_desc">Tri: meilleur progrès</option>
+              <option value="progress_asc">Tri: faible progrès</option>
+              <option value="deadline_asc">Tri: deadline proche</option>
+              <option value="goal_desc">Tri: objectif élevé</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body pt-0 p-0">
           <div class="table-responsive">
             <table class="table table-hover table-centered mb-0 text-nowrap">
               <thead class="table-light">
@@ -91,38 +216,57 @@
                   <th>Propriétaire</th>
                   <th>Objectif</th>
                   <th>Actuel</th>
+                  <th>Progression</th>
                   <th>Deadline</th>
                   <th>Statut</th>
+                  <th>Santé</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="projects-tbody">
                 {% for p in projects %}
+                  {% set goal = (p.goalAmount ?? 0) + 0 %}
+                  {% set current = (p.currentAmount ?? 0) + 0 %}
+                  {% set progress = goal > 0 ? (current / goal * 100) : 0 %}
+                  {% set isOverdue = p.deadline and p.deadline|date('Y-m-d') < "now"|date('Y-m-d') and p.status not in ['CLOSED','COMPLETED'] %}
+                  {% set isRisk = p.deadline and p.deadline|date('Y-m-d') <= ("now"|date_modify('+14 days')|date('Y-m-d')) and progress < 30 and not isOverdue %}
+                  {% set health = isOverdue ? 'overdue' : (isRisk ? 'risk' : 'healthy') %}
                   <tr>
-                    <td>{{ p.id }}</td>
+                    <td data-id="{{ p.id }}">{{ p.id }}</td>
                     <td class="fw-bold">{{ p.title }}</td>
-                    <td>
+                    <td data-owner="{% if p.owner %}{{ (p.owner.firstname ~ ' ' ~ p.owner.lastname)|lower }}{% endif %}">
                       {% if p.owner %}
                         {{ p.owner.firstname }} {{ p.owner.lastname }}
                       {% else %}
                         -
                       {% endif %}
                     </td>
-                    <td>{{ p.goalAmount }}</td>
-                    <td>{{ p.currentAmount }}</td>
-                    <td>
+                    <td data-goal="{{ goal }}">{{ goal|number_format(2, '.', ' ') }}</td>
+                    <td data-current="{{ current }}">{{ current|number_format(2, '.', ' ') }}</td>
+                    <td data-progress="{{ progress|number_format(2, '.', '') }}">
+                      <div class="progress-wrap">
+                        <div class="progress"><div class="progress-bar" style="width: {{ progress > 100 ? 100 : progress|number_format(0, '.', '') }}%;"></div></div>
+                        <small class="text-muted fw-bold">{{ progress|number_format(1, '.', ' ') }}%</small>
+                      </div>
+                    </td>
+                    <td data-deadline="{% if p.deadline %}{{ p.deadline|date('Y-m-d') }}{% endif %}">
                       {% if p.deadline %}
                         {{ p.deadline|date('d/m/Y') }}
                       {% endif %}
                     </td>
-                    <td>{{ p.status }}</td>
+                    <td data-status="{{ (p.status ?? 'OPEN')|upper }}">{{ p.status }}</td>
+                    <td data-health="{{ health }}">
+                      <span class="health-pill {% if health == 'overdue' %}health-overdue{% elseif health == 'risk' %}health-risk{% else %}health-healthy{% endif %}">
+                        {% if health == 'overdue' %}Overdue{% elseif health == 'risk' %}At risk{% else %}Healthy{% endif %}
+                      </span>
+                    </td>
                     <td>
                       <a class="btn btn-sm btn-primary" href="{{ path('backoffice_project_show', {'id': p.id}) }}">Détails</a>
                     </td>
                   </tr>
                 {% else %}
                   <tr>
-                    <td colspan="8" class="text-center py-4">Aucun projet trouvé.</td>
+                    <td colspan="10" class="text-center py-4">Aucun projet trouvé.</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -150,6 +294,74 @@
         if (arrow) { arrow.classList.remove('ti-chevron-down'); arrow.classList.add('ti-chevron-right'); }
       }
     }
+
+    (function () {
+      const tbody = document.getElementById('projects-tbody');
+      if (!tbody) return;
+
+      const searchEl = document.getElementById('projects-search');
+      const statusEl = document.getElementById('projects-status');
+      const healthEl = document.getElementById('projects-health');
+      const sortEl = document.getElementById('projects-sort');
+
+      function norm(v) { return (v || '').toString().toLowerCase().trim(); }
+
+      function applyFilters() {
+        const q = norm(searchEl ? searchEl.value : '');
+        const status = (statusEl ? statusEl.value : '').toUpperCase();
+        const health = norm(healthEl ? healthEl.value : '');
+
+        Array.from(tbody.querySelectorAll('tr')).forEach((row) => {
+          const title = norm(row.querySelector('td:nth-child(2)')?.textContent);
+          const owner = norm(row.querySelector('td:nth-child(3)')?.textContent);
+          const st = (row.querySelector('[data-status]')?.getAttribute('data-status') || '').toUpperCase();
+          const hl = norm(row.querySelector('[data-health]')?.getAttribute('data-health'));
+
+          const matchesQ = q === '' || title.includes(q) || owner.includes(q) || st.toLowerCase().includes(q);
+          const matchesStatus = status === '' || st === status;
+          const matchesHealth = health === '' || hl === health;
+
+          row.style.display = (matchesQ && matchesStatus && matchesHealth) ? '' : 'none';
+        });
+        applySort();
+      }
+
+      function applySort() {
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.style.display !== 'none');
+        const mode = sortEl ? sortEl.value : 'created_desc';
+        const parseDate = (v) => {
+          if (!v) return 0;
+          const t = Date.parse(v + 'T00:00:00');
+          return Number.isFinite(t) ? t : 0;
+        };
+        rows.sort((a, b) => {
+          const progA = parseFloat(a.querySelector('[data-progress]')?.getAttribute('data-progress') || '0');
+          const progB = parseFloat(b.querySelector('[data-progress]')?.getAttribute('data-progress') || '0');
+          const goalA = parseFloat(a.querySelector('[data-goal]')?.getAttribute('data-goal') || '0');
+          const goalB = parseFloat(b.querySelector('[data-goal]')?.getAttribute('data-goal') || '0');
+          const dlA = parseDate(a.querySelector('[data-deadline]')?.getAttribute('data-deadline') || '');
+          const dlB = parseDate(b.querySelector('[data-deadline]')?.getAttribute('data-deadline') || '');
+          const idA = parseInt(a.querySelector('[data-id]')?.getAttribute('data-id') || '0', 10) || 0;
+          const idB = parseInt(b.querySelector('[data-id]')?.getAttribute('data-id') || '0', 10) || 0;
+
+          switch (mode) {
+            case 'progress_desc': return progB - progA;
+            case 'progress_asc': return progA - progB;
+            case 'deadline_asc': return dlA - dlB;
+            case 'goal_desc': return goalB - goalA;
+            case 'created_desc':
+            default: return idB - idA;
+          }
+        });
+        rows.forEach(r => tbody.appendChild(r));
+      }
+
+      if (searchEl) searchEl.addEventListener('input', applyFilters);
+      if (statusEl) statusEl.addEventListener('change', applyFilters);
+      if (healthEl) healthEl.addEventListener('change', applyFilters);
+      if (sortEl) sortEl.addEventListener('change', applySort);
+      applyFilters();
+    })();
   </script>
 </body>
 

@@ -1,0 +1,12 @@
+framework:
+  rate_limiter:
+    ticket_message:
+      policy: 'sliding_window'
+      limit: 5
+      interval: '10 seconds'
+
+    api_translate:
+      policy: 'sliding_window'
+      limit: 20
+      interval: '60 seconds'
+

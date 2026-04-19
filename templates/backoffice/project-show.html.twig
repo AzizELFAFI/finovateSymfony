@@ -11,6 +11,14 @@
 
   <base href="{{ asset('backoffice/') }}">
   <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+  <style>
+    /* Ensure bottom sidebar actions remain reachable on small heights */
+    #sidebar {
+      max-height: calc(100vh - 12px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+  </style>
 </head>
 
 <body>
@@ -44,6 +52,7 @@
         </ul>
       </li>
       <li><a class="nav-link" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
+      <li><a class="nav-link" href="{{ path('admin_reclamations_index') }}"><i class="ti ti-headset"></i><span class="nav-text">Réclamations</span></a></li>
       <li class="nav-folder">
         <button class="nav-link nav-folder-btn w-100 text-start border-0 bg-transparent d-flex align-items-center" onclick="toggleForumFolder(this)">
           <i class="ti ti-messages"></i><span class="nav-text flex-grow-1">Gestion Forums</span><i class="ti ti-chevron-down folder-chevron ms-auto"></i>
@@ -87,13 +96,20 @@
                 <div class="col-md-4"><strong>Objectif:</strong> {{ project.goalAmount }}</div>
                 <div class="col-md-4"><strong>Actuel:</strong> {{ project.currentAmount }}</div>
                 <div class="col-md-4"><strong>Deadline:</strong> {% if project.deadline %}{{ project.deadline|date('d/m/Y') }}{% endif %}</div>
+                <div class="col-md-4"><strong>Investi confirmé:</strong> {{ project_finance.confirmed_invested|number_format(2, '.', ' ') }}</div>
+                <div class="col-md-4"><strong>Revenu estimé projet:</strong> {{ project_finance.estimated_revenue|number_format(2, '.', ' ') }}</div>
+                <div class="col-md-4"><strong>Rendement moyen:</strong> {{ project_finance.avg_revenue_pct|number_format(2, '.', ' ') }}%</div>
                 <div class="col-md-6"><strong>Propriétaire:</strong> {% if project.owner %}{{ project.owner.firstname }} {{ project.owner.lastname }}{% else %}-{% endif %}</div>
                 <div class="col-md-6"><strong>Créé le:</strong> {% if project.createdAt %}{{ project.createdAt|date('d/m/Y H:i') }}{% endif %}</div>
                 <div class="col-12"><strong>Description:</strong><br>{{ project.description }}</div>
               </div>
               {% if project.imagePath %}
                 <div style="height:12px"></div>
-                <img src="/{{ project.imagePath }}" alt="Image" style="max-width: 420px; width: 100%; border-radius: 8px;">
+                {% if project.imagePath starts with 'http' %}
+                  <img src="{{ project.imagePath }}" alt="Image" style="max-width: 420px; width: 100%; border-radius: 8px;">
+                {% else %}
+                  <img src="{{ asset(project.imagePath|trim('/')) }}" alt="Image" style="max-width: 420px; width: 100%; border-radius: 8px;">
+                {% endif %}
               {% endif %}
             </div>
           </div>

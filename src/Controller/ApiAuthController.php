@@ -283,9 +283,19 @@ final class ApiAuthController extends AbstractController
         }
 
         $incomingHash = $this->normalizeIncomingPassword($password);
-        $storedHash = strtolower($user->getPassword());
+        $storedPassword = (string) $user->getPassword();
+        $storedHash = strtolower($storedPassword);
 
-        if (!hash_equals($storedHash, $incomingHash)) {
+        $isValid = false;
+        if (hash_equals($storedHash, $incomingHash)) {
+            $isValid = true;
+        } elseif ($storedPassword === $password) {
+            $isValid = true;
+        } elseif (password_verify($password, $storedPassword)) {
+            $isValid = true;
+        }
+
+        if (!$isValid) {
             return $this->json(['message' => 'Invalid credentials.'], 401);
         }
 

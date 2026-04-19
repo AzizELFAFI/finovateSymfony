@@ -10,6 +10,9 @@ parameters:
     face_api_base_url: '%env(FACE_API_BASE_URL)%'
     unsplash_access_key: '%env(UNSPLASH_ACCESS_KEY)%'
     exchangerate_api_key: '%env(EXCHANGERATE_API_KEY)%'
+    libretranslate_url: '%env(default::LIBRETRANSLATE_URL)%'
+    libretranslate_fallback_urls: '%env(default::LIBRETRANSLATE_FALLBACK_URLS)%'
+    libretranslate_api_key: '%env(default::LIBRETRANSLATE_API_KEY)%'
 
 services:
     # default configuration for services in *this* file
