@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Finovate - Admin Réclamations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/images/favicon_io/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon_io/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/favicon_io/favicon-16x16.png">
+  <link rel="manifest" href="./assets/images/favicon_io/site.webmanifest">
+
+  <base href="{{ asset('backoffice/') }}">
+
+  <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+  <style>
+    #sidebar {
+      max-height: calc(100vh - 12px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .messenger-shell {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+        display: flex;
+        height: 700px;
+        overflow: hidden;
+    }
+
+    .messenger-contacts {
+        width: 35%;
+        border-right: 1px solid #e5e7eb;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .messenger-contacts-header {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #fafafa;
+    }
+
+    .messenger-contacts-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .contact-item {
+        display: block;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f3f4f6;
+        cursor: pointer;
+        text-decoration: none !important;
+        color: #111827;
+        transition: background 0.2s;
+    }
+
+    .contact-item:hover { background: #f9fafb; color: #111827; }
+    .contact-item.active { background: #f0fdf4; border-left: 4px solid #10b981; }
+
+    .messenger-chat {
+        width: 65%;
+        display: flex;
+        flex-direction: column;
+        background: #f8fafc;
+    }
+
+    .chat-header {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 18px;
+        max-width: 75%;
+        line-height: 1.5;
+        font-size: 14px;
+        position: relative;
+    }
+
+    /* Différence Admin/User dans le backoffice */
+    .message-admin {
+        align-self: flex-end;
+        background: #10b981;
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message-user {
+        align-self: flex-start;
+        background: #fff;
+        color: #334155;
+        border-bottom-left-radius: 4px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .message-date {
+        font-size: 11px;
+        margin-top: 6px;
+        opacity: 0.8;
+    }
+
+    .chat-input-area {
+        padding: 20px;
+        background: #fff;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 10px;
+        text-transform: uppercase;
+    }
+    .status-nouveau { background: #e0f2fe; color: #0284c7; }
+    .status-en-cours { background: #fef3c7; color: #d97706; }
+    .status-resolu { background: #dcfce7; color: #15803d; }
+
+    .contacts-tools {
+      padding: 12px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #fff;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .contacts-tools input, .contacts-tools select {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-weight: 700;
+      font-size: 13px;
+      outline: none;
+    }
+    .msg-tools {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      opacity: 0.0;
+      transition: opacity 0.15s ease;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .message-bubble:hover .msg-tools { opacity: 1; }
+    .tool-btn {
+      border: 1px solid rgba(15, 118, 110, 0.20);
+      background: rgba(15, 118, 110, 0.06);
+      color: #0f766e;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+    }
+    .message-admin .tool-btn {
+      border-color: rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+    }
+    .tool-select {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid rgba(15, 118, 110, 0.20);
+      background: rgba(15, 118, 110, 0.06);
+      color: #0f766e;
+      outline: none;
+    }
+    .message-admin .tool-select {
+      border-color: rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+    }
+    .translation-result {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(2, 132, 199, 0.08);
+      border: 1px solid rgba(2, 132, 199, 0.12);
+      color: inherit;
+      font-size: 13px;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .contact-unread {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: #dc2626;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      margin-left: 8px;
+    }
+
+    .typing-indicator {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 800;
+      display: none;
+      margin-top: 6px;
+    }
+
+    .chat-search {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .chat-search input {
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 13px;
+      outline: none;
+      width: 320px;
+      max-width: 100%;
+    }
+    .ai-tools {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .ai-tools input {
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      min-width: 260px;
+      outline: none;
+    }
+    mark.msg-hl {
+      background: rgba(250, 204, 21, 0.55);
+      padding: 0 2px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="overlay" class="overlay"></div>
+  <!-- TOPBAR -->
+  <nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
+    <button id="toggleBtn" class="d-none d-lg-inline-flex btn btn-light btn-icon btn-sm ">
+      <i class="ti ti-layout-sidebar-left-expand"></i>
+    </button>
+
+    <!-- MOBILE -->
+    <button id="mobileBtn" class="btn btn-light btn-icon btn-sm d-lg-none me-2">
+      <i class="ti ti-layout-sidebar-left-expand"></i>
+    </button>
+    <div>
+      <!-- Navbar nav -->
+      <ul class="list-unstyled d-flex align-items-center mb-0 gap-1">
+      </ul>
+    </div>
+  </nav>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar">
+    <div class="logo-area">
+     <a href="{{ path('backoffice_dashboard') }}" class="d-inline-flex align-items-center text-decoration-none">
+        <span class="logo-text ms-2 fw-bold" style="font-size: 1.25rem; letter-spacing: 0.2px;">Finovate</span>
+      </a>
+    </div>
+    <ul class="nav flex-column">
+      <li class="px-4 py-2"><small class="nav-text">Banque Virtuelle</small></li>
+      <li><a class="nav-link" href="{{ path('backoffice_dashboard') }}"><i class="ti ti-home"></i><span class="nav-text">Vue d'ensemble</span></a></li>
+      <li><a class="nav-link" href="{{ path('backoffice_users') }}"><i class="ti ti-users"></i><span class="nav-text">Gestion Utilisateurs</span></a></li>
+      <li><a class="nav-link" href="{{ path('backoffice_projects') }}"><i class="ti ti-briefcase"></i><span class="nav-text">Gestion Projets</span></a></li>
+      <li class="nav-folder">
+        <button class="nav-link nav-folder-btn w-100 text-start border-0 bg-transparent d-flex align-items-center" onclick="toggleForumFolder(this)">
+          <i class="ti ti-shopping-cart"></i><span class="nav-text flex-grow-1">Produits</span><i class="ti ti-chevron-down folder-chevron ms-auto"></i>
+        </button>
+        <ul class="nav flex-column nav-folder-children ps-3">
+          <li><a class="nav-link" href="{{ path('backoffice_products') }}"><i class="ti ti-list"></i><span class="nav-text">Liste des produits</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_products_statistics') }}"><i class="ti ti-chart-bar"></i><span class="nav-text">Statistiques</span></a></li>
+        </ul>
+      </li>
+      <li><a class="nav-link" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
+      
+      <!-- NOUVEAU LIEN RECLAMATIONS -->
+      <li><a class="nav-link active" href="{{ path('admin_reclamations_index') }}"><i class="ti ti-headset"></i><span class="nav-text">Réclamations</span></a></li>
+
+      <li class="nav-folder">
+        <button class="nav-link nav-folder-btn w-100 text-start border-0 bg-transparent d-flex align-items-center" onclick="toggleForumFolder(this)">
+          <i class="ti ti-messages"></i><span class="nav-text flex-grow-1">Gestion Forums</span><i class="ti ti-chevron-down folder-chevron ms-auto"></i>
+        </button>
+        <ul class="nav flex-column nav-folder-children ps-3">
+          <li><a class="nav-link" href="{{ path('backoffice_forums') }}"><i class="ti ti-list"></i><span class="nav-text">Liste des forums</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_liste_posts') }}"><i class="ti ti-file-text"></i><span class="nav-text">Liste des posts</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_liste_comments') }}"><i class="ti ti-message"></i><span class="nav-text">Liste des commentaires</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_users') }}"><i class="ti ti-users"></i><span class="nav-text">Utilisateurs</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_ai_flags') }}"><i class="ti ti-robot"></i><span class="nav-text">IA Flags</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_reports') }}"><i class="ti ti-flag"></i><span class="nav-text">Signalements</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_badges') }}"><i class="ti ti-award"></i><span class="nav-text">Badges</span></a></li>
+          <li><a class="nav-link" href="{{ path('admin_admin_policy') }}"><i class="ti ti-file-text"></i><span class="nav-text">Politique</span></a></li>
+        </ul>
+      </li>
+
+      <li class="px-4 pt-4 pb-2"><small class="nav-text">Session</small></li>
+      <li><a class="nav-link" href="{{ path('front_logout') }}"><i class="ti ti-logout"></i><span class="nav-text">Déconnexion</span></a></li>
+    </ul>
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main id="content" class="content py-10">
+    <div class="container-fluid">
+      <div class="row ">
+        <div class="col-12">
+          <div class="mb-4">
+            <h1 class="fs-3 mb-1">Administration des Réclamations</h1>
+            <p>Discutez avec vos utilisateurs et résolvez leurs problèmes.</p>
+          </div>
+
+          {% for label, messages in app.flashes %}
+            {% for message in messages %}
+              <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endfor %}
+
+          <div class="messenger-shell">
+            <!-- Colonne Contacts -->
+            <div class="messenger-contacts">
+                <div class="messenger-contacts-header">
+                    <h5 style="font-weight:900; margin:0; color:#1f2937;">Tous les Tickets</h5>
+                </div>
+                <div class="contacts-tools">
+                  <input type="text" id="admin-ticket-search" placeholder="Recherche (id, email, sujet)..." style="flex:1; min-width: 220px;">
+                  <select id="admin-ticket-status">
+                    <option value="">Statut: Tous</option>
+                    <option value="NOUVEAU">Nouveau</option>
+                    <option value="EN_COURS">En cours</option>
+                    <option value="FERME">Fermé</option>
+                    <option value="RESOLU">Résolu</option>
+                  </select>
+                </div>
+                <div class="messenger-contacts-list">
+                    {% for t in tickets %}
+                        <a
+                          href="{{ path('admin_reclamations_index', {'id': t.id}) }}"
+                          class="contact-item {{ active_ticket and t.id == active_ticket.id ? 'active' : '' }}"
+                          data-ticket-id="{{ t.id }}"
+                          data-ticket-type="{{ t.type|e('html_attr') }}"
+                          data-ticket-user="{{ (t.user ? (t.user.email ~ ' ' ~ t.user.firstname ~ ' ' ~ t.user.lastname) : '')|e('html_attr') }}"
+                          data-ticket-status="{{ t.statut|upper }}"
+                        >
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span style="font-weight: 800; font-size: 14px;">#{{ t.id }} • {{ t.user ? t.user.firstname ~ ' ' ~ t.user.lastname : 'Utilisateur inconnu' }} <span class="contact-unread" data-unread style="display:none;">0</span></span>
+                                {% if t.statut|upper == 'EN_COURS' or t.statut|upper == 'OPEN' %}
+                                    <span class="status-badge status-en-cours">En cours</span>
+                                {% elseif t.statut|upper == 'RESOLU' or t.statut|upper == 'FERME' %}
+                                    <span class="status-badge status-resolu">Fermé</span>
+                                {% else %}
+                                    <span class="status-badge status-nouveau">Nouveau</span>
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 13px; font-weight: 600; color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {{ t.type }}
+                            </div>
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">
+                                {{ t.dateCreation ? t.dateCreation|date('d/m/Y H:i') : '' }}
+                            </div>
+                        </a>
+                    {% else %}
+                        <div style="padding: 30px 20px; text-align: center; color: #9ca3af; font-size: 13px;">
+                            <p>Aucune réclamation trouvée dans le système.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Colonne Chat -->
+            <div class="messenger-chat">
+                {% if active_ticket %}
+                    <div class="chat-header">
+                        <div>
+                            <h5 style="margin:0; font-weight:800; color:#111827;">{{ active_ticket.type }}</h5>
+                            <div style="font-size:12px; color:#6b7280; font-weight:600;">Utilisateur : {{ active_ticket.user ? active_ticket.user.email : 'N/A' }}</div>
+                            <div class="typing-indicator" id="typing-indicator-admin">Client est en train d’écrire…</div>
+                            <div class="chat-search">
+                              <input type="text" id="chat-search-admin" placeholder="Rechercher dans la conversation...">
+                            </div>
+                        </div>
+                        {% if active_ticket.statut|upper != 'RESOLU' and active_ticket.statut|upper != 'FERME' %}
+                            <form action="{{ path('admin_reclamations_close', {'id': active_ticket.id}) }}" method="post" onsubmit="return confirm('Voulez-vous vraiment clôturer ce ticket ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('close' ~ active_ticket.id) }}">
+                                <button class="btn btn-sm btn-outline-danger">Clôturer le ticket</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="chat-messages" id="chat-messages-container">
+                        <!-- Message initial (description du ticket) -->
+                        <div class="message-bubble message-user">
+                            <span style="font-weight:800; font-size:11px; opacity:0.8; display:block; margin-bottom:4px; text-transform:uppercase;">Description Initiale</span>
+                            <div class="msg-text" data-original="{{ active_ticket.description|e('html_attr') }}">{{ active_ticket.description|nl2br }}</div>
+                            <div class="msg-tools" data-msg-tools>
+                              <button type="button" class="tool-btn" data-action="speak">Speak</button>
+                              <select class="tool-select" data-lang>
+                                <option value="fr" selected>FR</option>
+                                <option value="en">EN</option>
+                                <option value="ar">AR</option>
+                                <option value="es">ES</option>
+                                <option value="de">DE</option>
+                                <option value="it">IT</option>
+                              </select>
+                              <button type="button" class="tool-btn" data-action="translate">Translate</button>
+                              <button type="button" class="tool-btn" data-action="copy">Copy</button>
+                            </div>
+                            <div class="translation-result" data-translation></div>
+                            <div class="message-date">{{ active_ticket.dateCreation ? active_ticket.dateCreation|date('d/m/Y H:i') : '' }}</div>
+                        </div>
+
+                        <!-- Messages de la conversation -->
+                        {% for msg in active_ticket.messages %}
+                            <div class="message-bubble {% if msg.senderRole == 'ADMIN' %}message-admin{% else %}message-user{% endif %}">
+                                <div class="msg-text" data-original="{{ msg.content|e('html_attr') }}">{{ msg.content|nl2br }}</div>
+                                <div class="msg-tools" data-msg-tools>
+                                  <button type="button" class="tool-btn" data-action="speak">Speak</button>
+                                  <select class="tool-select" data-lang>
+                                    <option value="fr" selected>FR</option>
+                                    <option value="en">EN</option>
+                                    <option value="ar">AR</option>
+                                    <option value="es">ES</option>
+                                    <option value="de">DE</option>
+                                    <option value="it">IT</option>
+                                  </select>
+                                  <button type="button" class="tool-btn" data-action="translate">Translate</button>
+                                  <button type="button" class="tool-btn" data-action="copy">Copy</button>
+                                </div>
+                                <div class="translation-result" data-translation></div>
+                                <div class="message-date" style="{% if msg.senderRole == 'ADMIN' %}color:white;opacity:0.9;{% endif %}">
+                                    {% if msg.senderRole == 'ADMIN' %}Vous{% else %}Client{% endif %} • {{ msg.sentAt ? msg.sentAt|date('d/m/Y H:i') : '' }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Input Zone -->
+                    {% if active_ticket.statut|upper != 'RESOLU' and active_ticket.statut|upper != 'FERME' %}
+                        <div class="chat-input-area">
+                            <div class="ai-tools">
+                              <input type="text" id="ai-prompt-admin" placeholder="Demander à l'IA: ex. réponse pro courte et empathique">
+                              <button type="button" id="ai-generate-admin" class="btn btn-outline-secondary btn-sm" style="border-radius:999px; font-weight:800;">AI Reply</button>
+                            </div>
+                            {{ form_start(form, {'attr': {'style': 'display:flex; gap:12px; align-items:flex-end;'}}) }}
+                                <div style="flex:1;">
+                                    {{ form_widget(form.content, {'attr': {'style': 'border-radius: 8px; resize:none;', 'rows': '2', 'placeholder': 'Répondre au client...', 'class': 'form-control'}}) }}
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="border-radius: 8px; padding: 12px 20px; font-weight: 800; height: 58px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ti ti-send fs-5"></i>
+                                </button>
+                            {{ form_end(form) }}
+                        </div>
+                    {% else %}
+                        <div class="chat-input-area" style="background: #f1f5f9; text-align: center;">
+                            <span style="font-weight: 700; color: #64748b;">Cette conversation est fermée. L'utilisateur ne peut plus répondre.</span>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; color:#9ca3af;">
+                        <i class="ti ti-headset fs-1 mb-3"></i>
+                        <h5 style="font-weight:800; color:#4b5563;">Centre de Résolution</h5>
+                        <p style="font-size:14px;">Sélectionnez une réclamation à gauche pour l'analyser.</p>
+                    </div>
+                {% endif %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="{{ asset('backoffice/assets/js/main.js') }}" type="module"></script>
+  <script>
+    function toggleForumFolder(btn) {
+      var children = btn.nextElementSibling;
+      var arrow = btn.querySelector('.folder-chevron');
+      if (children.style.display === 'none' || !children.style.display) {
+        children.style.display = 'block';
+        if (arrow) { arrow.style.transform = 'rotate(180deg)'; }
+      } else {
+        children.style.display = 'none';
+        if (arrow) { arrow.style.transform = 'rotate(0deg)'; }
+      }
+    }
+
+    // Scroll chat to bottom
+    document.addEventListener("DOMContentLoaded", function() {
+        var chatContainer = document.getElementById('chat-messages-container');
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    });
+  </script>
+  <script>
+    (function () {
+      const searchEl = document.getElementById('admin-ticket-search');
+      const statusEl = document.getElementById('admin-ticket-status');
+
+      function normalize(s) {
+        return (s || '').toString().toLowerCase().trim();
+      }
+
+      function applyContactFilters() {
+        const q = normalize(searchEl ? searchEl.value : '');
+        const status = (statusEl ? statusEl.value : '').toUpperCase();
+        const items = document.querySelectorAll('.messenger-contacts-list .contact-item');
+
+        items.forEach((a) => {
+          const id = normalize(a.getAttribute('data-ticket-id'));
+          const type = normalize(a.getAttribute('data-ticket-type'));
+          const user = normalize(a.getAttribute('data-ticket-user'));
+          const s = (a.getAttribute('data-ticket-status') || '').toUpperCase();
+
+          const matchesQ = q === '' || id.includes(q) || type.includes(q) || user.includes(q);
+          const matchesStatus = status === '' || s === status || (status === 'FERME' && s === 'RESOLU');
+          a.style.display = (matchesQ && matchesStatus) ? '' : 'none';
+        });
+      }
+
+      if (searchEl) searchEl.addEventListener('input', applyContactFilters);
+      if (statusEl) statusEl.addEventListener('change', applyContactFilters);
+      applyContactFilters();
+
+      function hasSpeech() {
+        return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+      }
+
+      function pickVoice(lang) {
+        const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+        if (!voices || voices.length === 0) return null;
+        const exact = voices.find(v => (v.lang || '').toLowerCase().startsWith(lang.toLowerCase()));
+        if (exact) return exact;
+        const fr = voices.find(v => (v.lang || '').toLowerCase().startsWith('fr'));
+        return fr || voices[0] || null;
+      }
+
+      async function translateText(text, target) {
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ text, target, source: 'auto' })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const msg = (data && data.message) ? data.message : 'Traduction impossible.';
+          throw new Error(msg);
+        }
+        return data.translatedText || '';
+      }
+
+      function getBubbleText(bubble) {
+        const msgText = bubble.querySelector('.msg-text');
+        if (!msgText) return '';
+        const original = msgText.getAttribute('data-original') || '';
+        return (original || msgText.textContent || '').trim();
+      }
+
+      document.addEventListener('click', async function (e) {
+        const btn = e.target && e.target.closest ? e.target.closest('[data-action]') : null;
+        if (!btn) return;
+        const bubble = btn.closest('.message-bubble');
+        if (!bubble) return;
+
+        const action = btn.getAttribute('data-action');
+        const langSelect = bubble.querySelector('[data-lang]');
+        const targetLang = langSelect ? (langSelect.value || 'fr') : 'fr';
+
+        if (action === 'copy') {
+          const text = getBubbleText(bubble);
+          if (!text) return;
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch (_) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+          }
+          return;
+        }
+
+        if (action === 'speak') {
+          const text = getBubbleText(bubble);
+          if (!text) return;
+
+          if (!hasSpeech()) {
+            alert("Votre navigateur ne supporte pas Text-to-Speech.");
+            return;
+          }
+
+          try {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = targetLang;
+            const voice = pickVoice(targetLang);
+            if (voice) u.voice = voice;
+            window.speechSynthesis.speak(u);
+          } catch (_) {
+            alert("Text-to-Speech indisponible.");
+          }
+          return;
+        }
+
+        if (action === 'translate') {
+          const text = getBubbleText(bubble);
+          if (!text) return;
+
+          const out = bubble.querySelector('[data-translation]');
+          if (!out) return;
+
+          btn.disabled = true;
+          const oldLabel = btn.textContent;
+          btn.textContent = '...';
+          try {
+            const translated = await translateText(text, targetLang);
+            out.textContent = translated || '';
+            out.style.display = 'block';
+          } catch (err) {
+            out.textContent = (err && err.message) ? err.message : 'Traduction impossible.';
+            out.style.display = 'block';
+          } finally {
+            btn.disabled = false;
+            btn.textContent = oldLabel;
+          }
+        }
+      });
+
+      if (hasSpeech()) {
+        window.speechSynthesis.onvoiceschanged = function () {};
+      }
+    })();
+  </script>
+
+  <script>
+    (function () {
+      const ticketId = {{ active_ticket ? active_ticket.id : 'null' }};
+      if (!ticketId) return;
+
+      const url = "{{ active_ticket ? mercure('/tickets/' ~ active_ticket.id) : '' }}";
+      if (!url) return;
+
+      const chatContainer = document.getElementById('chat-messages-container');
+      if (!chatContainer) return;
+
+      function escapeHtml(str) {
+        return (str || '').toString()
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function nl2brEscaped(str) {
+        return escapeHtml(str).replace(/\n/g, '<br>');
+      }
+
+      function appendMessage(payload) {
+        if (!payload || payload.type !== 'message') return;
+        if (parseInt(payload.ticketId, 10) !== parseInt(ticketId, 10)) return;
+
+        const isAdmin = (payload.senderRole || '') === 'ADMIN';
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble ' + (isAdmin ? 'message-admin' : 'message-user');
+
+        const content = (payload.content || '').toString();
+        const sentAt = (payload.sentAt || '').toString();
+
+        bubble.innerHTML =
+          '<div class="msg-text" data-original="' + escapeHtml(content) + '">' + nl2brEscaped(content) + '</div>' +
+          '<div class="msg-tools" data-msg-tools>' +
+            '<button type="button" class="tool-btn" data-action="speak">Speak</button>' +
+            '<select class="tool-select" data-lang>' +
+              '<option value="fr" selected>FR</option>' +
+              '<option value="en">EN</option>' +
+              '<option value="ar">AR</option>' +
+              '<option value="es">ES</option>' +
+              '<option value="de">DE</option>' +
+              '<option value="it">IT</option>' +
+            '</select>' +
+            '<button type="button" class="tool-btn" data-action="translate">Translate</button>' +
+            '<button type="button" class="tool-btn" data-action="copy">Copy</button>' +
+          '</div>' +
+          '<div class="translation-result" data-translation></div>' +
+          '<div class="message-date" style="' + (isAdmin ? 'color:white;opacity:0.9;' : '') + '">' +
+            (isAdmin ? 'Vous' : 'Client') + ' • ' + escapeHtml(sentAt) +
+          '</div>';
+
+        chatContainer.appendChild(bubble);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      try {
+        const es = new EventSource(url);
+        es.onmessage = function (event) {
+          try {
+            const payload = JSON.parse(event.data || '{}');
+            if (payload && payload.type === 'typing') {
+              if ((payload.senderRole || '') === 'USER') {
+                const el = document.getElementById('typing-indicator-admin');
+                if (el) {
+                  el.style.display = 'block';
+                  clearTimeout(el.__t);
+                  el.__t = setTimeout(() => { el.style.display = 'none'; }, 1400);
+                }
+              }
+              return;
+            }
+            appendMessage(payload);
+          } catch (_) {}
+        };
+      } catch (_) {}
+    })();
+  </script>
+
+  <script>
+    (function () {
+      const ticketId = {{ active_ticket ? active_ticket.id : 'null' }};
+      const input = document.getElementById('chat-search-admin');
+      const container = document.getElementById('chat-messages-container');
+      if (!ticketId || !input || !container) return;
+
+      function escapeRegExp(s) { return (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+      function highlight(el, q) {
+        const txtEl = el.querySelector('.msg-text');
+        if (!txtEl) return;
+        const original = txtEl.getAttribute('data-original') || (txtEl.textContent || '');
+        if (!q) {
+          txtEl.innerHTML = original.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;').replace(/\n/g,'<br>');
+          el.style.display = '';
+          return;
+        }
+        const re = new RegExp(escapeRegExp(q), 'ig');
+        const matches = original.match(re);
+        if (!matches) {
+          el.style.display = 'none';
+          return;
+        }
+        el.style.display = '';
+        const safe = original
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+        const html = safe.replace(re, (m) => '<mark class="msg-hl">' + m + '</mark>').replace(/\n/g,'<br>');
+        txtEl.innerHTML = html;
+      }
+
+      input.addEventListener('input', function () {
+        const q = (input.value || '').trim();
+        const bubbles = container.querySelectorAll('.message-bubble');
+        bubbles.forEach(b => highlight(b, q));
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      const ticketId = {{ active_ticket ? active_ticket.id : 'null' }};
+      if (!ticketId) return;
+
+      // typing ping (debounced)
+      const textarea = document.querySelector('textarea');
+      let t = null;
+      function ping() {
+        fetch('{{ active_ticket ? path("admin_reclamations_typing", {"id": active_ticket.id}) : "" }}', { method: 'POST' }).catch(() => {});
+      }
+      if (textarea) {
+        textarea.addEventListener('input', function () {
+          clearTimeout(t);
+          t = setTimeout(ping, 350);
+        });
+      }
+
+      // unread counters in sidebar (localStorage, count messages from USER)
+      function updateBadges() {
+        document.querySelectorAll('[data-ticket-id]').forEach(a => {
+          const id = a.getAttribute('data-ticket-id');
+          const badge = a.querySelector('[data-unread]');
+          if (!badge) return;
+          const key = 'tickets:unread:admin:' + id;
+          const n = parseInt(localStorage.getItem(key) || '0', 10) || 0;
+          badge.textContent = String(n);
+          badge.style.display = n > 0 ? 'inline-flex' : 'none';
+        });
+      }
+      updateBadges();
+
+      const url = "{{ active_ticket ? mercure('/tickets/' ~ active_ticket.id) : '' }}";
+      if (!url) return;
+      try {
+        const es = new EventSource(url);
+        es.onmessage = function (event) {
+          try {
+            const payload = JSON.parse(event.data || '{}');
+            if (!payload || payload.type !== 'message') return;
+            if (parseInt(payload.ticketId, 10) !== parseInt(ticketId, 10)) return;
+            if ((payload.senderRole || '') !== 'USER') return;
+
+            const focused = document.hasFocus && document.hasFocus();
+            if (!focused) {
+              const key = 'tickets:unread:admin:' + ticketId;
+              const n = (parseInt(localStorage.getItem(key) || '0', 10) || 0) + 1;
+              localStorage.setItem(key, String(n));
+              updateBadges();
+            }
+          } catch (_) {}
+        };
+      } catch (_) {}
+
+      window.addEventListener('focus', function () {
+        localStorage.setItem('tickets:unread:admin:' + ticketId, '0');
+        updateBadges();
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      const ticketId = {{ active_ticket ? active_ticket.id : 'null' }};
+      if (!ticketId) return;
+      const btn = document.getElementById('ai-generate-admin');
+      const promptEl = document.getElementById('ai-prompt-admin');
+      const textarea = document.querySelector('textarea');
+      if (!btn || !promptEl || !textarea) return;
+
+      btn.addEventListener('click', async function () {
+        const manualPrompt = (promptEl.value || '').trim();
+        const draftText = (textarea.value || '').trim();
+        const prompt = manualPrompt || (draftText !== '' ? ('Améliore et reformule ce brouillon: ' + draftText) : 'Propose une réponse support professionnelle, concise et empathique pour ce ticket.');
+        btn.disabled = true;
+        const old = btn.textContent;
+        btn.textContent = '...';
+        try {
+          const res = await fetch('/api/tickets/' + ticketId + '/chatbot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ prompt })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(data.message || 'Assistant indisponible');
+          }
+          textarea.value = data.reply || '';
+          textarea.focus();
+        } catch (e) {
+          alert((e && e.message) ? e.message : 'Erreur IA');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = old;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Finovate - Mes Réclamations</title>
+
+  <link href="{{ asset('front/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/fontawesome.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/templatemo-finance-business.css') }}">
+  <link rel="stylesheet" href="{{ asset('front/assets/css/owl.css') }}">
+
+  <style>
+    .page-shell { padding: 36px 0; }
+
+    .sidebar {
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .sidebar .title { font-weight: 900; margin: 0 0 10px 0; }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .sidebar a:hover {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.18);
+      color: #0f766e;
+    }
+
+    .sidebar a.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.26);
+      color: #0f766e;
+    }
+
+    .card-shell {
+        background: #fff;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid rgba(15, 118, 110, 0.1);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 12px;
+    }
+    
+    .status-nouveau { background: #e0f2fe; color: #0284c7; }
+    .status-en-cours { background: #fef3c7; color: #d97706; }
+    .status-resolu { background: #dcfce7; color: #15803d; }
+
+    .priorite-badge {
+        font-weight: 700;
+        font-size: 13px;
+    }
+    
+    .priorite-hight { color: #dc2626; }
+    .priorite-medium { color: #d97706; }
+    .priorite-low { color: #16a34a; }
+
+    .table-tools {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin: 12px 0 18px 0;
+    }
+    .table-tools input, .table-tools select {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-weight: 700;
+        font-size: 13px;
+        outline: none;
+    }
+    .table-tools .mini {
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-weight: 800;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{{ path('front_home') }}">
+          <h2>Finovate</h2>
+        </a>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_home') }}">Accueil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('front_about') }}">À propos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ app.user ? path('front_products') : path('front_products_public') }}">Produits</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ path('app_forum_home') }}">Forums</a></li>
+            
+            {% if app.user %}
+              <li class="nav-item active"><a class="nav-link" href="{{ path('user_dashboard') }}">Mon espace</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ path('front_logout') }}">Déconnexion</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="page-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Mes Réclamations</h1>
+          <span>Support et assistance technique</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-shell">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 mb-4">
+          <div class="sidebar">
+            <div class="title">Mon espace</div>
+            <a href="{{ path('user_dashboard') }}">Dashboard</a>
+            <a href="{{ path('user_transactions') }}">Transactions</a>
+            <a href="{{ path('user_goals') }}">Goals</a>
+            <a href="{{ path('user_bills') }}">Factures</a>
+            <a href="{{ path('investissement_index') }}">Investissement</a>
+            <a href="{{ path('front_products') }}">Produits</a>
+            <a href="{{ path('front_ads') }}">Annonces</a>
+            <a href="{{ path('user_buy_points') }}">Acheter des points</a>
+            <a href="{{ path('user_topup') }}">Alimenter carte</a>
+            <a href="{{ path('user_dashboard') ~ '?section=edit' }}">Modifier le profil</a>
+            <a href="{{ path('app_ticket_index') }}" class="active">Réclamations</a>
+            <a href="{{ path('app_ticket_messagerie') }}">Messagerie</a>
+            <a href="{{ path('front_logout') }}">Déconnexion</a>
+          </div>
+        </div>
+
+        <div class="col-lg-9">
+          <div class="card-shell">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h4 style="font-weight:900;margin:0">Liste de vos réclamations</h4>
+                <div class="text-muted" style="font-weight:600">Suivez vos demandes d'assistance</div>
+              </div>
+              <a href="{{ path('app_ticket_new') }}" class="btn btn-success" style="border-radius: 999px; font-weight: bold; padding: 10px 24px;"> + Nouvelle Réclamation</a>
+            </div>
+
+            {% for label, messages in app.flashes %}
+              {% for message in messages %}
+                <div class="alert alert-{{ label }}" role="alert">{{ message }}</div>
+              {% endfor %}
+            {% endfor %}
+
+            {% if tickets is empty %}
+              <div class="alert alert-info" role="alert" style="border-radius: 12px;">Vous n'avez aucune réclamation en cours.</div>
+            {% else %}
+              <div class="table-tools">
+                <input id="ticket-search" type="text" placeholder="Recherche (id, sujet, statut, priorité)..." style="flex:1; min-width: 240px;">
+                <select id="ticket-status">
+                  <option value="">Statut: Tous</option>
+                  <option value="NOUVEAU">Nouveau</option>
+                  <option value="EN_COURS">En cours</option>
+                  <option value="FERME">Fermé</option>
+                  <option value="RESOLU">Résolu</option>
+                </select>
+                <select id="ticket-priority">
+                  <option value="">Priorité: Toutes</option>
+                  <option value="HIGHT">Critique</option>
+                  <option value="MEDIUM">Moyenne</option>
+                  <option value="LOW">Basse</option>
+                </select>
+                <select id="ticket-sort" class="mini">
+                  <option value="date_desc" selected>Trier: + récent</option>
+                  <option value="date_asc">Trier: + ancien</option>
+                  <option value="id_desc">Trier: ID ↓</option>
+                  <option value="id_asc">Trier: ID ↑</option>
+                </select>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-hover" style="border-radius: 12px; overflow: hidden; background: #fafafa;">
+                  <thead class="thead-light">
+                    <tr>
+                      <th style="border-top: none;">ID</th>
+                      <th style="border-top: none;">Sujet</th>
+                      <th style="border-top: none;">Priorité</th>
+                      <th style="border-top: none;">Statut</th>
+                      <th style="border-top: none;">Date</th>
+                      <th style="border-top: none;" class="text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ticket-tbody">
+                    {% for ticket in tickets %}
+                      <tr
+                        style="background: white;"
+                        data-id="{{ ticket.id }}"
+                        data-type="{{ ticket.type|e('html_attr') }}"
+                        data-status="{{ ticket.statut|upper }}"
+                        data-priority="{{ ticket.priorite|upper }}"
+                        data-date="{{ ticket.dateCreation ? ticket.dateCreation|date('Y-m-d H:i:s') : '' }}"
+                      >
+                        <td style="font-weight: bold; color: #6b7280;">#{{ ticket.id }}</td>
+                        <td style="font-weight: 700; color: #111827;">{{ ticket.type }}</td>
+                        <td>
+                            {% if ticket.priorite|lower == 'hight' or ticket.priorite|lower == 'haute' %}
+                                <span class="priorite-badge priorite-hight">Critique</span>
+                            {% elseif ticket.priorite|lower == 'medium' or ticket.priorite|lower == 'moyenne' %}
+                                <span class="priorite-badge priorite-medium">Moyenne</span>
+                            {% else %}
+                                <span class="priorite-badge priorite-low">Basse</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if ticket.statut|upper == 'EN_COURS' or ticket.statut|upper == 'OPEN' %}
+                                <span class="status-badge status-en-cours">En cours</span>
+                            {% elseif ticket.statut|upper == 'RESOLU' or ticket.statut|upper == 'FERME' %}
+                                <span class="status-badge status-resolu">Fermé</span>
+                            {% else %}
+                                <span class="status-badge status-nouveau">Nouveau</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted">{{ ticket.dateCreation ? ticket.dateCreation|date('d/m/Y H:i') : '' }}</td>
+                        <td class="text-right">
+                          <a href="{{ path('app_ticket_messagerie', {'id': ticket.id}) }}" class="btn btn-sm btn-outline-success" style="border-radius: 8px; font-weight: bold;">Voir la discussion</a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  (function () {
+    const searchEl = document.getElementById('ticket-search');
+    const statusEl = document.getElementById('ticket-status');
+    const prioEl = document.getElementById('ticket-priority');
+    const sortEl = document.getElementById('ticket-sort');
+    const tbody = document.getElementById('ticket-tbody');
+    if (!tbody) return;
+
+    function norm(s) {
+      return (s || '').toString().toLowerCase().trim();
+    }
+
+    function mapPriority(raw) {
+      const p = norm(raw);
+      if (p.includes('hight') || p.includes('haute') || p.includes('high')) return 'HIGHT';
+      if (p.includes('medium') || p.includes('moy')) return 'MEDIUM';
+      return 'LOW';
+    }
+
+    function applyFilters() {
+      const q = norm(searchEl ? searchEl.value : '');
+      const status = (statusEl ? statusEl.value : '').toUpperCase();
+      const prio = (prioEl ? prioEl.value : '').toUpperCase();
+
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.forEach((tr) => {
+        const id = norm(tr.getAttribute('data-id'));
+        const type = norm(tr.getAttribute('data-type'));
+        const st = (tr.getAttribute('data-status') || '').toUpperCase();
+        const pr = mapPriority(tr.getAttribute('data-priority'));
+
+        const matchesQ =
+          q === '' ||
+          id.includes(q) ||
+          type.includes(q) ||
+          st.toLowerCase().includes(q) ||
+          pr.toLowerCase().includes(q);
+
+        const matchesStatus = status === '' || st === status || (status === 'FERME' && st === 'RESOLU');
+        const matchesPrio = prio === '' || pr === prio;
+
+        tr.style.display = (matchesQ && matchesStatus && matchesPrio) ? '' : 'none';
+      });
+
+      applySort();
+    }
+
+    function applySort() {
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const visible = rows.filter(r => r.style.display !== 'none');
+      const mode = sortEl ? sortEl.value : 'date_desc';
+
+      const getDate = (tr) => {
+        const d = tr.getAttribute('data-date') || '';
+        const t = Date.parse(d.replace(' ', 'T'));
+        return Number.isFinite(t) ? t : 0;
+      };
+
+      const getId = (tr) => parseInt(tr.getAttribute('data-id') || '0', 10) || 0;
+
+      visible.sort((a, b) => {
+        switch (mode) {
+          case 'date_asc': return getDate(a) - getDate(b);
+          case 'id_asc': return getId(a) - getId(b);
+          case 'id_desc': return getId(b) - getId(a);
+          case 'date_desc':
+          default: return getDate(b) - getDate(a);
+        }
+      });
+
+      visible.forEach(tr => tbody.appendChild(tr));
+    }
+
+    if (searchEl) searchEl.addEventListener('input', applyFilters);
+    if (statusEl) statusEl.addEventListener('change', applyFilters);
+    if (prioEl) prioEl.addEventListener('change', applyFilters);
+    if (sortEl) sortEl.addEventListener('change', applySort);
+
+    applyFilters();
+  })();
+</script>
+</body>
+</html>
