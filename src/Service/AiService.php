@@ -12,12 +12,72 @@ class AiService
     private const OLLAMA_MODEL = 'gemma3:1b';
     private const LANGBLY_URL = 'https://api.langbly.com/language/translate/v2';
 
+    private const OPENAI_URL   = 'https://api.openai.com/v1/chat/completions';
+    private const OPENAI_MODEL = 'gpt-4o-mini';
+
     public function __construct(
         private HttpClientInterface $http,
         private string $groqApiKey,
         private string $langblyApiKey,
+        private string $openaiApiKey = '',
         private ?TranslationUsageService $usageService = null,
     ) {}
+
+    /**
+     * Like call() but falls back to OpenAI if Groq fails or returns empty.
+     * Used only for personality analysis and AI recommendation.
+     */
+    private function callWithFallback(string $system, string $user, float $temp = 0.7): string
+    {
+        // Try Groq first
+        try {
+            $response = $this->http->request('POST', self::GROQ_URL, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->groqApiKey,
+                    'Content-Type'  => 'application/json',
+                ],
+                'json' => [
+                    'model'       => self::MODEL,
+                    'temperature' => $temp,
+                    'messages'    => [
+                        ['role' => 'system', 'content' => $system],
+                        ['role' => 'user',   'content' => $user],
+                    ],
+                ],
+                'timeout' => 20,
+            ]);
+            $data    = $response->toArray();
+            $content = trim($data['choices'][0]['message']['content'] ?? '');
+            if ($content !== '') {
+                return $content;
+            }
+        } catch (\Throwable) {
+            // fall through to OpenAI
+        }
+
+        // Fallback: OpenAI
+        if ($this->openaiApiKey) {
+            $response = $this->http->request('POST', self::OPENAI_URL, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->openaiApiKey,
+                    'Content-Type'  => 'application/json',
+                ],
+                'json' => [
+                    'model'       => self::OPENAI_MODEL,
+                    'temperature' => $temp,
+                    'messages'    => [
+                        ['role' => 'system', 'content' => $system],
+                        ['role' => 'user',   'content' => $user],
+                    ],
+                ],
+                'timeout' => 30,
+            ]);
+            $data = $response->toArray();
+            return trim($data['choices'][0]['message']['content'] ?? '');
+        }
+
+        return '';
+    }
 
     // ── Core call ─────────────────────────────────────────────────────────────
 
@@ -234,7 +294,7 @@ class AiService
             $stats['upvotes'] ?? 0, $stats['downvotes'] ?? 0
         );
 
-        $result = $this->call(
+        $result = $this->callWithFallback(
             'You are a personality analyst for a financial forum. Based on user activity, return ONLY valid JSON with keys: title (string, emoji + short title), description (2-3 sentences in French), traits (array of 3-5 French trait strings), sentiment (object with positive/neutral/negative as integers summing to 100). No markdown.',
             $prompt,
             0.6
@@ -265,7 +325,7 @@ class AiService
             $stats['postsPerDay'] ?? 0
         );
 
-        $result = $this->call(
+        $result = $this->callWithFallback(
             'You are a social media growth strategist for a financial forum. Based on the user\'s activity, create a personalized growth plan. Return ONLY valid JSON with keys: bestPostingTime (string, e.g. "18h-20h"), postsPerDay (int, recommended), recommendedForums (array of 3 forum topic strings in French), contentIdeas (array of 5 post topic ideas in French), weeklyGoal (string, one sentence in French), tips (array of 3 actionable tips in French). No markdown.',
             $prompt,
             0.7

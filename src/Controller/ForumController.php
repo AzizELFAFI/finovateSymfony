@@ -20,6 +20,7 @@ use App\Repository\CommentRepository;
 use App\Service\AlertService;
 use App\Service\AiService;
 use App\Service\AdminRestrictionService;
+use App\Service\InteractionService;
 use App\Service\RecommendationService;
 use App\Service\UserRelationService;
 use App\Repository\UserBlockRepository;
@@ -363,7 +364,7 @@ final class ForumController extends AbstractController
     }
 
     #[Route('/{id}/join', name: 'app_forum_join', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function joinForum(Forum $forum, EntityManagerInterface $em, UserForumRepository $ufRepo, AlertService $alerts, UserRelationService $relations): Response
+    public function joinForum(Forum $forum, EntityManagerInterface $em, UserForumRepository $ufRepo, AlertService $alerts, UserRelationService $relations, InteractionService $interactions): Response
     {
         // Check if forum creator has peer-restricted me
         if ($forum->getCreator() && ($r = $this->checkPeerRestriction($forum->getCreator()->getId(), $relations, 'app_forum_home'))) return $r;
@@ -392,6 +393,9 @@ final class ForumController extends AbstractController
             if ($newBadges) {
                 $this->addFlash('new_badges', json_encode($newBadges));
             }
+
+            // Track JOIN interaction (after flush so membership exists)
+            try { $interactions->track($this->getCurrentUserId(), $forum->getId(), 'JOIN'); } catch (\Throwable) {}
         }
         return $this->redirectToRoute('app_forum_joined');
     }
@@ -421,8 +425,12 @@ final class ForumController extends AbstractController
     // ── Post pages ────────────────────────────────────────────────────────────
 
     #[Route('/{id}/posts', name: 'app_forum_posts', requirements: ['id' => '\d+'])]
-    public function posts(Forum $forum, PostRepository $postRepo, Request $request, UserBlockRepository $blockRepo): Response
+    public function posts(Forum $forum, PostRepository $postRepo, Request $request, UserBlockRepository $blockRepo, InteractionService $interactions): Response
     {
+        // Track VIEW interaction
+        if ($this->getUser()) {
+            try { $interactions->track($this->getCurrentUserId(), $forum->getId(), 'VIEW'); } catch (\Throwable) {}
+        }
         $sort   = $request->query->get('sort', 'recent');
         $search = $request->query->get('q', '');
 
@@ -464,8 +472,12 @@ final class ForumController extends AbstractController
     }
 
     #[Route('/post/{id}', name: 'app_post_detail', requirements: ['id' => '\d+'])]
-    public function postDetail(Post $post, VoteRepository $voteRepo, UserForumRepository $ufRepo, ForumRepository $forumRepo, UserBlockRepository $blockRepo, UserPeerRestrictionRepository $restrictRepo, UserRelationService $relations): Response
+    public function postDetail(Post $post, VoteRepository $voteRepo, UserForumRepository $ufRepo, ForumRepository $forumRepo, UserBlockRepository $blockRepo, UserPeerRestrictionRepository $restrictRepo, UserRelationService $relations, InteractionService $interactions): Response
     {
+        // Track CLICK interaction on the forum this post belongs to
+        if ($this->getUser() && $post->getForum()) {
+            try { $interactions->track($this->getCurrentUserId(), $post->getForum()->getId(), 'CLICK'); } catch (\Throwable) {}
+        }
         $authorId = $post->getAuthor()?->getId();
 
         $userVote = $voteRepo->createQueryBuilder('v')
@@ -507,7 +519,7 @@ final class ForumController extends AbstractController
     // ── Post CRUD ─────────────────────────────────────────────────────────────
 
     #[Route('/{id}/create-post', name: 'app_post_create', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
-    public function createPost(Forum $forum, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, AlertService $alerts, AdminRestrictionService $restrictionService, \App\Service\CloudinaryService $cloudinary): Response
+    public function createPost(Forum $forum, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, AlertService $alerts, AdminRestrictionService $restrictionService, \App\Service\CloudinaryService $cloudinary, InteractionService $interactions): Response
     {
         if ($redirect = $this->checkRestriction('post', $restrictionService, $em)) return $redirect;
         if ($request->isMethod('POST')) {
@@ -547,6 +559,10 @@ final class ForumController extends AbstractController
             $newBadges = $alerts->checkAndAwardBadges($this->getCurrentUserId());
             $em->flush();
             if ($newBadges) $this->addFlash('new_badges', json_encode($newBadges));
+
+            // Track POST interaction
+            try { $interactions->track($this->getCurrentUserId(), $forum->getId(), 'POST'); } catch (\Throwable) {}
+
             return $this->redirectToRoute('app_forum_posts', ['id' => $forum->getId()]);
         }
         return $this->render('forum/create_post_dialog.html.twig', ['forum' => $forum]);
@@ -600,7 +616,7 @@ final class ForumController extends AbstractController
     }
 
     #[Route('/post/{id}/vote', name: 'app_post_vote', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function vote(Post $post, Request $request, EntityManagerInterface $em, VoteRepository $voteRepo, AlertService $alerts, UserRelationService $relations): Response
+    public function vote(Post $post, Request $request, EntityManagerInterface $em, VoteRepository $voteRepo, AlertService $alerts, UserRelationService $relations, InteractionService $interactions): Response
     {
         if ($post->getAuthor() && ($r = $this->checkPeerRestriction($post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
         $type = $request->request->get('type');
@@ -637,13 +653,19 @@ final class ForumController extends AbstractController
         $newBadges = $alerts->checkAndAwardBadges($this->getCurrentUserId());
         $em->flush();
         if ($newBadges) $this->addFlash('new_badges', json_encode($newBadges));
+
+        // Track VOTE interaction
+        if ($post->getForum()) {
+            try { $interactions->track($this->getCurrentUserId(), $post->getForum()->getId(), 'VOTE'); } catch (\Throwable) {}
+        }
+
         return $this->redirectToRoute('app_post_detail', ['id' => $post->getId()]);
     }
 
     // ── Share ─────────────────────────────────────────────────────────────────
 
     #[Route('/post/{id}/share', name: 'app_post_share', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function sharePost(Post $post, Request $request, EntityManagerInterface $em, SharedPostRepository $spRepo, AlertService $alerts, ForumRepository $forumRepo, UserRelationService $relations): Response
+    public function sharePost(Post $post, Request $request, EntityManagerInterface $em, SharedPostRepository $spRepo, AlertService $alerts, ForumRepository $forumRepo, UserRelationService $relations, InteractionService $interactions): Response
     {
         if ($post->getAuthor() && ($r = $this->checkPeerRestriction($post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
         $targetForumId = $request->request->get('target_forum_id');
@@ -701,6 +723,11 @@ final class ForumController extends AbstractController
             $em->flush();
             if ($newBadges) $this->addFlash('new_badges', json_encode($newBadges));
             $this->addFlash('success', 'Post partagé dans "' . $targetForum->getTitle() . '" !');
+
+            // Track SHARE interaction on the original post's forum
+            if ($post->getForum()) {
+                try { $interactions->track($this->getCurrentUserId(), $post->getForum()->getId(), 'SHARE'); } catch (\Throwable) {}
+            }
         }
 
         return $this->redirectToRoute('app_forum_posts', ['id' => $targetForum->getId()]);
@@ -717,7 +744,7 @@ final class ForumController extends AbstractController
     // ── Comment CRUD ──────────────────────────────────────────────────────────
 
     #[Route('/post/{id}/comment', name: 'app_post_comment', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function addComment(Post $post, Request $request, EntityManagerInterface $em, AlertService $alerts, AdminRestrictionService $restrictionService, UserRelationService $relations): Response
+    public function addComment(Post $post, Request $request, EntityManagerInterface $em, AlertService $alerts, AdminRestrictionService $restrictionService, UserRelationService $relations, InteractionService $interactions): Response
     {
         if ($redirect = $this->checkRestriction('comment', $restrictionService, $em)) return $redirect;
         if ($post->getAuthor() && ($r = $this->checkPeerRestriction($post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
@@ -741,6 +768,11 @@ final class ForumController extends AbstractController
             $newBadges = $alerts->checkAndAwardBadges($this->getCurrentUserId());
             $em->flush();
             if ($newBadges) $this->addFlash('new_badges', json_encode($newBadges));
+
+            // Track COMMENT interaction
+            if ($post->getForum()) {
+                try { $interactions->track($this->getCurrentUserId(), $post->getForum()->getId(), 'COMMENT'); } catch (\Throwable) {}
+            }
         }
         return $this->redirectToRoute('app_post_detail', ['id' => $post->getId()]);
     }

@@ -46,6 +46,7 @@ services:
         arguments:
             $groqApiKey: '%env(GROQ_API_KEY)%'
             $langblyApiKey: '%env(LANGBLY_API_KEY)%'
+            $openaiApiKey: '%env(OPENAI_API_KEY)%'
 
     App\Service\WhisperService:
         arguments:
