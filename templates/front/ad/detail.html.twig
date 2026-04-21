@@ -237,9 +237,10 @@
                 </div>
 
                 <div class="d-flex flex-wrap" style="gap:10px">
-                  <form action="{{ path('front_ad_click', {'id': ad.id}) }}" method="POST" class="mb-0" style="flex:1;min-width:240px">
+                  <div id="ad-click-message" style="display:none;width:100%"></div>
+                  <form action="{{ path('front_ad_click', {'id': ad.id}) }}" method="POST" class="mb-0" style="flex:1;min-width:240px" id="ad-click-form">
                     <input type="hidden" name="_token" value="{{ csrf_token('ad_click_' ~ ad.id) }}">
-                    <button type="submit" class="btn btn-success btn-lg btn-block" style="border-radius:12px;font-weight:800">
+                    <button type="submit" class="btn btn-success btn-lg btn-block" style="border-radius:12px;font-weight:800" id="ad-click-btn">
                       <i class="fa fa-mouse-pointer mr-1"></i> Cliquer et gagner {{ ad.rewardPoints }} points
                     </button>
                   </form>
@@ -382,6 +383,64 @@
           ratingMessage.innerHTML = '<i class="fa fa-exclamation-circle mr-1"></i> Erreur réseau';
         });
     };
+
+    var adClickForm = document.getElementById('ad-click-form');
+    var adClickBtn = document.getElementById('ad-click-btn');
+    var adClickMessage = document.getElementById('ad-click-message');
+
+    function showAdClickMessage(type, html) {
+      if (!adClickMessage) return;
+
+      adClickMessage.style.display = 'block';
+      adClickMessage.innerHTML =
+        '<div class="alert alert-' + type + '" role="alert" style="border-radius:12px;font-weight:700;margin:0 0 10px 0">' +
+          html +
+        '</div>';
+
+      window.clearTimeout(showAdClickMessage._t);
+      showAdClickMessage._t = window.setTimeout(function() {
+        adClickMessage.style.display = 'none';
+      }, 4000);
+    }
+
+    if (adClickForm && adClickBtn) {
+      adClickForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        adClickBtn.disabled = true;
+        var originalHtml = adClickBtn.innerHTML;
+        adClickBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-1"></i> Traitement...';
+
+        fetch(adClickForm.action, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(adClickForm)
+        })
+          .then(function(res) {
+            return res.json().then(function(payload) {
+              return { ok: res.ok, status: res.status, payload: payload };
+            });
+          })
+          .then(function(result) {
+            if (result.ok) {
+              var pts = (result.payload && result.payload.rewardPoints) ? result.payload.rewardPoints : {{ ad.rewardPoints }};
+              showAdClickMessage('success', '<i class="fa fa-check-circle mr-1"></i> ' + (result.payload.message || 'Clic enregistré') + ' (+ ' + pts + ' pts)');
+            } else {
+              var msg = (result.payload && (result.payload.message || result.payload.error))
+                ? (result.payload.message || result.payload.error)
+                : 'Une erreur est survenue';
+              showAdClickMessage('danger', '<i class="fa fa-exclamation-circle mr-1"></i> ' + msg);
+            }
+          })
+          .catch(function() {
+            showAdClickMessage('danger', '<i class="fa fa-exclamation-circle mr-1"></i> Erreur réseau');
+          })
+          .finally(function() {
+            adClickBtn.disabled = false;
+            adClickBtn.innerHTML = originalHtml;
+          });
+      });
+    }
   </script>
 </body>
 </html>

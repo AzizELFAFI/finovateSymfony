@@ -114,7 +114,6 @@
                 <table class="table table-hover mb-0">
                   <thead>
                     <tr>
-                      <th>#</th>
                       <th>Nom</th>
                       <th>Description</th>
                       <th>Prix (Points)</th>
@@ -126,7 +125,6 @@
                   <tbody>
                     {% for product in products %}
                     <tr>
-                      <td><strong>{{ product.id }}</strong></td>
                       <td>{{ product.name }}</td>
                       <td>{{ product.description ? product.description: '-' }}</td>
                       <td><badge class="badge bg-primary">{{ product.pricePoints }}</badge></td>
