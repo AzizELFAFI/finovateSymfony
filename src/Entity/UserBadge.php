@@ -18,7 +18,7 @@ class UserBadge
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true)]
     private ?User $user = null;
 
-    #[ORM\ManyToOne(targetEntity: BadgeType::class, inversedBy: 'userBadges')]
+    #[ORM\ManyToOne(targetEntity: BadgeType::class, inversedBy: 'userBadges', cascade: ['remove'])]
     #[ORM\JoinColumn(name: 'badge_type_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
     private ?BadgeType $badgeType = null;
 

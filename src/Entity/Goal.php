@@ -5,18 +5,17 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-
 #[ORM\Entity]
 class Goal
 {
 
     #[ORM\Id]
-    #[ORM\Column(type: "integer")]
-    private int $id;
+    #[ORM\Column(type: "bigint")]
+    private string $id;
 
-    #[ORM\Column(type: "integer")]
+    #[ORM\Column(type: "bigint")]
     #[Assert\NotBlank(message: "L'utilisateur est obligatoire.")]
-    private int $id_user;
+    private string $id_user;
 
     #[ORM\Column(type: "string", length: 40)]
     #[Assert\NotBlank(message: "Le titre est obligatoire.")]
@@ -52,22 +51,22 @@ class Goal
     #[Assert\GreaterThanOrEqual(value: 0, message: "Le montant actuel doit être supérieur ou égal à 0.")]
     private string $current_amount;
 
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
-    public function setId($value)
+    public function setId(string $value): void
     {
         $this->id = $value;
     }
 
-    public function getId_user()
+    public function getId_user(): string
     {
         return $this->id_user;
     }
 
-    public function setId_user($value)
+    public function setId_user(string $value): void
     {
         $this->id_user = $value;
     }

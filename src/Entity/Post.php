@@ -17,7 +17,7 @@ class Post
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Forum::class, inversedBy: 'posts')]
-    #[ORM\JoinColumn(name: 'forum_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'forum_id', referencedColumnName: 'id', nullable: false)]
     private ?Forum $forum = null;
 
     #[ORM\Column(length: 200)]
@@ -39,13 +39,13 @@ class Post
     #[ORM\Column(name: 'updated_at', type: 'datetime')]
     private \DateTime $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'post', targetEntity: Comment::class, cascade: ['remove'])]
+    #[ORM\OneToMany(mappedBy: 'post', targetEntity: Comment::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $comments;
 
-    #[ORM\OneToMany(mappedBy: 'post', targetEntity: Vote::class, cascade: ['remove'])]
+    #[ORM\OneToMany(mappedBy: 'post', targetEntity: Vote::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $votes;
 
-    #[ORM\OneToMany(mappedBy: 'post', targetEntity: SharedPost::class, cascade: ['remove'])]
+    #[ORM\OneToMany(mappedBy: 'post', targetEntity: SharedPost::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $sharedPosts;
 
     public function __construct()
