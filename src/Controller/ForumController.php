@@ -367,7 +367,7 @@ final class ForumController extends AbstractController
     public function joinForum(Forum $forum, EntityManagerInterface $em, UserForumRepository $ufRepo, AlertService $alerts, UserRelationService $relations, InteractionService $interactions): Response
     {
         // Check if forum creator has peer-restricted me
-        if ($forum->getCreator() && ($r = $this->checkPeerRestriction($forum->getCreator()->getId(), $relations, 'app_forum_home'))) return $r;
+        if ($forum->getCreator() && ($r = $this->checkPeerRestriction((int) $forum->getCreator()->getId(), $relations, 'app_forum_home'))) return $r;
         $existing = $ufRepo->createQueryBuilder('uf')
             ->where('uf.forum = :f AND uf.user = :uid')
             ->setParameter('f', $forum)->setParameter('uid', $this->getCurrentUserId())
@@ -618,7 +618,7 @@ final class ForumController extends AbstractController
     #[Route('/post/{id}/vote', name: 'app_post_vote', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function vote(Post $post, Request $request, EntityManagerInterface $em, VoteRepository $voteRepo, AlertService $alerts, UserRelationService $relations, InteractionService $interactions): Response
     {
-        if ($post->getAuthor() && ($r = $this->checkPeerRestriction($post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
+        if ($post->getAuthor() && ($r = $this->checkPeerRestriction((int) $post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
         $type = $request->request->get('type');
         $existing = $voteRepo->createQueryBuilder('v')
             ->where('v.post = :p AND v.user = :uid')
@@ -667,7 +667,7 @@ final class ForumController extends AbstractController
     #[Route('/post/{id}/share', name: 'app_post_share', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function sharePost(Post $post, Request $request, EntityManagerInterface $em, SharedPostRepository $spRepo, AlertService $alerts, ForumRepository $forumRepo, UserRelationService $relations, InteractionService $interactions): Response
     {
-        if ($post->getAuthor() && ($r = $this->checkPeerRestriction($post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
+        if ($post->getAuthor() && ($r = $this->checkPeerRestriction((int) $post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
         $targetForumId = $request->request->get('target_forum_id');
         $comment       = trim($request->request->get('comment', ''));
 
@@ -747,7 +747,7 @@ final class ForumController extends AbstractController
     public function addComment(Post $post, Request $request, EntityManagerInterface $em, AlertService $alerts, AdminRestrictionService $restrictionService, UserRelationService $relations, InteractionService $interactions): Response
     {
         if ($redirect = $this->checkRestriction('comment', $restrictionService, $em)) return $redirect;
-        if ($post->getAuthor() && ($r = $this->checkPeerRestriction($post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
+        if ($post->getAuthor() && ($r = $this->checkPeerRestriction((int) $post->getAuthor()->getId(), $relations, 'app_post_detail', ['id' => $post->getId()]))) return $r;
         $content = trim($request->request->get('content', ''));
         if ($content) {
             $comment = new Comment();

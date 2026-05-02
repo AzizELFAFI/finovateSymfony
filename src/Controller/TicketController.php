@@ -24,7 +24,7 @@ class TicketController extends AbstractController
     public function index(EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
-        if (!$user) {
+        if (!$user instanceof \App\Entity\User) {
             return $this->redirectToRoute('front_login');
         }
 
@@ -41,7 +41,7 @@ class TicketController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $user = $this->getUser();
-        if (!$user) {
+        if (!$user instanceof \App\Entity\User) {
             return $this->redirectToRoute('front_login');
         }
 
@@ -75,7 +75,7 @@ class TicketController extends AbstractController
     ): Response
     {
         $user = $this->getUser();
-        if (!$user) {
+        if (!$user instanceof \App\Entity\User) {
             return $this->redirectToRoute('front_login');
         }
 

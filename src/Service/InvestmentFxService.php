@@ -87,8 +87,8 @@ final class InvestmentFxService
     public function convertFromTnd(float $amountTnd, ?array $rates): array
     {
         $rates ??= ['EUR' => 0.0, 'USD' => 0.0];
-        $re = $rates['EUR'] ?? 0.0;
-        $ru = $rates['USD'] ?? 0.0;
+        $re = $rates['EUR'];
+        $ru = $rates['USD'];
 
         return [
             'tnd' => $amountTnd,

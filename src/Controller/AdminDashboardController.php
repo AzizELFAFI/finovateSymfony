@@ -7,6 +7,7 @@ use App\Entity\FlaggedContent;
 use App\Enum\DeletionReason;
 use App\Repository\CommentRepository;
 use App\Repository\FlaggedContentRepository;
+use App\Repository\ForumRepository;
 use App\Repository\PostRepository;
 use App\Repository\UserRepository;
 use App\Repository\UserRestrictionRepository;

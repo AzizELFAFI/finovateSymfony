@@ -413,12 +413,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->userAdClicks = new ArrayCollection();
     }
 
-    /**
-     * @return Collection<int, UserAdClick>
-     */
     public function getUserAdClicks(): Collection
     {
         return $this->userAdClicks;
+    }
+
+    public function getForumRecommendations(): Collection
+    {
+        return $this->forumRecommendations;
+    }
+
+    public function getSharedPosts(): Collection
+    {
+        return $this->sharedPosts;
+    }
+
+    public function getUserForums(): Collection
+    {
+        return $this->userForums;
+    }
+
+    public function getUserInteractions(): Collection
+    {
+        return $this->userInteractions;
+    }
+
+    public function getVotes(): Collection
+    {
+        return $this->votes;
+    }
+
+    public function getUserBadges(): Collection
+    {
+        return $this->userBadges;
     }
 
     public function addUserAdClick(UserAdClick $userAdClick): static

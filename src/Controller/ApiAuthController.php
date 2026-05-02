@@ -158,10 +158,7 @@ final class ApiAuthController extends AbstractController
             error_log("enrollFace - Calling FaceApiClient::enroll");
             $result = $faceApiClient->enroll('user-' . $user->getId(), $bytes);
             error_log("enrollFace - FaceApiClient::enroll success");
-            $embedding = $result['embedding'] ?? null;
-            if (!is_array($embedding)) {
-                return $this->json(['message' => 'Réponse API visage invalide.'], 422);
-            }
+            $embedding = $result['embedding'];
 
             $user->setFaceEmbedding(json_encode($embedding, JSON_THROW_ON_ERROR));
             $user->setFaceAuthEnabled(true);
@@ -532,7 +529,7 @@ final class ApiAuthController extends AbstractController
             return $this->json(['message' => 'Format image non supporté. Utilisez JPG/PNG/WebP.'], 422);
         }
 
-        if ($file->getSize() !== null && $file->getSize() > 2 * 1024 * 1024) {
+        if ($file->getSize() > 2 * 1024 * 1024) {
             return $this->json(['message' => 'Image trop grande (max 2MB).'], 422);
         }
 
@@ -653,7 +650,7 @@ final class ApiAuthController extends AbstractController
         }
 
         if ($password !== null) {
-            if ($passwordConfirm === null || $passwordConfirm === '') {
+            if ($passwordConfirm === null) {
                 return $this->json(['message' => 'Confirmation du mot de passe obligatoire.'], 422);
             }
 

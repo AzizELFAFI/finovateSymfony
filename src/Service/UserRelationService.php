@@ -30,7 +30,7 @@ class UserRelationService
 
     public function block(User $blocker, User $blocked, string $reason): void
     {
-        $existing = $this->blockRepo->findBlock($blocker->getId(), $blocked->getId());
+        $existing = $this->blockRepo->findBlock((int) $blocker->getId(), (int) $blocked->getId());
         if ($existing) return;
 
         $block = new UserBlock();
@@ -50,7 +50,7 @@ class UserRelationService
 
     public function unblock(User $blocker, User $blocked): void
     {
-        $block = $this->blockRepo->findBlock($blocker->getId(), $blocked->getId());
+        $block = $this->blockRepo->findBlock((int) $blocker->getId(), (int) $blocked->getId());
         if ($block) {
             $this->em->remove($block);
             $this->em->flush();
@@ -72,7 +72,7 @@ class UserRelationService
     public function restrict(User $restrictor, User $restricted, string $reason, ?int $days): void
     {
         // Deactivate existing
-        $existing = $this->restrictRepo->findActive($restrictor->getId(), $restricted->getId());
+        $existing = $this->restrictRepo->findActive((int) $restrictor->getId(), (int) $restricted->getId());
         if ($existing) {
             $existing->setActive(false);
             $this->em->flush();
@@ -99,7 +99,7 @@ class UserRelationService
 
     public function unrestrict(User $restrictor, User $restricted): void
     {
-        $r = $this->restrictRepo->findActive($restrictor->getId(), $restricted->getId());
+        $r = $this->restrictRepo->findActive((int) $restrictor->getId(), (int) $restricted->getId());
         if ($r) {
             $r->setActive(false);
             $this->em->flush();
