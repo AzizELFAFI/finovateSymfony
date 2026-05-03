@@ -71,62 +71,62 @@ class Goal
         $this->id_user = $value;
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->title;
     }
 
-    public function setTitle($value)
+    public function setTitle(string $value): void
     {
         $this->title = $value;
     }
 
-    public function getDeadline()
+    public function getDeadline(): \DateTimeInterface
     {
         return $this->deadline;
     }
 
-    public function setDeadline($value)
+    public function setDeadline(\DateTimeInterface $value): void
     {
         $this->deadline = $value;
     }
 
-    public function getStatus()
+    public function getStatus(): string
     {
         return $this->status;
     }
 
-    public function setStatus($value)
+    public function setStatus(string $value): void
     {
         $this->status = $value;
     }
 
-    public function getCreated_at()
+    public function getCreated_at(): \DateTimeInterface
     {
         return $this->created_at;
     }
 
-    public function setCreated_at($value)
+    public function setCreated_at(\DateTimeInterface $value): void
     {
         $this->created_at = $value;
     }
 
-    public function getTarget_amount()
+    public function getTarget_amount(): string
     {
         return $this->target_amount;
     }
 
-    public function setTarget_amount($value)
+    public function setTarget_amount(string $value): void
     {
         $this->target_amount = $value;
     }
 
-    public function getCurrent_amount()
+    public function getCurrent_amount(): string
     {
         return $this->current_amount;
     }
 
-    public function setCurrent_amount($value)
+    public function setCurrent_amount(string $value): void
     {
         $this->current_amount = $value;
     }

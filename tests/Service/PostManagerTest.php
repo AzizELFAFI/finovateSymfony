@@ -159,15 +159,15 @@ class PostManagerTest extends TestCase
         $this->assertTrue($this->postManager->validate($post));
     }
 
-    public function testPostWithoutAuthor(): void
+    public function testPostWithAuthor(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('L\'auteur du post est obligatoire.');
-        
+        // Since author is now mandatory (nullable=false), a post always has an author
+        // The validate method should pass when author is present
+        $user = $this->createUser();
         $forum = $this->createForum();
-        $post = $this->createPost('Test Post', 'Contenu valide avec au moins 10 caractères', null, $forum);
+        $post = $this->createPost('Test Post', 'Contenu valide avec au moins 10 caractères', $user, $forum);
         
-        $this->postManager->validate($post);
+        $this->assertTrue($this->postManager->validate($post));
     }
 
     public function testPostWithoutForum(): void
@@ -217,11 +217,12 @@ class PostManagerTest extends TestCase
         $this->assertTrue($this->postManager->hasAuthor($post));
     }
 
-    public function testHasAuthorWithoutAuthor(): void
+    public function testHasAuthorAlwaysReturnsTrue(): void
     {
+        // Since author is now mandatory (nullable=false), hasAuthor always returns true
         $post = $this->createPost('Title', 'Content');
         
-        $this->assertFalse($this->postManager->hasAuthor($post));
+        $this->assertTrue($this->postManager->hasAuthor($post));
     }
 
     public function testHasForumWithForum(): void

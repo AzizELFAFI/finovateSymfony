@@ -16,6 +16,7 @@ use SensitiveParameter;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'user')]
+#[ORM\UniqueConstraint(name: 'UNIQ_EMAIL', columns: ['email'])]
 #[Vich\Uploadable]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
