@@ -27,7 +27,7 @@ class Post
     private string $content;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'posts')]
-    #[ORM\JoinColumn(name: 'author_id', referencedColumnName: 'id', nullable: true)]
+    #[ORM\JoinColumn(name: 'author_id', referencedColumnName: 'id', nullable: false)]
     private ?User $author = null;
 
     #[ORM\Column(name: 'image_url', length: 500, nullable: true)]
@@ -50,6 +50,7 @@ class Post
 
     public function __construct()
     {
+        $this->author = new User();
         $this->comments = new ArrayCollection();
         $this->votes = new ArrayCollection();
         $this->sharedPosts = new ArrayCollection();

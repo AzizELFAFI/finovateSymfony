@@ -31,7 +31,7 @@ class ForumManagerTest extends TestCase
         if ($creator !== null) {
             $forum->setCreator($creator);
         }
-        
+    
         return $forum;
     }
 
