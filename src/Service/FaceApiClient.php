@@ -43,7 +43,7 @@ final class FaceApiClient
         }
 
         if ($status < 200 || $status >= 300) {
-            $detail = is_array($data) && isset($data['detail']) ? (string) $data['detail'] : 'Face API enroll failed.';
+            $detail = isset($data['detail']) ? (string) $data['detail'] : 'Face API enroll failed.';
             throw new \RuntimeException($detail);
         }
 
@@ -79,10 +79,10 @@ final class FaceApiClient
         $data = $response->toArray(false);
 
         if ($status < 200 || $status >= 300) {
-            $detail = is_array($data) && isset($data['detail']) ? (string) $data['detail'] : 'Face API verify failed.';
+            $detail = isset($data['detail']) ? (string) $data['detail'] : 'Face API verify failed.';
             throw new \RuntimeException($detail);
         }
 
-        return is_array($data) ? $data : [];
+        return $data;
     }
 }

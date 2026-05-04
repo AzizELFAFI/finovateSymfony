@@ -14,6 +14,7 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
@@ -29,7 +30,7 @@ final class GithubAuthenticator extends OAuth2Authenticator implements Authentic
     ) {
     }
 
-    public function supports(Request $request): ?bool
+    public function supports(Request $request): bool
     {
         return $request->attributes->get('_route') === 'connect_github_check';
     }
@@ -107,7 +108,7 @@ final class GithubAuthenticator extends OAuth2Authenticator implements Authentic
         return '';
     }
 
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): Response
     {
         $user = $token->getUser();
 
@@ -124,7 +125,7 @@ final class GithubAuthenticator extends OAuth2Authenticator implements Authentic
         return new RedirectResponse($url);
     }
 
-    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
         if ($exception instanceof CustomUserMessageAuthenticationException) {
             $messageKey = $exception->getMessageKey();
@@ -134,7 +135,10 @@ final class GithubAuthenticator extends OAuth2Authenticator implements Authentic
             }
 
             if ($messageKey === 'GITHUB_NO_EMAIL') {
-                $request->getSession()->getFlashBag()->add('error', 'Impossible de récupérer votre adresse email depuis GitHub. Vérifiez vos paramètres GitHub.');
+                $session = $request->getSession();
+                if ($session instanceof Session) {
+                    $session->getFlashBag()->add('error', 'Impossible de récupérer votre adresse email depuis GitHub. Vérifiez vos paramètres GitHub.');
+                }
                 return new RedirectResponse($this->router->generate('front_login'));
             }
         }

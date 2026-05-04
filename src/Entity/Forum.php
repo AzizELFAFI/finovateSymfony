@@ -32,10 +32,10 @@ class Forum
     #[ORM\Column(name: 'created_at', type: 'datetime')]
     private \DateTime $createdAt;
 
-    #[ORM\OneToMany(mappedBy: 'forum', targetEntity: Post::class, cascade: ['remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'forum', targetEntity: Post::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $posts;
 
-    #[ORM\OneToMany(mappedBy: 'forum', targetEntity: UserForum::class, cascade: ['remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'forum', targetEntity: UserForum::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $members;
 
     public function __construct()

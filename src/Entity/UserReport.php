@@ -56,5 +56,5 @@ class UserReport
     public function setDetails(?string $details): static { $this->details = $details; return $this; }
     public function isTreated(): bool { return $this->treated; }
     public function setTreated(bool $treated): static { $this->treated = $treated; return $this; }
-    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function getCreatedAt(): \DateTime { return $this->createdAt; }
 }

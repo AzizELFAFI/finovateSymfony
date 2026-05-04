@@ -37,7 +37,7 @@ class Ticket
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $date_resolution = null;
 
-    #[ORM\OneToMany(mappedBy: 'ticket', targetEntity: Message::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'ticket', targetEntity: Message::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['sentAt' => 'ASC', 'id' => 'ASC'])]
     private Collection $messages;
 

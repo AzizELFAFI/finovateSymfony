@@ -115,7 +115,6 @@
                 <table class="table table-hover mb-0">
                   <thead>
                     <tr>
-                      <th>#</th>
                       <th>Titre</th>
                       <th>Durée (secondes)</th>
                       <th>Points Récompense</th>
@@ -127,7 +126,6 @@
                   <tbody>
                     {% for ad in ads %}
                     <tr>
-                      <td><strong>{{ ad.id }}</strong></td>
                       <td>{{ ad.title }}</td>
                       <td>{{ ad.duration }}</td>
                       <td><badge class="badge bg-info">{{ ad.rewardPoints }}</badge></td>

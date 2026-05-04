@@ -11,9 +11,12 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Symfony\Component\Serializer\Annotation\Ignore;
+use SensitiveParameter;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'user')]
+#[ORM\UniqueConstraint(name: 'UNIQ_EMAIL', columns: ['email'])]
 #[Vich\Uploadable]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -29,6 +32,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: "string", length: 255)]
     #[Assert\NotBlank(message: "Le mot de passe est obligatoire.")]
+    #[Ignore]
     private string $password;
 
     #[ORM\Column(type: "string", length: 100)]
@@ -118,9 +122,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password;
     }
 
-    public function setPassword(string $value): void
+    public function setPassword(#[SensitiveParameter] string $value): self
     {
         $this->password = $value;
+        return $this;
     }
 
     public function getUserIdentifier(): string
@@ -413,12 +418,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->userAdClicks = new ArrayCollection();
     }
 
-    /**
-     * @return Collection<int, UserAdClick>
-     */
     public function getUserAdClicks(): Collection
     {
         return $this->userAdClicks;
+    }
+
+    public function getForumRecommendations(): Collection
+    {
+        return $this->forumRecommendations;
+    }
+
+    public function getSharedPosts(): Collection
+    {
+        return $this->sharedPosts;
+    }
+
+    public function getUserForums(): Collection
+    {
+        return $this->userForums;
+    }
+
+    public function getUserInteractions(): Collection
+    {
+        return $this->userInteractions;
+    }
+
+    public function getVotes(): Collection
+    {
+        return $this->votes;
+    }
+
+    public function getUserBadges(): Collection
+    {
+        return $this->userBadges;
     }
 
     public function addUserAdClick(UserAdClick $userAdClick): static

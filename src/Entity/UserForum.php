@@ -20,7 +20,7 @@ class UserForum
     private ?User $user = null;
 
     #[ORM\ManyToOne(targetEntity: Forum::class, inversedBy: 'members')]
-    #[ORM\JoinColumn(name: 'forum_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'forum_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Forum $forum = null;
 
     #[ORM\Column(name: 'joined_at', type: 'datetime')]
