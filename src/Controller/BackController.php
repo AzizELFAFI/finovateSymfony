@@ -26,6 +26,7 @@ use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -565,8 +566,101 @@ final class BackController extends AbstractController
     {
         $projects = $em->getRepository(Project::class)->findBy([], ['created_at' => 'DESC']);
 
+        $now = new \DateTimeImmutable('today');
+        $openCount = 0;
+        $closedCount = 0;
+        $overdueCount = 0;
+        $totalGoal = 0.0;
+        $totalCurrent = 0.0;
+        $nearDeadlineCount = 0;
+
+        foreach ($projects as $project) {
+            if (!$project instanceof Project) {
+                continue;
+            }
+
+            $status = strtoupper((string) ($project->getStatus() ?? 'OPEN'));
+            if (in_array($status, ['CLOSED', 'COMPLETED'], true)) {
+                $closedCount++;
+            } else {
+                $openCount++;
+            }
+
+            $goal = (float) str_replace(',', '.', (string) ($project->getGoalAmount() ?? '0'));
+            $current = (float) str_replace(',', '.', (string) ($project->getCurrentAmount() ?? '0'));
+            $totalGoal += $goal;
+            $totalCurrent += $current;
+
+            $deadline = $project->getDeadline();
+            if ($deadline instanceof \DateTimeInterface) {
+                $deadlineDate = \DateTimeImmutable::createFromInterface($deadline)->setTime(0, 0, 0);
+                if ($deadlineDate < $now && !in_array($status, ['CLOSED', 'COMPLETED'], true)) {
+                    $overdueCount++;
+                } elseif ($deadlineDate >= $now && $deadlineDate <= $now->add(new \DateInterval('P14D'))) {
+                    $nearDeadlineCount++;
+                }
+            }
+        }
+
+        $fundingRate = $totalGoal > 0 ? round(($totalCurrent / $totalGoal) * 100, 2) : 0.0;
+
         return $this->render('backoffice/projects.html.twig', [
             'projects' => $projects,
+            'project_stats' => [
+                'total' => count($projects),
+                'open' => $openCount,
+                'closed' => $closedCount,
+                'overdue' => $overdueCount,
+                'near_deadline' => $nearDeadlineCount,
+                'total_goal' => $totalGoal,
+                'total_current' => $totalCurrent,
+                'funding_rate' => $fundingRate,
+            ],
+        ]);
+    }
+
+    #[Route('/projects/stats', name: 'backoffice_projects_stats_api', methods: ['GET'])]
+    public function projectsStatsApi(EntityManagerInterface $em): JsonResponse
+    {
+        $projects = $em->getRepository(Project::class)->findBy([], ['created_at' => 'DESC']);
+        $now = new \DateTimeImmutable('today');
+
+        $series = [];
+        foreach ($projects as $project) {
+            if (!$project instanceof Project) {
+                continue;
+            }
+            $goal = (float) str_replace(',', '.', (string) ($project->getGoalAmount() ?? '0'));
+            $current = (float) str_replace(',', '.', (string) ($project->getCurrentAmount() ?? '0'));
+            $progress = $goal > 0 ? round(($current / $goal) * 100, 2) : 0;
+            $status = strtoupper((string) ($project->getStatus() ?? 'OPEN'));
+
+            $health = 'healthy';
+            $deadline = $project->getDeadline();
+            if ($deadline instanceof \DateTimeInterface) {
+                $deadlineDate = \DateTimeImmutable::createFromInterface($deadline)->setTime(0, 0, 0);
+                if ($deadlineDate < $now && !in_array($status, ['CLOSED', 'COMPLETED'], true)) {
+                    $health = 'overdue';
+                } elseif ($progress < 30 && $deadlineDate <= $now->add(new \DateInterval('P14D'))) {
+                    $health = 'at_risk';
+                }
+            }
+
+            $series[] = [
+                'id' => $project->getId(),
+                'title' => $project->getTitle(),
+                'status' => $status,
+                'goal' => $goal,
+                'current' => $current,
+                'progress' => $progress,
+                'health' => $health,
+                'deadline' => $deadline?->format('Y-m-d'),
+            ];
+        }
+
+        return $this->json([
+            'generated_at' => (new \DateTimeImmutable())->format(DATE_ATOM),
+            'projects' => $series,
         ]);
     }
 
@@ -599,12 +693,30 @@ final class BackController extends AbstractController
             }
         }
 
+        $confirmedInvested = 0.0;
+        $estimatedRevenue = 0.0;
+        foreach ($confirmed as $inv) {
+            if (!$inv instanceof Investissement) {
+                continue;
+            }
+            $amount = (float) str_replace(',', '.', (string) ($inv->getAmount() ?? '0'));
+            $pct = (float) ($inv->getRevenuePercentage() ?? 0.0);
+            $confirmedInvested += $amount;
+            $estimatedRevenue += $amount * ($pct / 100);
+        }
+        $avgRevenuePct = $confirmedInvested > 0 ? ($estimatedRevenue / $confirmedInvested) * 100 : 0.0;
+
         return $this->render('backoffice/project-show.html.twig', [
             'project' => $project,
             'pending' => $pending,
             'confirmed' => $confirmed,
             'rejected' => $rejected,
             'investissements' => $allInvestissements,
+            'project_finance' => [
+                'confirmed_invested' => $confirmedInvested,
+                'estimated_revenue' => $estimatedRevenue,
+                'avg_revenue_pct' => $avgRevenuePct,
+            ],
         ]);
     }
 

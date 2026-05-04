@@ -17,7 +17,7 @@ class AdminRestrictionService
     public function applyRestriction(User $user, RestrictionDto $dto): UserRestriction
     {
         // Deactivate existing active restriction
-        $existing = $this->restrictionRepo->findActiveForUser($user->getId());
+        $existing = $this->restrictionRepo->findActiveForUser((int) $user->getId());
         if ($existing) {
             $existing->setActive(false);
             $this->em->flush();
@@ -49,7 +49,7 @@ class AdminRestrictionService
 
     public function getActiveRestriction(User $user): ?UserRestriction
     {
-        $r = $this->restrictionRepo->findActiveForUser($user->getId());
+        $r = $this->restrictionRepo->findActiveForUser((int) $user->getId());
         if ($r && $r->getRestrictedUntil() && $r->getRestrictedUntil() < new \DateTimeImmutable()) {
             $r->setActive(false);
             $this->em->flush();

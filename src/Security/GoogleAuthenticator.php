@@ -29,7 +29,7 @@ final class GoogleAuthenticator extends OAuth2Authenticator implements Authentic
     ) {
     }
 
-    public function supports(Request $request): ?bool
+    public function supports(Request $request): bool
     {
         return $request->attributes->get('_route') === 'connect_google_check';
     }
@@ -83,7 +83,7 @@ final class GoogleAuthenticator extends OAuth2Authenticator implements Authentic
         return $cin !== '' && $phone > 0 && $birth instanceof \DateTimeInterface;
     }
 
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): Response
     {
         $user = $token->getUser();
 
@@ -100,7 +100,7 @@ final class GoogleAuthenticator extends OAuth2Authenticator implements Authentic
         return new RedirectResponse($url);
     }
 
-    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
         if ($exception instanceof CustomUserMessageAuthenticationException
             && $exception->getMessageKey() === 'GOOGLE_PROFILE_INCOMPLETE') {

@@ -9,12 +9,20 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('backoffice/assets/images/favicon_io/favicon-16x16.png') }}">
   <base href="{{ asset('backoffice/') }}">
   <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+  <style>
+    #sidebar {
+      max-height: calc(100vh - 12px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+  </style>
 </head>
 <body>
   <!-- TOPBAR -->
   <nav id="topbar" class="navbar bg-white border-bottom fixed-top topbar px-3">
     <div class="d-flex align-items-center">
       <a href="{{ path('backoffice_ads') }}" class="btn btn-light btn-icon btn-sm me-3">
+      <li><a class="nav-link" href="{{ path('admin_reclamations_index') }}"><i class="ti ti-headset"></i><span class="nav-text">Réclamations</span></a></li>
         <i class="ti ti-arrow-left"></i>
       </a>
       <h1 class="fs-4 mb-0">Éditer l'annonce : {{ ad.title }}</h1>
@@ -43,6 +51,7 @@
         </ul>
       </li>
       <li><a class="nav-link active" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
+      <li><a class="nav-link" href="{{ path('admin_reclamations_index') }}"><i class="ti ti-headset"></i><span class="nav-text">Réclamations</span></a></li>
       <li class="px-4 pt-3 pb-1"><small class="nav-text">Forum</small></li>
       <li>
         <button class="nav-link folder-toggle w-100 text-start border-0 bg-transparent d-flex align-items-center gap-2" onclick="toggleForumFolder(this)" type="button">
@@ -137,6 +146,7 @@
                     <i class="ti ti-check"></i> Mettre à jour
                   </button>
                   <a href="{{ path('backoffice_ads') }}" class="btn btn-outline-secondary">
+      <li><a class="nav-link" href="{{ path('admin_reclamations_index') }}"><i class="ti ti-headset"></i><span class="nav-text">Réclamations</span></a></li>
                     <i class="ti ti-x"></i> Annuler
                   </a>
                 </div>

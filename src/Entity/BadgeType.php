@@ -40,7 +40,7 @@ class BadgeType
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\OneToMany(mappedBy: 'badgeType', targetEntity: UserBadge::class)]
+    #[ORM\OneToMany(mappedBy: 'badgeType', targetEntity: UserBadge::class,cascade: ['persist', 'remove'])]
     private Collection $userBadges;
 
     public function __construct()

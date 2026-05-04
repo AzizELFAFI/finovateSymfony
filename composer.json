@@ -121,9 +121,7 @@
         }
     },
     "require-dev": {
-        "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
-        "phpstan/phpstan-symfony": "^2.0",
         "phpunit/phpunit": "*",
         "symfony/browser-kit": "6.4.*",
         "symfony/css-selector": "6.4.*",

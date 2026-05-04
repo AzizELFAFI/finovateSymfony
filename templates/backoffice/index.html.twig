@@ -13,6 +13,13 @@
   <base href="{{ asset('backoffice/') }}">
 
   <link rel="stylesheet" href="{{ asset('backoffice/assets/css/main.css') }}">
+  <style>
+    #sidebar {
+      max-height: calc(100vh - 12px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+  </style>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
 </head>
@@ -62,6 +69,7 @@
         </ul>
       </li>
       <li><a class="nav-link" href="{{ path('backoffice_ads') }}"><i class="ti ti-bulb"></i><span class="nav-text">Annonces</span></a></li>
+      <li><a class="nav-link" href="{{ path('admin_reclamations_index') }}"><i class="ti ti-headset"></i><span class="nav-text">Réclamations</span></a></li>
       <li class="nav-folder">
         <button class="nav-link nav-folder-btn w-100 text-start border-0 bg-transparent d-flex align-items-center" onclick="toggleForumFolder(this)">
           <i class="ti ti-messages"></i><span class="nav-text flex-grow-1">Gestion Forums</span><i class="ti ti-chevron-down folder-chevron ms-auto"></i>

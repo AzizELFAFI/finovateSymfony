@@ -71,7 +71,7 @@ class AIRecommendationService
 
         return [
             'age' => $age,
-            'gender' => $user->getGender() ?? 'non spécifié',
+            'gender' => 'non spécifié',
             'points' => $user->getPoints(),
             'clicked_ads' => $clickedAdTitles,
             'total_clicks' => count($clickHistory),

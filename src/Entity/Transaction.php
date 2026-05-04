@@ -14,6 +14,18 @@ class Transaction
     #[ORM\Column(type: "bigint")]
     private ?int $id = null;
 
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function setId(int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
     #[ORM\Column(type: "integer")]
     #[Assert\NotBlank(message: "L'expéditeur est obligatoire.")]
     private int $sender_id;
@@ -43,11 +55,6 @@ class Transaction
     #[ORM\Column(type: "integer")]
     #[Assert\NotBlank(message: "Le bénéficiaire est obligatoire.")]
     private int $receiver_id;
-
-    public function getId()
-    {
-        return $this->id;
-    }
 
     public function getSender_id()
     {

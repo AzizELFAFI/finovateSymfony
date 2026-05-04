@@ -5,18 +5,17 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-
 #[ORM\Entity]
 class Goal
 {
 
     #[ORM\Id]
-    #[ORM\Column(type: "integer")]
-    private int $id;
+    #[ORM\Column(type: "bigint")]
+    private string $id;
 
-    #[ORM\Column(type: "integer")]
+    #[ORM\Column(type: "bigint")]
     #[Assert\NotBlank(message: "L'utilisateur est obligatoire.")]
-    private int $id_user;
+    private string $id_user;
 
     #[ORM\Column(type: "string", length: 40)]
     #[Assert\NotBlank(message: "Le titre est obligatoire.")]
@@ -52,82 +51,82 @@ class Goal
     #[Assert\GreaterThanOrEqual(value: 0, message: "Le montant actuel doit être supérieur ou égal à 0.")]
     private string $current_amount;
 
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
-    public function setId($value)
+    public function setId(string $value): void
     {
         $this->id = $value;
     }
 
-    public function getId_user()
+    public function getId_user(): string
     {
         return $this->id_user;
     }
 
-    public function setId_user($value)
+    public function setId_user(string $value): void
     {
         $this->id_user = $value;
     }
 
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->title;
     }
 
-    public function setTitle($value)
+    public function setTitle(string $value): void
     {
         $this->title = $value;
     }
 
-    public function getDeadline()
+    public function getDeadline(): \DateTimeInterface
     {
         return $this->deadline;
     }
 
-    public function setDeadline($value)
+    public function setDeadline(\DateTimeInterface $value): void
     {
         $this->deadline = $value;
     }
 
-    public function getStatus()
+    public function getStatus(): string
     {
         return $this->status;
     }
 
-    public function setStatus($value)
+    public function setStatus(string $value): void
     {
         $this->status = $value;
     }
 
-    public function getCreated_at()
+    public function getCreated_at(): \DateTimeInterface
     {
         return $this->created_at;
     }
 
-    public function setCreated_at($value)
+    public function setCreated_at(\DateTimeInterface $value): void
     {
         $this->created_at = $value;
     }
 
-    public function getTarget_amount()
+    public function getTarget_amount(): string
     {
         return $this->target_amount;
     }
 
-    public function setTarget_amount($value)
+    public function setTarget_amount(string $value): void
     {
         $this->target_amount = $value;
     }
 
-    public function getCurrent_amount()
+    public function getCurrent_amount(): string
     {
         return $this->current_amount;
     }
 
-    public function setCurrent_amount($value)
+    public function setCurrent_amount(string $value): void
     {
         $this->current_amount = $value;
     }

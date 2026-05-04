@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\PasswordResetRequestRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
+use SensitiveParameter;
 
 #[ORM\Entity(repositoryClass: PasswordResetRequestRepository::class)]
 #[ORM\Table(name: 'password_reset_request')]
@@ -19,6 +21,7 @@ class PasswordResetRequest
     private ?User $user = null;
 
     #[ORM\Column(type: 'string', length: 64, unique: true)]
+    #[Ignore]
     private string $tokenHash;
 
     #[ORM\Column(type: 'datetime')]
@@ -34,7 +37,6 @@ class PasswordResetRequest
     {
         return $this->id;
     }
-
     public function getUser(): ?User
     {
         return $this->user;
@@ -50,9 +52,10 @@ class PasswordResetRequest
         return $this->tokenHash;
     }
 
-    public function setTokenHash(string $tokenHash): void
+    public function setTokenHash(#[SensitiveParameter] string $tokenHash): self
     {
         $this->tokenHash = $tokenHash;
+        return $this;
     }
 
     public function getExpiresAt(): \DateTimeInterface

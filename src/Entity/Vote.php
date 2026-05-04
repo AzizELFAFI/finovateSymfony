@@ -16,7 +16,7 @@ class Vote
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Post::class, inversedBy: 'votes')]
-    #[ORM\JoinColumn(name: 'post_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'post_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Post $post = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'votes')]
