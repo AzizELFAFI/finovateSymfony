@@ -63,14 +63,19 @@ class AdminTicketController extends AbstractController
                 $entityManager->persist($message);
                 $entityManager->flush();
 
-                $topic = '/tickets/' . $ticket->getId();
-                $hub->publish(new Update($topic, json_encode([
-                    'type' => 'message',
-                    'ticketId' => $ticket->getId(),
-                    'senderRole' => 'ADMIN',
-                    'content' => (string) $message->getContent(),
-                    'sentAt' => $message->getSentAt() ? $message->getSentAt()->format('Y-m-d H:i:s') : (new \DateTime())->format('Y-m-d H:i:s'),
-                ], JSON_THROW_ON_ERROR)));
+                // Mercure real-time push (optional - works without active hub)
+                try {
+                    $topic = '/tickets/' . $ticket->getId();
+                    $hub->publish(new Update($topic, json_encode([
+                        'type' => 'message',
+                        'ticketId' => $ticket->getId(),
+                        'senderRole' => 'ADMIN',
+                        'content' => (string) $message->getContent(),
+                        'sentAt' => $message->getSentAt() ? $message->getSentAt()->format('Y-m-d H:i:s') : (new \DateTime())->format('Y-m-d H:i:s'),
+                    ], JSON_THROW_ON_ERROR)));
+                } catch (\Throwable) {
+                    // Mercure not available - real-time push skipped, message saved
+                }
 
                 return $this->redirectToRoute('admin_reclamations_index', ['id' => $ticket->getId()]);
             }
@@ -106,13 +111,17 @@ class AdminTicketController extends AbstractController
         }
 
         $topic = '/tickets/' . $ticket->getId();
-        $hub->publish(new Update($topic, json_encode([
-            'type' => 'typing',
-            'ticketId' => $ticket->getId(),
-            'senderRole' => 'ADMIN',
-            'typing' => true,
-            'at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
-        ], JSON_THROW_ON_ERROR)));
+        try {
+            $hub->publish(new Update($topic, json_encode([
+                'type' => 'typing',
+                'ticketId' => $ticket->getId(),
+                'senderRole' => 'ADMIN',
+                'typing' => true,
+                'at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            ], JSON_THROW_ON_ERROR)));
+        } catch (\Throwable) {
+            // Mercure not available - typing indicator skipped
+        }
 
         return $this->json(['ok' => true]);
     }
