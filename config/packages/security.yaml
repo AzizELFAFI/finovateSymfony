@@ -18,8 +18,16 @@ security:
             pattern: ^/forum/admin
             security: false
         public:
-            pattern: ^/(login|logout|signup|inscription|mot-de-passe-oublie|reinitialiser-mot-de-passe|access-denied|connect|oauth)
+            pattern: ^/(login|logout|signup|inscription|mot-de-passe-oublie|reinitialiser-mot-de-passe|access-denied)
             security: false
+        oauth:
+            pattern: ^/(connect|oauth)
+            stateless: false
+            provider: app_user_provider
+            entry_point: App\Security\JwtRedirectEntryPoint
+            custom_authenticators:
+                - App\Security\GoogleAuthenticator
+                - App\Security\GithubAuthenticator
         api_public:
             pattern: ^/api/(login|register|ai/signup-field|ai/signup-all|notifications|login-face-2fa|login-face-only)
             security: false

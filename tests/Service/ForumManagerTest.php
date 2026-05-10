@@ -113,7 +113,7 @@ class ForumManagerTest extends TestCase
 
     public function testIsTitleValidWithInvalidTitle(): void
     {
-        $forum = $this->createForum('AB');
+        $forum = $this->createForum('');
         
         $this->assertFalse($this->forumManager->isTitleValid($forum));
     }

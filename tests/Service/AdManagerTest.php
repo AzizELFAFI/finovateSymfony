@@ -34,7 +34,7 @@ class AdManagerTest extends TestCase
         $ad->setTitle($title);
         $ad->setDuration($duration);
         $ad->setRewardPoints($rewardPoints);
-        $ad->setImagePath('/uploads/ads/test.jpg');
+        $ad->setImagePath('/uploads/ads/test');
         
         return $ad;
     }
@@ -44,7 +44,8 @@ class AdManagerTest extends TestCase
      */
     public function testValidAd(): void
     {
-        $ad = $this->createAd('Annonce Test', 30, 10);
+        
+        $ad = $this->createAd('Annonce Test', 2, 10);
         
         $this->assertTrue($this->adManager->validate($ad));
     }

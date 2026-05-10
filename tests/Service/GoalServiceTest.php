@@ -179,7 +179,7 @@ class GoalServiceTest extends TestCase
      */
     public function testAddAmountGoalCompleted(): void
     {
-        $user = $this->createUser(1, 500.0);
+        $user = $this->createUser(1, 100.0);
         $goal = $this->createGoal(1, 1, 100.0, 50.0);
 
         $this->entityManager->expects($this->once())

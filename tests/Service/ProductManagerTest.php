@@ -26,7 +26,7 @@ class ProductManagerTest extends TestCase
     /**
      * Crée un produit avec les propriétés spécifiées.
      */
-    private function createProduct(string $name, int $pricePoints, int $stock): Product
+    private function createProduct( $name, int $pricePoints, int $stock): Product
     {
         $product = new Product();
         $product->setName($name);

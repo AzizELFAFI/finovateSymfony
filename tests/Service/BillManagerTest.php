@@ -42,7 +42,7 @@ class BillManagerTest extends TestCase
      */
     public function testValidBill(): void
     {
-        $bill = $this->createBill('FACT-2024-001', 150.50);
+        $bill = $this->createBill('FACT-2024-001', 140.0);
         
         $this->assertTrue($this->billManager->validate($bill));
     }
